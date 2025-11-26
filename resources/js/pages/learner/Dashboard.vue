@@ -1,0 +1,368 @@
+<script setup lang="ts">
+import Navbar from '@/components/home/Navbar.vue';
+import Footer from '@/components/home/Footer.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import {
+    Clock,
+    Users,
+    BookOpen,
+    ChevronLeft,
+    ChevronRight,
+    Play,
+    GraduationCap,
+    Mail,
+} from 'lucide-vue-next';
+import { ref, computed } from 'vue';
+
+interface CourseItem {
+    id: number;
+    course_id?: number;
+    title: string;
+    slug: string;
+    short_description: string;
+    thumbnail_path: string | null;
+    difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+    duration: number;
+    instructor: string;
+    category: string | null;
+    enrollments_count?: number;
+    progress_percentage?: number;
+    enrolled_at?: string;
+    last_lesson_id?: number | null;
+    lessons_count?: number;
+    invited_by?: string;
+    message?: string;
+    invited_at?: string;
+}
+
+interface Props {
+    featuredCourses: CourseItem[];
+    myLearning: CourseItem[];
+    invitedCourses: CourseItem[];
+    browseCourses: CourseItem[];
+}
+
+defineProps<Props>();
+
+const page = usePage();
+const appName = computed(() => page.props.name || 'E-Learning');
+
+const carouselIndex = ref(0);
+
+const difficultyLabel = (level: string) => {
+    const labels: Record<string, string> = {
+        beginner: 'Pemula',
+        intermediate: 'Menengah',
+        advanced: 'Lanjutan',
+    };
+    return labels[level] || level;
+};
+
+const difficultyColor = (level: string) => {
+    const colors: Record<string, string> = {
+        beginner: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+        intermediate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+        advanced: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    };
+    return colors[level] || '';
+};
+
+const formatDuration = (minutes: number) => {
+    if (!minutes) return '-';
+    if (minutes < 60) return `${minutes} menit`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) return `${hours} jam`;
+    return `${hours}j ${remainingMinutes}m`;
+};
+
+const prevSlide = (total: number) => {
+    carouselIndex.value = carouselIndex.value === 0 ? total - 1 : carouselIndex.value - 1;
+};
+
+const nextSlide = (total: number) => {
+    carouselIndex.value = carouselIndex.value === total - 1 ? 0 : carouselIndex.value + 1;
+};
+</script>
+
+<template>
+    <Head title="Dashboard Pembelajaran" />
+
+    <div class="min-h-screen bg-background">
+        <Navbar :app-name="appName" />
+
+        <main class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div class="flex flex-col gap-8">
+                <!-- Featured Courses Carousel -->
+                <section v-if="featuredCourses.length > 0" class="relative">
+                    <div class="overflow-hidden rounded-xl">
+                        <div
+                            class="flex transition-transform duration-500 ease-in-out"
+                            :style="{ transform: `translateX(-${carouselIndex * 100}%)` }"
+                        >
+                            <div
+                                v-for="course in featuredCourses"
+                                :key="course.id"
+                                class="w-full shrink-0"
+                            >
+                                <div class="relative h-64 md:h-80 lg:h-96 overflow-hidden rounded-xl bg-gradient-to-r from-primary/90 to-primary/70">
+                                    <img
+                                        v-if="course.thumbnail_path"
+                                        :src="course.thumbnail_path"
+                                        :alt="course.title"
+                                        class="absolute inset-0 h-full w-full object-cover mix-blend-overlay opacity-50"
+                                    />
+                                    <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8 text-white">
+                                        <Badge class="mb-2 w-fit" variant="secondary">
+                                            {{ course.category || 'Umum' }}
+                                        </Badge>
+                                        <h2 class="text-2xl md:text-3xl lg:text-4xl font-bold mb-2">
+                                            {{ course.title }}
+                                        </h2>
+                                        <p class="text-sm md:text-base opacity-90 line-clamp-2 mb-4 max-w-2xl">
+                                            {{ course.short_description }}
+                                        </p>
+                                        <div class="flex flex-wrap items-center gap-4 text-sm opacity-80 mb-4">
+                                            <span class="flex items-center gap-1">
+                                                <GraduationCap class="h-4 w-4" />
+                                                {{ course.instructor }}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <Clock class="h-4 w-4" />
+                                                {{ formatDuration(course.duration) }}
+                                            </span>
+                                            <span class="flex items-center gap-1">
+                                                <Users class="h-4 w-4" />
+                                                {{ course.enrollments_count }} peserta
+                                            </span>
+                                        </div>
+                                        <Link :href="`/courses/${course.id}`">
+                                            <Button variant="secondary" size="lg">
+                                                Lihat Kursus
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Controls -->
+                    <button
+                        v-if="featuredCourses.length > 1"
+                        class="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
+                        @click="prevSlide(featuredCourses.length)"
+                    >
+                        <ChevronLeft class="h-5 w-5" />
+                    </button>
+                    <button
+                        v-if="featuredCourses.length > 1"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-lg hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800"
+                        @click="nextSlide(featuredCourses.length)"
+                    >
+                        <ChevronRight class="h-5 w-5" />
+                    </button>
+
+                    <!-- Carousel Indicators -->
+                    <div v-if="featuredCourses.length > 1" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                        <button
+                            v-for="(_, idx) in featuredCourses"
+                            :key="idx"
+                            class="h-2 w-2 rounded-full transition-colors"
+                            :class="idx === carouselIndex ? 'bg-white' : 'bg-white/50'"
+                            @click="carouselIndex = idx"
+                        />
+                    </div>
+                </section>
+
+                <!-- My Learning Section -->
+                <section v-if="myLearning.length > 0">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <BookOpen class="h-5 w-5" />
+                            Pembelajaran Saya
+                        </h2>
+                        <Link href="/my-learning" class="text-sm text-primary hover:underline">
+                            Lihat Semua
+                        </Link>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <Card v-for="item in myLearning" :key="item.id" class="group overflow-hidden">
+                            <div class="relative aspect-video bg-muted">
+                                <img
+                                    v-if="item.thumbnail_path"
+                                    :src="item.thumbnail_path"
+                                    :alt="item.title"
+                                    class="h-full w-full object-cover"
+                                />
+                                <div v-else class="flex h-full items-center justify-center">
+                                    <BookOpen class="h-12 w-12 text-muted-foreground" />
+                                </div>
+                                <!-- Progress Overlay -->
+                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-muted">
+                                    <div
+                                        class="h-full bg-primary transition-all"
+                                        :style="{ width: `${item.progress_percentage}%` }"
+                                    />
+                                </div>
+                                <!-- Play Button -->
+                                <Link
+                                    :href="item.last_lesson_id ? `/lessons/${item.last_lesson_id}` : `/courses/${item.course_id}`"
+                                    class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+                                >
+                                    <div class="rounded-full bg-white p-3">
+                                        <Play class="h-6 w-6 text-primary" />
+                                    </div>
+                                </Link>
+                            </div>
+                            <CardContent class="p-4">
+                                <Link :href="`/courses/${item.course_id}`">
+                                    <h3 class="font-semibold line-clamp-2 hover:text-primary">
+                                        {{ item.title }}
+                                    </h3>
+                                </Link>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    {{ item.instructor }}
+                                </p>
+                                <div class="mt-2 flex items-center justify-between text-sm">
+                                    <span class="text-muted-foreground">
+                                        {{ item.progress_percentage }}% selesai
+                                    </span>
+                                    <Link
+                                        :href="item.last_lesson_id ? `/lessons/${item.last_lesson_id}` : `/courses/${item.course_id}`"
+                                        class="text-primary hover:underline"
+                                    >
+                                        Lanjutkan
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
+
+                <!-- Invited Courses Section -->
+                <section v-if="invitedCourses.length > 0">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold flex items-center gap-2">
+                            <Mail class="h-5 w-5" />
+                            Undangan Kursus
+                        </h2>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <Card v-for="item in invitedCourses" :key="item.id" class="overflow-hidden border-primary/50">
+                            <div class="relative aspect-video bg-muted">
+                                <img
+                                    v-if="item.thumbnail_path"
+                                    :src="item.thumbnail_path"
+                                    :alt="item.title"
+                                    class="h-full w-full object-cover"
+                                />
+                                <div v-else class="flex h-full items-center justify-center">
+                                    <BookOpen class="h-12 w-12 text-muted-foreground" />
+                                </div>
+                                <Badge class="absolute top-2 right-2" variant="default">
+                                    Undangan
+                                </Badge>
+                            </div>
+                            <CardContent class="p-4">
+                                <Link :href="`/courses/${item.course_id}`">
+                                    <h3 class="font-semibold line-clamp-2 hover:text-primary">
+                                        {{ item.title }}
+                                    </h3>
+                                </Link>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    {{ item.instructor }}
+                                </p>
+                                <p class="mt-2 text-xs text-muted-foreground">
+                                    Diundang oleh {{ item.invited_by }}
+                                </p>
+                                <div class="mt-3 flex gap-2">
+                                    <Button size="sm" class="flex-1">
+                                        Terima
+                                    </Button>
+                                    <Button size="sm" variant="outline" class="flex-1">
+                                        Tolak
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
+
+                <!-- Browse Courses Section -->
+                <section v-if="browseCourses.length > 0">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold">Jelajahi Kursus</h2>
+                        <Link href="/courses" class="text-sm text-primary hover:underline">
+                            Lihat Semua
+                        </Link>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <Card v-for="course in browseCourses" :key="course.id" class="group overflow-hidden">
+                            <div class="relative aspect-video bg-muted">
+                                <img
+                                    v-if="course.thumbnail_path"
+                                    :src="course.thumbnail_path"
+                                    :alt="course.title"
+                                    class="h-full w-full object-cover transition-transform group-hover:scale-105"
+                                />
+                                <div v-else class="flex h-full items-center justify-center">
+                                    <BookOpen class="h-12 w-12 text-muted-foreground" />
+                                </div>
+                                <Badge
+                                    class="absolute top-2 left-2"
+                                    :class="difficultyColor(course.difficulty_level)"
+                                >
+                                    {{ difficultyLabel(course.difficulty_level) }}
+                                </Badge>
+                            </div>
+                            <CardContent class="p-4">
+                                <Link :href="`/courses/${course.id}`">
+                                    <h3 class="font-semibold line-clamp-2 hover:text-primary">
+                                        {{ course.title }}
+                                    </h3>
+                                </Link>
+                                <p class="mt-1 text-sm text-muted-foreground">
+                                    {{ course.instructor }}
+                                </p>
+                                <div class="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span class="flex items-center gap-1">
+                                        <Clock class="h-3 w-3" />
+                                        {{ formatDuration(course.duration) }}
+                                    </span>
+                                    <span class="flex items-center gap-1">
+                                        <Users class="h-3 w-3" />
+                                        {{ course.enrollments_count }}
+                                    </span>
+                                </div>
+                                <Button class="mt-3 w-full" variant="outline" size="sm">
+                                    Daftar Sekarang
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
+
+                <!-- Empty State -->
+                <div
+                    v-if="featuredCourses.length === 0 && myLearning.length === 0 && invitedCourses.length === 0 && browseCourses.length === 0"
+                    class="flex flex-1 flex-col items-center justify-center py-12 text-center"
+                >
+                    <BookOpen class="h-16 w-16 text-muted-foreground mb-4" />
+                    <h2 class="text-xl font-semibold mb-2">Belum Ada Kursus</h2>
+                    <p class="text-muted-foreground mb-4">
+                        Belum ada kursus yang tersedia saat ini.
+                    </p>
+                </div>
+            </div>
+        </main>
+
+        <Footer :app-name="appName" />
+    </div>
+</template>
