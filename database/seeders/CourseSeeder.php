@@ -44,13 +44,25 @@ class CourseSeeder extends Seeder
 
             $category = $categories->where('name', $courseData['category'])->first();
 
-            $thumbnailPath = $this->mediaHelper->downloadThumbnail(
-                $courseData['thumbnail_keywords'],
-                'course-'.($index + 1).'-'.Str::slug($courseData['title']).'.jpg'
-            );
+            $targetFilename = 'course-'.($index + 1).'-'.Str::slug($courseData['title']).'.jpg';
 
-            if ($thumbnailPath) {
-                $this->command->info("  [OK] Thumbnail downloaded");
+            // Try fixture first, then fallback to download
+            $thumbnailPath = null;
+            if (isset($courseData['thumbnail_fixture'])) {
+                $thumbnailPath = $this->mediaHelper->copyThumbnail($courseData['thumbnail_fixture'], $targetFilename);
+                if ($thumbnailPath) {
+                    $this->command->info('  [OK] Thumbnail copied from fixture');
+                }
+            }
+
+            if (! $thumbnailPath) {
+                $thumbnailPath = $this->mediaHelper->downloadThumbnail(
+                    $courseData['thumbnail_keywords'],
+                    $targetFilename
+                );
+                if ($thumbnailPath) {
+                    $this->command->info('  [OK] Thumbnail downloaded');
+                }
             }
 
             $course = Course::create([
@@ -91,13 +103,22 @@ class CourseSeeder extends Seeder
             ]);
 
             foreach ($sectionData['lessons'] as $lessonOrder => $lessonData) {
+                // Load rich content from fixture if specified, otherwise use inline content
+                $richContent = null;
+                if (isset($lessonData['rich_content_fixture'])) {
+                    $richContent = $this->mediaHelper->loadRichContent($lessonData['rich_content_fixture']);
+                }
+                if (! $richContent && isset($lessonData['rich_content'])) {
+                    $richContent = $lessonData['rich_content'];
+                }
+
                 $lesson = Lesson::create([
                     'course_section_id' => $section->id,
                     'title' => $lessonData['title'],
                     'description' => $lessonData['description'] ?? null,
                     'order' => $lessonOrder + 1,
                     'content_type' => $lessonData['content_type'],
-                    'rich_content' => $lessonData['rich_content'] ?? null,
+                    'rich_content' => $richContent,
                     'youtube_url' => $lessonData['youtube_url'] ?? null,
                     'conference_url' => $lessonData['conference_url'] ?? null,
                     'conference_type' => $lessonData['conference_type'] ?? null,
@@ -114,36 +135,60 @@ class CourseSeeder extends Seeder
     {
         $mediaPath = null;
 
-        if ($lessonData['content_type'] === 'video' && isset($lessonData['video_url'])) {
-            $mediaPath = $this->mediaHelper->downloadVideo($lessonData['video_url'], $lesson->id);
+        // Video content: try fixture first, then download
+        if ($lessonData['content_type'] === 'video') {
+            $mediaPath = $this->mediaHelper->copyVideo($lesson->id);
             if ($mediaPath) {
-                $this->command->info("    [OK] Video downloaded for: {$lesson->title}");
+                $this->command->info("    [OK] Video copied from fixture for: {$lesson->title}");
+            } elseif (isset($lessonData['video_url'])) {
+                $mediaPath = $this->mediaHelper->downloadVideo($lessonData['video_url'], $lesson->id);
+                if ($mediaPath) {
+                    $this->command->info("    [OK] Video downloaded for: {$lesson->title}");
+                }
             }
         }
 
-        if ($lessonData['content_type'] === 'audio' && isset($lessonData['audio_url'])) {
-            $mediaPath = $this->mediaHelper->downloadAudio($lessonData['audio_url'], $lesson->id);
+        // Audio content: try fixture first, then download
+        if ($lessonData['content_type'] === 'audio') {
+            $mediaPath = $this->mediaHelper->copyAudio($lesson->id);
             if ($mediaPath) {
-                $this->command->info("    [OK] Audio downloaded for: {$lesson->title}");
+                $this->command->info("    [OK] Audio copied from fixture for: {$lesson->title}");
+            } elseif (isset($lessonData['audio_url'])) {
+                $mediaPath = $this->mediaHelper->downloadAudio($lessonData['audio_url'], $lesson->id);
+                if ($mediaPath) {
+                    $this->command->info("    [OK] Audio downloaded for: {$lesson->title}");
+                }
             }
         }
 
-        if ($lessonData['content_type'] === 'document' && isset($lessonData['pdf_content'])) {
-            $mediaPath = $this->mediaHelper->generatePdf(
-                $lessonData['pdf_title'] ?? $lesson->title,
-                $lessonData['pdf_content'],
-                $lesson->id
-            );
-            if ($mediaPath) {
-                $this->command->info("    [OK] PDF generated for: {$lesson->title}");
+        // Document content: try fixture first, then generate
+        if ($lessonData['content_type'] === 'document') {
+            if (isset($lessonData['pdf_fixture'])) {
+                $mediaPath = $this->mediaHelper->copyPdf($lessonData['pdf_fixture'], $lesson->id);
+                if ($mediaPath) {
+                    $this->command->info("    [OK] PDF copied from fixture for: {$lesson->title}");
+                }
+            }
+            if (! $mediaPath && isset($lessonData['pdf_html'])) {
+                $mediaPath = $this->mediaHelper->generatePdf(
+                    $lessonData['pdf_title'] ?? $lesson->title,
+                    $lessonData['pdf_html'],
+                    $lesson->id
+                );
+                if ($mediaPath) {
+                    $this->command->info("    [OK] PDF generated for: {$lesson->title}");
+                }
             }
         }
 
         if ($mediaPath) {
+            // Use content type as collection name (video, audio, document)
+            $collectionName = $lessonData['content_type'];
+
             Media::create([
                 'mediable_type' => Lesson::class,
                 'mediable_id' => $lesson->id,
-                'collection_name' => 'default',
+                'collection_name' => $collectionName,
                 'name' => pathinfo($mediaPath, PATHINFO_FILENAME),
                 'file_name' => basename($mediaPath),
                 'mime_type' => $this->mediaHelper->getMimeType($mediaPath),
@@ -171,6 +216,7 @@ class CourseSeeder extends Seeder
         return [
             'title' => 'Pengantar Pemrograman Python untuk Pemula',
             'category' => 'Teknologi Informasi',
+            'thumbnail_fixture' => 'python',
             'thumbnail_keywords' => 'python,programming,code,laptop',
             'short_description' => 'Pelajari dasar-dasar pemrograman Python dari nol. Cocok untuk pemula yang ingin memulai karir di bidang teknologi.',
             'long_description' => 'Python adalah bahasa pemrograman yang populer dan mudah dipelajari. Dalam kursus ini, Anda akan mempelajari konsep dasar pemrograman seperti variabel, tipe data, percabangan, perulangan, fungsi, dan struktur data dasar.',
@@ -197,7 +243,7 @@ class CourseSeeder extends Seeder
                             'content_type' => 'text',
                             'duration' => 10,
                             'is_free_preview' => true,
-                            'rich_content' => $this->getSampleRichContent('Python adalah bahasa pemrograman tingkat tinggi yang mudah dipelajari. Dibuat oleh Guido van Rossum pada tahun 1991.'),
+                            'rich_content_fixture' => 'python',
                         ],
                         [
                             'title' => 'Instalasi Python dan VS Code',
@@ -209,8 +255,8 @@ class CourseSeeder extends Seeder
                             'title' => 'Cheat Sheet: Sintaks Python Dasar',
                             'content_type' => 'document',
                             'duration' => 10,
+                            'pdf_fixture' => 'python-cheatsheet',
                             'pdf_title' => 'Python Cheat Sheet',
-                            'pdf_content' => "VARIABEL DAN TIPE DATA\n\nVariabel:\nname = \"Budi\"\nage = 25\nprice = 99.99\nis_active = True\n\nTipe Data:\n- str (string): \"Hello World\"\n- int (integer): 42\n- float (decimal): 3.14\n- bool (boolean): True/False\n- list: [1, 2, 3]\n- dict: {\"key\": \"value\"}\n\nOPERATOR\n+ Penjumlahan\n- Pengurangan\n* Perkalian\n/ Pembagian\n// Pembagian bulat\n% Modulus\n** Pangkat\n\nKONDISI\nif condition:\n    # code\nelif other_condition:\n    # code\nelse:\n    # code\n\nPERULANGAN\nfor i in range(10):\n    print(i)\n\nwhile condition:\n    # code",
                         ],
                     ],
                 ],
@@ -228,7 +274,7 @@ class CourseSeeder extends Seeder
                             'title' => 'Operator Aritmatika',
                             'content_type' => 'text',
                             'duration' => 15,
-                            'rich_content' => $this->getSampleRichContent('Python mendukung berbagai operator aritmatika: +, -, *, /, //, %, **'),
+                            'rich_content_fixture' => 'python',
                         ],
                         [
                             'title' => 'Podcast: Tips Belajar Python',
@@ -254,6 +300,7 @@ class CourseSeeder extends Seeder
         return [
             'title' => 'Pengembangan Web dengan Laravel',
             'category' => 'Teknologi Informasi',
+            'thumbnail_fixture' => 'laravel',
             'thumbnail_keywords' => 'web,development,coding,php',
             'short_description' => 'Kuasai framework Laravel dan bangun aplikasi web profesional dengan PHP.',
             'long_description' => 'Laravel adalah framework PHP paling populer untuk pengembangan aplikasi web modern. Kursus ini mengajarkan Anda cara membangun aplikasi web dari awal hingga deployment.',
@@ -281,7 +328,7 @@ class CourseSeeder extends Seeder
                             'content_type' => 'text',
                             'duration' => 15,
                             'is_free_preview' => true,
-                            'rich_content' => $this->getSampleRichContent('Laravel adalah framework PHP yang elegan dan ekspresif. Menyediakan struktur dan tools untuk membangun aplikasi web modern.'),
+                            'rich_content_fixture' => 'laravel',
                         ],
                         [
                             'title' => 'Instalasi Laravel dengan Composer',
@@ -293,8 +340,8 @@ class CourseSeeder extends Seeder
                             'title' => 'Dokumentasi: Eloquent ORM Reference',
                             'content_type' => 'document',
                             'duration' => 15,
+                            'pdf_fixture' => 'eloquent-reference',
                             'pdf_title' => 'Eloquent ORM Quick Reference',
-                            'pdf_content' => "ELOQUENT ORM REFERENCE\n\nMODEL DASAR\nphp artisan make:model Post\nphp artisan make:model Post -m (dengan migration)\n\nQUERY DASAR\nPost::all()\nPost::find(1)\nPost::where('status', 'published')->get()\nPost::first()\nPost::latest()->take(10)->get()\n\nCREATE\nPost::create(['title' => 'Hello', 'body' => 'World'])\n\nUPDATE\npost->update(['title' => 'New Title'])\n\nDELETE\npost->delete()\nPost::destroy(1)\n\nRELATIONSHIPS\nhasOne, hasMany, belongsTo, belongsToMany\n\nEAGER LOADING\nPost::with('comments')->get()\nPost::with(['comments', 'author'])->get()",
                         ],
                     ],
                 ],
@@ -332,6 +379,7 @@ class CourseSeeder extends Seeder
         return [
             'title' => 'Manajemen Proyek untuk Profesional',
             'category' => 'Bisnis & Manajemen',
+            'thumbnail_fixture' => 'project-management',
             'thumbnail_keywords' => 'business,meeting,team,office',
             'short_description' => 'Pelajari teknik manajemen proyek yang efektif untuk menyelesaikan proyek tepat waktu dan sesuai anggaran.',
             'long_description' => 'Kursus ini dirancang untuk para profesional yang ingin meningkatkan kemampuan manajemen proyek. Anda akan mempelajari metodologi Agile dan Scrum, teknik perencanaan, dan manajemen risiko.',
@@ -358,7 +406,7 @@ class CourseSeeder extends Seeder
                             'content_type' => 'text',
                             'duration' => 15,
                             'is_free_preview' => true,
-                            'rich_content' => $this->getSampleRichContent('Manajemen proyek adalah penerapan pengetahuan, keterampilan, tools, dan teknik untuk aktivitas proyek guna memenuhi persyaratan proyek.'),
+                            'rich_content_fixture' => 'project-management',
                         ],
                         [
                             'title' => 'Project Life Cycle',
@@ -370,8 +418,8 @@ class CourseSeeder extends Seeder
                             'title' => 'Template: Project Charter',
                             'content_type' => 'document',
                             'duration' => 20,
+                            'pdf_fixture' => 'project-charter',
                             'pdf_title' => 'Project Charter Template',
-                            'pdf_content' => "PROJECT CHARTER TEMPLATE\n\nPROJECT INFORMATION\nProject Name: _________________\nProject Manager: _________________\nSponsor: _________________\nStart Date: _________________\nEnd Date: _________________\n\nPROJECT OVERVIEW\nBusiness Need:\n_________________________________\n\nProject Objectives:\n1. _________________________________\n2. _________________________________\n3. _________________________________\n\nScope:\nIn Scope:\n- _________________________________\n- _________________________________\n\nOut of Scope:\n- _________________________________\n\nSTAKEHOLDERS\nName | Role | Responsibility\n_____|______|_______________\n\nMILESTONES\nMilestone | Target Date\n__________|____________\n\nRISKS\nRisk | Impact | Mitigation\n_____|________|___________\n\nBUDGET\nTotal Budget: Rp _________________\n\nAPPROVALS\nSignature: _________________\nDate: _________________",
                         ],
                     ],
                 ],
@@ -409,6 +457,7 @@ class CourseSeeder extends Seeder
         return [
             'title' => 'Bahasa Inggris Bisnis',
             'category' => 'Bahasa',
+            'thumbnail_fixture' => 'business-english',
             'thumbnail_keywords' => 'business,communication,office,professional',
             'short_description' => 'Tingkatkan kemampuan bahasa Inggris Anda untuk keperluan profesional dan bisnis.',
             'long_description' => 'Kursus ini fokus pada pengembangan kemampuan bahasa Inggris dalam konteks bisnis. Anda akan belajar cara berkomunikasi dalam meeting, menulis email profesional, dan presentasi.',
@@ -434,7 +483,7 @@ class CourseSeeder extends Seeder
                             'content_type' => 'text',
                             'duration' => 20,
                             'is_free_preview' => true,
-                            'rich_content' => $this->getSampleRichContent('Email formal memiliki struktur: Subject Line, Greeting, Body, Closing, dan Signature.'),
+                            'rich_content_fixture' => 'business-english',
                         ],
                         [
                             'title' => 'Frasa Penting dalam Email',
@@ -446,8 +495,8 @@ class CourseSeeder extends Seeder
                             'title' => 'Vocabulary List: Business Terms',
                             'content_type' => 'document',
                             'duration' => 15,
+                            'pdf_fixture' => 'business-vocab',
                             'pdf_title' => 'Business English Vocabulary',
-                            'pdf_content' => "BUSINESS ENGLISH VOCABULARY\n\nMEETING PHRASES\n- Let's get started\n- I'd like to begin by...\n- Moving on to the next point\n- To summarize...\n- Any questions?\n\nEMAIL PHRASES\nOpening:\n- I hope this email finds you well\n- Thank you for your email\n- Following up on our conversation\n\nClosing:\n- Please let me know if you have any questions\n- I look forward to hearing from you\n- Best regards / Kind regards\n\nCOMMON BUSINESS TERMS\n- ROI (Return on Investment)\n- KPI (Key Performance Indicator)\n- Q1, Q2, Q3, Q4 (Quarters)\n- YoY (Year over Year)\n- B2B (Business to Business)\n- B2C (Business to Consumer)\n- Stakeholder\n- Deliverable\n- Deadline\n- Milestone",
                         ],
                     ],
                 ],
@@ -479,6 +528,7 @@ class CourseSeeder extends Seeder
         return [
             'title' => 'Desain UI/UX dengan Figma',
             'category' => 'Desain & Multimedia',
+            'thumbnail_fixture' => 'ui-ux',
             'thumbnail_keywords' => 'design,ux,interface,creative',
             'short_description' => 'Pelajari prinsip desain UI/UX dan kuasai tool Figma untuk membuat desain yang menarik.',
             'long_description' => 'Kursus komprehensif tentang desain antarmuka pengguna (UI) dan pengalaman pengguna (UX). Anda akan mempelajari prinsip-prinsip desain, wireframing, dan prototyping dengan Figma.',
@@ -505,7 +555,7 @@ class CourseSeeder extends Seeder
                             'content_type' => 'text',
                             'duration' => 15,
                             'is_free_preview' => true,
-                            'rich_content' => $this->getSampleRichContent('UI (User Interface) adalah tampilan visual, sedangkan UX (User Experience) adalah keseluruhan pengalaman pengguna saat berinteraksi dengan produk.'),
+                            'rich_content_fixture' => 'ui-ux',
                         ],
                         [
                             'title' => 'Perbedaan UI dan UX',
@@ -517,8 +567,8 @@ class CourseSeeder extends Seeder
                             'title' => 'Checklist: UI Design Review',
                             'content_type' => 'document',
                             'duration' => 15,
+                            'pdf_fixture' => 'ui-checklist',
                             'pdf_title' => 'UI Design Review Checklist',
-                            'pdf_content' => "UI DESIGN REVIEW CHECKLIST\n\nTYPOGRAPHY\n[ ] Font hierarchy is clear (H1, H2, H3, Body)\n[ ] Line height is readable (1.4-1.6)\n[ ] Font size is accessible (min 16px body)\n[ ] Maximum 2-3 font families\n\nCOLOR\n[ ] Color palette is consistent\n[ ] Sufficient contrast (WCAG AA)\n[ ] Color is not the only indicator\n[ ] Dark mode compatibility\n\nLAYOUT\n[ ] Grid system is consistent\n[ ] White space is balanced\n[ ] Visual hierarchy is clear\n[ ] Mobile responsive\n\nCOMPONENTS\n[ ] Buttons are consistent\n[ ] Form inputs are clear\n[ ] Icons are consistent style\n[ ] Loading states defined\n\nACCESSIBILITY\n[ ] Alt text for images\n[ ] Keyboard navigation\n[ ] Focus states visible\n[ ] Touch targets min 44px\n\nINTERACTION\n[ ] Hover states defined\n[ ] Click feedback\n[ ] Error states clear\n[ ] Success states clear",
                         ],
                     ],
                 ],
@@ -544,58 +594,6 @@ class CourseSeeder extends Seeder
                             'duration' => 60,
                             'conference_url' => 'https://zoom.us/j/portfolio-review-session',
                             'conference_type' => 'zoom',
-                        ],
-                    ],
-                ],
-            ],
-        ];
-    }
-
-    private function getSampleRichContent(string $mainContent): array
-    {
-        return [
-            'type' => 'doc',
-            'content' => [
-                [
-                    'type' => 'heading',
-                    'attrs' => ['level' => 2],
-                    'content' => [
-                        ['type' => 'text', 'text' => 'Pendahuluan'],
-                    ],
-                ],
-                [
-                    'type' => 'paragraph',
-                    'content' => [
-                        ['type' => 'text', 'text' => $mainContent],
-                    ],
-                ],
-                [
-                    'type' => 'heading',
-                    'attrs' => ['level' => 3],
-                    'content' => [
-                        ['type' => 'text', 'text' => 'Tujuan Pembelajaran'],
-                    ],
-                ],
-                [
-                    'type' => 'bulletList',
-                    'content' => [
-                        [
-                            'type' => 'listItem',
-                            'content' => [
-                                ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Memahami konsep dasar yang dibahas']]],
-                            ],
-                        ],
-                        [
-                            'type' => 'listItem',
-                            'content' => [
-                                ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Dapat mengaplikasikan pengetahuan dalam praktik']]],
-                            ],
-                        ],
-                        [
-                            'type' => 'listItem',
-                            'content' => [
-                                ['type' => 'paragraph', 'content' => [['type' => 'text', 'text' => 'Siap untuk melanjutkan ke materi berikutnya']]],
-                            ],
                         ],
                     ],
                 ],

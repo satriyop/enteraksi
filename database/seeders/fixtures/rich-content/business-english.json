@@ -1,0 +1,739 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Pentingnya Business English"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Dalam era globalisasi, kemampuan berkomunikasi dalam Bahasa Inggris bisnis menjadi skill yang sangat penting, terutama di sektor perbankan yang sering berinteraksi dengan partner internasional, investor asing, dan regulator global. Business English berbeda dari English sehari-hari karena menggunakan terminologi khusus dan memiliki etika komunikasi yang lebih formal."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Bank-bank di Indonesia, terutama yang memiliki jaringan internasional atau melayani nasabah ekspatriat, membutuhkan karyawan yang mampu berkomunikasi dalam Business English dengan percaya diri. Kemampuan ini tidak hanya penting untuk komunikasi eksternal, tetapi juga untuk memahami dokumen teknis, laporan keuangan, dan kebijakan dari regulator internasional."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Business English mencakup berbagai konteks komunikasi: email profesional, meeting, presentasi, negosiasi, networking, dan written reports. Setiap konteks memiliki conventions dan best practices tersendiri yang perlu dipelajari dan dipraktikkan secara konsisten untuk mencapai fluency."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Writing Professional Emails"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Email adalah bentuk komunikasi bisnis yang paling umum. Email profesional harus jelas, singkat, dan sopan. Struktur email yang baik terdiri dari: subject line yang deskriptif, greeting yang sesuai, body yang terorganisir, dan closing yang profesional."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Struktur Email Profesional"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Subject Line: Jelas dan spesifik, contoh: \"Q3 Financial Report - Review Request\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Greeting: Formal (Dear Mr.\/Ms.) atau semi-formal (Hello\/Hi) tergantung relationship"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Opening: Langsung ke tujuan atau referensi ke komunikasi sebelumnya"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Body: Poin-poin utama, gunakan bullet points untuk clarity"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Closing: Call to action yang jelas, deadline jika ada"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Sign-off: Best regards, Kind regards, atau Sincerely untuk formal emails"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Useful Email Phrases"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Berikut frasa-frasa yang berguna dalam email bisnis:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Opening: \"I hope this email finds you well\", \"Following up on our conversation...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Request: \"Could you please...\", \"I would appreciate it if you could...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Apologizing: \"I apologize for any inconvenience\", \"Sorry for the delayed response\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Clarification: \"Just to clarify...\", \"Please let me know if I understood correctly...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Closing: \"Please do not hesitate to contact me\", \"I look forward to hearing from you\""
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Effective Meeting Communication"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Meeting dalam konteks bisnis internasional memerlukan preparation yang matang. Anda perlu memahami agenda, prepared dengan relevant data, dan siap untuk berpartisipasi aktif dalam diskusi. Active listening dan kemampuan mengajukan pertinent questions sangat dihargai."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Meeting Vocabulary"
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Opening: \"Let's get started\", \"Shall we begin?\", \"Thank you all for joining\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Agenda: \"Today we'll be discussing...\", \"The main points are...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Transition: \"Moving on to the next topic...\", \"Let's now turn to...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Participation: \"What are your thoughts on this?\", \"Does anyone have questions?\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Agreement: \"I completely agree\", \"That's a valid point\", \"I see your perspective\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Disagreement: \"I see it differently\", \"With respect, I have a different view\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Summarizing: \"To summarize...\", \"In conclusion...\", \"The key takeaways are...\""
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Closing: \"Thank you for your time\", \"We'll follow up with minutes\""
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "blockquote",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Tip: Jika Anda tidak memahami sesuatu, jangan ragu untuk meminta klarifikasi: \"Could you please elaborate on that?\" atau \"I'm not sure I follow. Could you explain further?\""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Delivering Presentations"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Presentasi dalam bahasa Inggris memerlukan preparation yang lebih intensif. Selain konten, Anda perlu memperhatikan pronunciation, pace of speaking, dan body language. Practice adalah kunci untuk delivery yang confident dan natural."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Struktur Presentasi Efektif"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Hook: Mulai dengan attention-grabbing opening - statistik menarik, pertanyaan, atau cerita"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Agenda: \"Today I'll cover three main points...\" - berikan roadmap kepada audience"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Body: Deliver konten dengan clear transitions dan supporting evidence"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Visual aids: Gunakan slides yang simple dan readable, avoid text-heavy slides"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Interaction: Libatkan audience dengan pertanyaan atau polling"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Q&A: Siapkan jawaban untuk potential questions, admit jika tidak tahu"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Conclusion: Ringkas key points dan end dengan clear call to action"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Gunakan signposting language untuk guide audience: \"Firstly...\", \"Another important point is...\", \"Finally...\", \"As I mentioned earlier...\". Ini membantu audience mengikuti flow presentasi Anda."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Banking Terminology"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Berikut terminologi perbankan yang penting untuk dikuasai:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Assets & Liabilities: Aset dan kewajiban dalam balance sheet"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "NPL (Non-Performing Loan): Kredit bermasalah dengan tunggakan lebih dari 90 hari"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "LDR (Loan to Deposit Ratio): Rasio pinjaman terhadap simpanan"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "CAR (Capital Adequacy Ratio): Rasio kecukupan modal"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "NIM (Net Interest Margin): Selisih antara interest income dan interest expense"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "ROA\/ROE: Return on Assets\/Equity - ukuran profitabilitas"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "KYC (Know Your Customer): Proses verifikasi identitas nasabah"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "AML (Anti-Money Laundering): Pencegahan pencucian uang"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Kesimpulan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Menguasai Business English adalah investasi jangka panjang untuk karir Anda di industri perbankan. Mulailah dengan mempraktikkan dalam situasi low-stakes seperti internal meetings, kemudian gradually increase complexity. Jangan takut membuat kesalahan - setiap error adalah learning opportunity."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Manfaatkan resources seperti business news (Bloomberg, Financial Times), podcasts, dan online courses. Pertimbangkan untuk mengambil sertifikasi seperti TOEIC atau Cambridge Business English Certificate untuk memvalidasi kemampuan Anda. Yang terpenting, practice consistently dan seek feedback dari native speakers atau colleagues yang lebih berpengalaman."
+                }
+            ]
+        }
+    ]
+}

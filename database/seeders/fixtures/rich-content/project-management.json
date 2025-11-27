@@ -1,0 +1,617 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Pendahuluan Manajemen Proyek"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Manajemen proyek adalah penerapan pengetahuan, keterampilan, alat, dan teknik pada aktivitas proyek untuk memenuhi persyaratan proyek. Dalam konteks organisasi modern, terutama di sektor perbankan, kemampuan mengelola proyek dengan efektif menjadi kompetensi yang sangat penting karena hampir setiap inisiatif strategis dijalankan dalam bentuk proyek."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Di Indonesia, transformasi digital perbankan telah mendorong kebutuhan akan project manager yang kompeten. Proyek-proyek seperti implementasi core banking system, pengembangan mobile banking, atau migrasi ke cloud memerlukan pengelolaan yang sistematis untuk memastikan keberhasilan. Kegagalan proyek tidak hanya berdampak pada kerugian finansial, tetapi juga dapat mempengaruhi kepercayaan nasabah dan reputasi bank."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Seorang project manager yang efektif harus memiliki kombinasi hard skills (seperti scheduling, budgeting, risk management) dan soft skills (seperti leadership, communication, stakeholder management). Keseimbangan kedua aspek ini akan menentukan keberhasilan proyek dan karir Anda sebagai project manager."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Konsep Dasar Project Management"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Project Management Institute (PMI) mendefinisikan proyek sebagai usaha temporer yang dilakukan untuk menciptakan produk, layanan, atau hasil yang unik. Kata kunci di sini adalah \"temporer\" dan \"unik\" - proyek memiliki awal dan akhir yang jelas, serta menghasilkan sesuatu yang berbeda dari operasi rutin."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Triple Constraint (Iron Triangle)"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Setiap proyek dibatasi oleh tiga constraint utama yang saling mempengaruhi:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Scope: Apa yang harus dikerjakan dan dihasilkan oleh proyek, termasuk fitur dan deliverables"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Time: Berapa lama proyek akan berjalan, termasuk milestones dan deadline"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Cost: Berapa budget yang tersedia untuk menyelesaikan proyek"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Quality: Standar kualitas yang harus dipenuhi oleh deliverables proyek"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Perubahan pada satu constraint akan mempengaruhi constraint lainnya. Misalnya, jika scope ditambah tanpa menambah time atau cost, maka quality kemungkinan akan menurun. Tugas project manager adalah menyeimbangkan ketiga constraint ini sesuai dengan prioritas stakeholder."
+                }
+            ]
+        },
+        {
+            "type": "blockquote",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Ingat: \"Good, Fast, Cheap - pick two.\" Anda tidak bisa memiliki ketiganya secara bersamaan. Komunikasikan trade-off ini dengan jelas kepada stakeholder di awal proyek."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Metodologi Project Management"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Ada berbagai metodologi project management yang dapat dipilih sesuai dengan karakteristik proyek. Pemilihan metodologi yang tepat akan sangat mempengaruhi efektivitas pengelolaan proyek."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Waterfall vs Agile"
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Waterfall: Pendekatan linear dan sequential, cocok untuk proyek dengan requirement yang jelas dan tidak berubah. Fase-fasenya: Requirement → Design → Implementation → Testing → Deployment → Maintenance"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Agile: Pendekatan iteratif dan incremental, cocok untuk proyek dengan requirement yang berubah-ubah. Fokus pada delivering value secara berkelanjutan melalui sprint cycles"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Scrum: Framework Agile paling populer dengan roles (Product Owner, Scrum Master, Dev Team), events (Sprint Planning, Daily Standup, Sprint Review, Retrospective), dan artifacts (Product Backlog, Sprint Backlog, Increment)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Kanban: Fokus pada visualisasi workflow dan limiting work in progress (WIP) untuk meningkatkan flow"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Hybrid: Kombinasi Waterfall dan Agile yang sering digunakan di enterprise untuk menyeimbangkan governance dengan agility"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Di sektor perbankan Indonesia, pendekatan hybrid sering digunakan karena kebutuhan compliance dan governance yang ketat, sambil tetap ingin mendapatkan benefit dari Agile seperti faster time-to-market dan ability to respond to change."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Tools dan Teknik Project Management"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Berikut adalah tools dan teknik yang umum digunakan dalam project management:"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Planning Tools"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Work Breakdown Structure (WBS): Dekomposisi deliverables menjadi work packages yang dapat dikelola"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Gantt Chart: Visualisasi timeline proyek dengan dependencies antar task"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Network Diagram (PERT\/CPM): Menentukan critical path dan float time"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Resource Histogram: Visualisasi resource allocation sepanjang proyek"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "RACI Matrix: Mendefinisikan roles dan responsibilities untuk setiap task"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Risk Management"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Risk management adalah proses mengidentifikasi, menganalisis, dan merespons risiko proyek. Langkah-langkahnya meliputi:"
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Identifikasi risiko menggunakan brainstorming, checklist, atau lessons learned"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Analisis kualitatif: menilai probability dan impact untuk prioritisasi"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Analisis kuantitatif: simulasi Monte Carlo untuk proyek kompleks"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Perencanaan respons: avoid, mitigate, transfer, atau accept"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Monitoring dan control: review berkala dan update risk register"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Latihan dan Studi Kasus"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Untuk mengasah kemampuan project management, cobalah latihan-latihan berikut:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buatlah WBS untuk proyek implementasi fitur baru di mobile banking"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Kembangkan risk register dengan minimal 10 risiko dan rencana mitigasinya"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Praktikkan facilitating Sprint Planning dan Daily Standup dengan tim Anda"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat project charter untuk inisiatif transformasi digital di organisasi Anda"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Analisis sebuah proyek yang gagal dan identifikasi root cause-nya"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Kesimpulan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Manajemen proyek adalah skill yang dapat dipelajari dan diasah melalui praktik. Sertifikasi seperti PMP (Project Management Professional) atau Scrum certifications dapat meningkatkan kredibilitas Anda, tetapi pengalaman nyata mengelola proyek adalah guru terbaik. Mulailah dengan proyek-proyek kecil dan terus tingkatkan kompleksitasnya."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Dalam era digital banking, kemampuan project management yang solid akan membuka banyak peluang karir. Dari Business Analyst, Project Manager, hingga Program Director - semuanya membutuhkan fondasi project management yang kuat. Teruslah belajar dan beradaptasi dengan metodologi dan tools terbaru untuk tetap relevan."
+                }
+            ]
+        }
+    ]
+}

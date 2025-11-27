@@ -1,0 +1,527 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Pendahuluan Laravel"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Laravel adalah framework PHP yang elegan dan ekspresif yang diciptakan oleh Taylor Otwell pada tahun 2011. Framework ini dirancang untuk membuat pengembangan web menjadi lebih menyenangkan dan produktif dengan menyediakan sintaks yang ekspresif dan tools yang powerful. Laravel mengikuti pola arsitektur MVC (Model-View-Controller) yang membantu memisahkan logika bisnis dari tampilan."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Di Indonesia, Laravel telah menjadi framework PHP paling populer dan banyak digunakan oleh perusahaan-perusahaan besar termasuk sektor perbankan. Beberapa sistem internet banking, mobile banking, dan sistem internal bank dikembangkan menggunakan Laravel karena keamanan, skalabilitas, dan kemudahan pengembangan yang ditawarkan."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Salah satu kekuatan utama Laravel adalah ekosistemnya yang lengkap. Dari authentication dengan Laravel Fortify dan Sanctum, queue management dengan Laravel Horizon, hingga real-time communication dengan Laravel Echo dan Reverb. Laravel juga memiliki dokumentasi yang sangat baik dan komunitas yang aktif, membuat proses learning menjadi lebih mudah."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Arsitektur MVC Laravel"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Model-View-Controller (MVC) adalah pola arsitektur yang memisahkan aplikasi menjadi tiga komponen utama. Model bertanggung jawab untuk mengelola data dan logika bisnis, View menangani tampilan dan presentasi data kepada user, sedangkan Controller berfungsi sebagai perantara yang menerima request dan mengkoordinasikan Model dan View."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Komponen Utama Laravel"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Routes: Mendefinisikan URL endpoint dan menghubungkannya dengan controller atau closure"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Controllers: Menangani logika request dan mengembalikan response yang sesuai"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Models: Merepresentasikan tabel database dan relasi antar tabel menggunakan Eloquent ORM"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Views: Template Blade yang menampilkan data kepada user dengan sintaks yang clean"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Middleware: Filter yang dijalankan sebelum atau setelah request untuk authentication, logging, dll"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Migrations: Version control untuk database schema, memudahkan kolaborasi tim"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Seeders: Mengisi database dengan data awal atau data testing"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Factories: Membuat data dummy untuk testing dengan Faker"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Setiap komponen memiliki direktori khusus dalam struktur folder Laravel, membuat kode terorganisir dengan baik. Konvensi ini memudahkan developer baru untuk memahami dan berkontribusi pada proyek Laravel yang sudah ada."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Eloquent ORM dan Database"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Eloquent adalah Object-Relational Mapping (ORM) yang disertakan dalam Laravel. Dengan Eloquent, setiap tabel database memiliki Model yang sesuai untuk berinteraksi dengan tabel tersebut. Eloquent menyediakan cara yang elegan untuk melakukan operasi CRUD tanpa menulis query SQL secara langsung."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Salah satu fitur powerful dari Eloquent adalah relationship. Anda dapat mendefinisikan relasi seperti hasOne, hasMany, belongsTo, belongsToMany, dan polymorphic relations dengan sangat mudah. Eloquent juga mendukung eager loading untuk mengatasi masalah N+1 query yang sering terjadi pada aplikasi database-intensive."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Contoh Penggunaan Eloquent"
+                }
+            ]
+        },
+        {
+            "type": "codeBlock",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "\/\/ Mendefinisikan Model dengan relationship\nclass Nasabah extends Model\n{\n    protected $fillable = ['nama', 'email', 'no_rekening'];\n    \n    public function transaksi(): HasMany\n    {\n        return $this->hasMany(Transaksi::class);\n    }\n    \n    public function akun(): HasOne\n    {\n        return $this->hasOne(Akun::class);\n    }\n}\n\n\/\/ Query dengan eager loading\n$nasabah = Nasabah::with(['transaksi', 'akun'])\n    ->where('status', 'aktif')\n    ->orderBy('created_at', 'desc')\n    ->paginate(15);"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Contoh di atas menunjukkan bagaimana Eloquent memudahkan query kompleks dengan sintaks yang mudah dibaca. Eager loading dengan with() mencegah N+1 query problem yang dapat memperlambat aplikasi."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Keamanan dalam Laravel"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Laravel menyediakan berbagai fitur keamanan built-in yang sangat penting untuk aplikasi perbankan. Proteksi CSRF secara otomatis diterapkan pada semua form, SQL injection dicegah dengan parameter binding di Eloquent, dan XSS protection tersedia melalui Blade templating engine."
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Selalu gunakan HTTPS untuk semua koneksi, terutama yang melibatkan data sensitif"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan rate limiting pada API endpoint untuk mencegah brute force attack"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Gunakan Laravel Sanctum atau Passport untuk API authentication yang aman"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Encrypt data sensitif seperti nomor kartu kredit menggunakan Laravel encryption"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Validasi semua input user menggunakan Form Request dengan rules yang ketat"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Audit log semua aktivitas penting menggunakan Laravel model events"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan two-factor authentication untuk akses ke area sensitif"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "blockquote",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Penting: Dalam industri perbankan, keamanan bukan hanya fitur tetapi keharusan. Pastikan aplikasi Anda memenuhi standar keamanan OJK dan PCI-DSS jika memproses data kartu kredit."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Latihan Praktis"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Untuk memperdalam pemahaman Laravel, cobalah mengerjakan project-project berikut:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat sistem CRUD sederhana untuk mengelola data nasabah dengan validasi lengkap"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan authentication dengan Laravel Fortify termasuk email verification"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat REST API untuk mobile banking dengan Sanctum authentication"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Kembangkan sistem notifikasi real-time menggunakan Laravel Echo dan database notification"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan job queue untuk proses batch seperti generate statement bulanan"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Kesimpulan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Laravel adalah framework yang sangat cocok untuk mengembangkan aplikasi perbankan karena kelengkapan fitur keamanan, skalabilitas, dan ekosistem yang mature. Dengan mengikuti best practices dan memanfaatkan fitur-fitur yang disediakan, Anda dapat membangun aplikasi yang robust dan maintainable."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Setelah menguasai dasar-dasar Laravel, langkah selanjutnya adalah mempelajari advanced topics seperti event sourcing, CQRS pattern, microservices architecture, dan integration dengan message brokers seperti RabbitMQ atau Apache Kafka untuk sistem yang lebih scalable."
+                }
+            ]
+        }
+    ]
+}

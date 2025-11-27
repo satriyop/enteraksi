@@ -37,11 +37,26 @@ class LessonController extends Controller
 
         $lesson->load(['section', 'media']);
 
-        // Get user enrollment
+        // Get user enrollment and lesson progress
         $user = $request->user();
         $enrollment = $user->enrollments()->where('course_id', $course->id)->first();
 
-        // Get all lessons for navigation
+        // Get lesson progress for all content types
+        $lessonProgress = null;
+        if ($enrollment) {
+            $lessonProgress = $enrollment->getProgressForLesson($lesson);
+        }
+
+        // Get all lesson progress for this enrollment (for sidebar checkmarks)
+        $lessonProgressMap = [];
+        if ($enrollment) {
+            $lessonProgressMap = $enrollment->lessonProgress()
+                ->where('is_completed', true)
+                ->pluck('is_completed', 'lesson_id')
+                ->toArray();
+        }
+
+        // Get all lessons for navigation with completion status
         $allLessons = collect();
         foreach ($course->sections as $section) {
             foreach ($section->lessons as $l) {
@@ -50,6 +65,7 @@ class LessonController extends Controller
                     'title' => $l->title,
                     'section_title' => $section->title,
                     'order' => $section->order * 1000 + $l->order,
+                    'is_completed' => isset($lessonProgressMap[$l->id]),
                 ]);
             }
         }
@@ -63,6 +79,7 @@ class LessonController extends Controller
             'course' => $course,
             'lesson' => $lesson,
             'enrollment' => $enrollment,
+            'lessonProgress' => $lessonProgress,
             'prevLesson' => $prevLesson,
             'nextLesson' => $nextLesson,
             'allLessons' => $allLessons,

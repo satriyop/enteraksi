@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -10,6 +11,112 @@ class MediaSeederHelper
     private int $timeout = 30;
 
     private int $maxRetries = 2;
+
+    private string $fixturesPath;
+
+    public function __construct()
+    {
+        $this->fixturesPath = database_path('seeders/fixtures');
+    }
+
+    /**
+     * Copy thumbnail from fixtures or download if not available.
+     */
+    public function copyThumbnail(string $fixtureSlug, string $targetFilename): ?string
+    {
+        $fixturePath = "{$this->fixturesPath}/thumbnails/{$fixtureSlug}.jpg";
+        $targetPath = "courses/thumbnails/{$targetFilename}";
+
+        if (file_exists($fixturePath)) {
+            $this->ensureDirectoryExists($targetPath);
+            Storage::disk('public')->put($targetPath, file_get_contents($fixturePath));
+
+            return $targetPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Copy video from fixtures or download if not available.
+     */
+    public function copyVideo(string $lessonId): ?string
+    {
+        $fixturePath = "{$this->fixturesPath}/videos/sample.mp4";
+        $targetPath = "lessons/{$lessonId}/default/video.mp4";
+
+        if (file_exists($fixturePath)) {
+            $this->ensureDirectoryExists($targetPath);
+            Storage::disk('public')->put($targetPath, file_get_contents($fixturePath));
+
+            return $targetPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Copy audio from fixtures or download if not available.
+     */
+    public function copyAudio(string $lessonId): ?string
+    {
+        $fixturePath = "{$this->fixturesPath}/audio/placeholder.mp3";
+        $targetPath = "lessons/{$lessonId}/default/audio.mp3";
+
+        if (file_exists($fixturePath)) {
+            $this->ensureDirectoryExists($targetPath);
+            Storage::disk('public')->put($targetPath, file_get_contents($fixturePath));
+
+            return $targetPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Copy PDF from fixtures.
+     */
+    public function copyPdf(string $fixtureName, string $lessonId): ?string
+    {
+        $fixturePath = "{$this->fixturesPath}/pdfs/{$fixtureName}.pdf";
+        $targetPath = "lessons/{$lessonId}/default/document.pdf";
+
+        if (file_exists($fixturePath)) {
+            $this->ensureDirectoryExists($targetPath);
+            Storage::disk('public')->put($targetPath, file_get_contents($fixturePath));
+
+            return $targetPath;
+        }
+
+        return null;
+    }
+
+    /**
+     * Load rich content from JSON fixture file.
+     */
+    public function loadRichContent(string $contentName): ?array
+    {
+        $fixturePath = "{$this->fixturesPath}/rich-content/{$contentName}.json";
+
+        if (file_exists($fixturePath)) {
+            $json = file_get_contents($fixturePath);
+
+            return json_decode($json, true);
+        }
+
+        return null;
+    }
+
+    /**
+     * Ensure directory exists for the given path.
+     */
+    private function ensureDirectoryExists(string $path): void
+    {
+        $directory = dirname($path);
+        if (! Storage::disk('public')->exists($directory)) {
+            Storage::disk('public')->makeDirectory($directory);
+        }
+    }
 
     public function downloadThumbnail(string $keywords, string $filename): ?string
     {
@@ -86,14 +193,28 @@ class MediaSeederHelper
         }
     }
 
-    public function generatePdf(string $title, string $content, string $lessonId): ?string
+    /**
+     * Generate a PDF document using DomPDF from HTML content.
+     *
+     * @param  string  $title  The document title
+     * @param  string  $htmlContent  HTML content for the PDF body
+     * @param  string  $lessonId  The lesson ID for storage path
+     */
+    public function generatePdf(string $title, string $htmlContent, string $lessonId): ?string
     {
         $path = "lessons/{$lessonId}/default/document.pdf";
 
-        $pdfContent = $this->createSimplePdf($title, $content);
-
         try {
-            Storage::disk('public')->put($path, $pdfContent);
+            $fullHtml = $this->wrapHtmlForPdf($title, $htmlContent);
+            $pdf = Pdf::loadHTML($fullHtml);
+            $pdf->setPaper('a4', 'portrait');
+
+            $directory = dirname($path);
+            if (! Storage::disk('public')->exists($directory)) {
+                Storage::disk('public')->makeDirectory($directory);
+            }
+
+            Storage::disk('public')->put($path, $pdf->output());
 
             return $path;
         } catch (\Exception $e) {
@@ -101,6 +222,128 @@ class MediaSeederHelper
 
             return null;
         }
+    }
+
+    /**
+     * Wrap HTML content in a full HTML document for PDF generation.
+     */
+    private function wrapHtmlForPdf(string $title, string $content): string
+    {
+        $date = now()->format('d F Y');
+
+        return <<<HTML
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>{$title}</title>
+    <style>
+        @page {
+            margin: 2cm;
+        }
+        body {
+            font-family: 'DejaVu Sans', Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #333;
+        }
+        h1 {
+            font-size: 24pt;
+            color: #1a1a1a;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            font-size: 18pt;
+            color: #1e40af;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+        h3 {
+            font-size: 14pt;
+            color: #1e3a8a;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        pre, code {
+            font-family: 'DejaVu Sans Mono', monospace;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10pt;
+        }
+        pre {
+            padding: 15px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #d1d5db;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f3f4f6;
+            font-weight: bold;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .date {
+            color: #6b7280;
+            font-size: 10pt;
+            margin-bottom: 20px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .highlight {
+            background-color: #fef3c7;
+            padding: 15px;
+            border-left: 4px solid #f59e0b;
+            margin-bottom: 15px;
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 9pt;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>{$title}</h1>
+        <p class="date">Tanggal: {$date}</p>
+    </div>
+
+    {$content}
+</body>
+</html>
+HTML;
     }
 
     public function cleanupStorage(): void
@@ -150,52 +393,6 @@ class MediaSeederHelper
         }
 
         return null;
-    }
-
-    private function createSimplePdf(string $title, string $content): string
-    {
-        $date = now()->format('d F Y');
-
-        $pdf = "%PDF-1.4\n";
-        $pdf .= "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n";
-        $pdf .= "2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n";
-        $pdf .= "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj\n";
-
-        $textContent = "BT\n";
-        $textContent .= "/F1 18 Tf\n";
-        $textContent .= "50 742 Td\n";
-        $textContent .= "({$title}) Tj\n";
-        $textContent .= "/F1 10 Tf\n";
-        $textContent .= "0 -30 Td\n";
-        $textContent .= "(Tanggal: {$date}) Tj\n";
-        $textContent .= "0 -40 Td\n";
-        $textContent .= "/F1 12 Tf\n";
-
-        $lines = explode("\n", wordwrap($content, 80, "\n", true));
-        foreach ($lines as $line) {
-            $escapedLine = str_replace(['(', ')', '\\'], ['\\(', '\\)', '\\\\'], $line);
-            $textContent .= "0 -18 Td\n";
-            $textContent .= "({$escapedLine}) Tj\n";
-        }
-
-        $textContent .= 'ET';
-
-        $streamLength = strlen($textContent);
-        $pdf .= "4 0 obj << /Length {$streamLength} >> stream\n{$textContent}\nendstream endobj\n";
-        $pdf .= "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj\n";
-        $pdf .= "xref\n0 6\n";
-        $pdf .= "0000000000 65535 f \n";
-        $pdf .= "0000000009 00000 n \n";
-        $pdf .= "0000000058 00000 n \n";
-        $pdf .= "0000000115 00000 n \n";
-        $pdf .= sprintf("0000000270 00000 n \n");
-        $pdf .= sprintf("%010d 00000 n \n", 270 + $streamLength + 50);
-        $pdf .= "trailer << /Size 6 /Root 1 0 R >>\n";
-        $pdf .= "startxref\n";
-        $pdf .= (string) (350 + $streamLength);
-        $pdf .= "\n%%EOF";
-
-        return $pdf;
     }
 
     public function getFileSize(string $path): int

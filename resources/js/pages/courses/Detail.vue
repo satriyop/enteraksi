@@ -181,18 +181,6 @@ const lessonTypeIcon = (type: string) => {
     }
 };
 
-const lessonTypeLabel = (type: string) => {
-    const labels: Record<string, string> = {
-        video: 'Video',
-        youtube: 'YouTube',
-        audio: 'Audio',
-        document: 'Dokumen',
-        conference: 'Konferensi',
-        text: 'Teks',
-    };
-    return labels[type] || type;
-};
-
 const previewLessonsCount = computed(() => {
     return props.course.sections.reduce((total, section) => {
         return total + section.lessons.filter(l => l.is_free_preview).length;
@@ -379,14 +367,9 @@ const firstLesson = computed(() => {
                                                         {{ lesson.title }}
                                                     </p>
                                                 </div>
-                                                <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <Badge variant="outline" class="text-xs">
-                                                        {{ lessonTypeLabel(lesson.content_type) }}
-                                                    </Badge>
-                                                    <span v-if="lesson.estimated_duration_minutes">
-                                                        {{ lesson.estimated_duration_minutes }} min
-                                                    </span>
-                                                </div>
+                                                <span v-if="lesson.estimated_duration_minutes" class="text-xs text-muted-foreground">
+                                                    {{ lesson.estimated_duration_minutes }} min
+                                                </span>
                                             </Link>
                                             <!-- Non-enrolled users: preview lessons are clickable -->
                                             <Link
@@ -407,9 +390,6 @@ const firstLesson = computed(() => {
                                                     <Badge class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 gap-1">
                                                         <Eye class="h-3 w-3" />
                                                         Preview
-                                                    </Badge>
-                                                    <Badge variant="outline" class="text-xs">
-                                                        {{ lessonTypeLabel(lesson.content_type) }}
                                                     </Badge>
                                                     <span v-if="lesson.estimated_duration_minutes">
                                                         {{ lesson.estimated_duration_minutes }} min
@@ -432,9 +412,6 @@ const firstLesson = computed(() => {
                                                 </div>
                                                 <div class="flex items-center gap-2 text-xs text-muted-foreground">
                                                     <Lock class="h-3 w-3" />
-                                                    <Badge variant="outline" class="text-xs">
-                                                        {{ lessonTypeLabel(lesson.content_type) }}
-                                                    </Badge>
                                                     <span v-if="lesson.estimated_duration_minutes">
                                                         {{ lesson.estimated_duration_minutes }} min
                                                     </span>

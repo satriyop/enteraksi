@@ -1,0 +1,753 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Pengenalan UI\/UX Design"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "UI (User Interface) dan UX (User Experience) adalah dua aspek yang saling terkait dalam desain produk digital. UI fokus pada tampilan visual dan interaktif dari produk - termasuk layout, warna, typography, dan elemen visual lainnya. Sementara UX berfokus pada keseluruhan pengalaman pengguna saat berinteraksi dengan produk, termasuk kemudahan penggunaan, efisiensi, dan kepuasan emosional."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Dalam konteks perbankan digital, desain UI\/UX yang baik bukan lagi nice-to-have tetapi keharusan. Nasabah modern mengharapkan aplikasi banking yang intuitif, cepat, dan menyenangkan untuk digunakan. Bank-bank yang berhasil mengimplementasikan desain UX yang superior, seperti Jenius atau Jago, telah membuktikan bahwa user experience dapat menjadi diferensiator kompetitif yang signifikan."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Karir di bidang UI\/UX design terus berkembang pesat di Indonesia. Posisi seperti UI Designer, UX Researcher, Product Designer, dan Design Lead semakin dibutuhkan tidak hanya di startup teknologi, tetapi juga di bank-bank tradisional yang sedang bertransformasi digital."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Prinsip-Prinsip Dasar UI\/UX"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Ada beberapa prinsip fundamental yang harus dipahami oleh setiap UI\/UX designer. Prinsip-prinsip ini menjadi fondasi dalam membuat keputusan desain yang baik."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Prinsip UX Design"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "User-Centered Design: Selalu tempatkan kebutuhan user sebagai prioritas utama dalam setiap keputusan desain"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Consistency: Gunakan pattern yang konsisten di seluruh aplikasi untuk mengurangi cognitive load"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Feedback: Berikan feedback yang jelas untuk setiap aksi user - visual, audio, atau haptic"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Error Prevention: Desain yang baik mencegah error terjadi, bukan hanya menangani error"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Recognition over Recall: User seharusnya tidak perlu mengingat informasi - tampilkan opsi yang tersedia"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Accessibility: Desain harus dapat diakses oleh semua orang, termasuk pengguna dengan disabilitas"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Prinsip UI Design"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Visual Hierarchy: Atur elemen berdasarkan importance menggunakan size, color, dan spacing"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Whitespace: Gunakan ruang kosong dengan bijak untuk meningkatkan readability dan focus"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Color Theory: Pahami psikologi warna dan gunakan color palette yang sesuai dengan brand"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Typography: Pilih font yang readable dan buat hierarchy yang jelas dengan font sizes"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Contrast: Pastikan contrast yang cukup antara text dan background untuk accessibility"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Alignment: Jaga alignment yang konsisten untuk tampilan yang rapi dan profesional"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "UX Research Methods"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "UX Research adalah proses mengumpulkan insight tentang user untuk menginformasikan keputusan desain. Research dapat dilakukan di berbagai tahap product development."
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "User Interviews: Percakapan one-on-one untuk memahami needs, pain points, dan motivasi user"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Surveys: Mengumpulkan data kuantitatif dari large sample size"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Usability Testing: Observasi user saat menggunakan produk untuk menemukan usability issues"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "A\/B Testing: Membandingkan dua versi desain untuk menentukan mana yang lebih efektif"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Card Sorting: Membantu menentukan information architecture yang intuitif"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Heatmaps & Analytics: Menganalisis behavior user melalui data clicks, scrolls, dan sessions"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Competitive Analysis: Mempelajari kekuatan dan kelemahan kompetitor"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "blockquote",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Pro tip: \"You are not your user.\" Jangan assume bahwa preferences Anda mewakili user. Selalu validate asumsi dengan research."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Untuk aplikasi perbankan, research juga harus mempertimbangkan aspek keamanan dan trust. User harus merasa aman saat melakukan transaksi finansial, dan desain harus mengkomunikasikan security tanpa mengorbankan usability."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Design Process dan Tools"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Design process yang terstruktur membantu memastikan hasil yang konsisten dan berkualitas. Berikut adalah tahapan dalam design process:"
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Double Diamond Framework"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Discover: Research untuk memahami problem space - interviews, observations, data analysis"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Define: Synthesize findings menjadi problem statement yang clear dan actionable"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Develop: Ideation dan prototyping - brainstorming, sketching, wireframing"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Deliver: Testing, iteration, dan final implementation"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Design Tools"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Tools yang umum digunakan dalam UI\/UX design:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Figma: Industry standard untuk UI design dan prototyping, sangat baik untuk kolaborasi"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Sketch: Populer di macOS ecosystem, banyak plugins tersedia"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Adobe XD: Terintegrasi dengan Adobe ecosystem"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Miro\/FigJam: Untuk whiteboarding, brainstorming, dan workshop"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Maze\/UsabilityHub: Untuk remote usability testing"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Hotjar: Untuk heatmaps dan session recordings"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Figma telah menjadi tool paling populer karena kemampuan real-time collaboration dan accessibility yang baik (berjalan di browser). Banyak design system besar seperti Material Design dan Ant Design tersedia sebagai Figma libraries."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Latihan Praktis"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Untuk mengembangkan skill UI\/UX, cobalah project-project berikut:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Redesign halaman transfer mobile banking - fokus pada reducing friction"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat user flow untuk onboarding nasabah baru dari download app hingga aktivasi"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Conduct usability testing dengan 5 user untuk aplikasi yang sudah ada"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Design sistem notifikasi yang informative tanpa mengganggu"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat design system sederhana dengan components library di Figma"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Kesimpulan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "UI\/UX design adalah kombinasi dari seni dan sains. Diperlukan kreativitas untuk menciptakan desain yang menarik, tetapi juga analytical thinking untuk memvalidasi keputusan dengan data. Dalam industri perbankan yang highly regulated, designer juga harus memahami compliance requirements dan security considerations."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Bangun portfolio dengan real projects atau redesign concepts. Ikuti design communities seperti Dribbble, Behance, atau local communities seperti UX Indonesia. Yang terpenting, teruslah belajar karena field ini terus berkembang dengan new tools, methodologies, dan best practices setiap tahunnya."
+                }
+            ]
+        }
+    ]
+}

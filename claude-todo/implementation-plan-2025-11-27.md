@@ -6,526 +6,512 @@
 
 ---
 
-## Overview
+## Phase Summary
 
-Implement Course Management features for the LMS application based on the user story requirements. This is a new Laravel 12 + Inertia v2 + Vue 3 project with authentication already set up.
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Day 1 | Core Course Management | ✅ ~90% Complete |
+| Day 2 | Progress, Dashboard, Rating, Assessment Foundation | 🔄 In Progress |
+| Day 3 | Assessment Taking, Learning Paths | ⏳ Pending |
+| Day 4 | Competencies & Certificates | ⏳ Pending |
+| Day 5 | Gamification (XP, Badges) | ⏳ Pending |
 
-## Technical Decisions
+---
 
+# Day 1: Core Course Management (COMPLETED)
+
+## Completed Features
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Course CRUD | ✅ Complete | Full CRUD with thumbnail, tags, categories |
+| Course Sections | ✅ Complete | Drag-drop ordering, duration calculation |
+| Lessons | ✅ Complete | All 6 content types (text, video, youtube, audio, document, conference) |
+| Enrollment System | ✅ Complete | Enroll/unenroll, invitation workflow |
+| Course Publishing | ✅ Complete | Draft → Published → Archived workflow |
+| Course Visibility | ✅ Complete | Public, Restricted, Hidden |
+| Authorization | ✅ Complete | Role-based policies (learner, content_manager, lms_admin) |
+| Learner Course Browse | ✅ Complete | Search, filter by category/difficulty |
+| Lesson Viewing | ✅ Complete | Udemy-style immersive layout with sidebar |
+| Free Preview | ✅ Complete | is_free_preview flag working |
+
+## Existing Database Schema
+
+### Core Tables
+- `users` (with role: learner, content_manager, trainer, lms_admin)
+- `categories`
+- `tags`
+- `courses` (status, visibility, difficulty, objectives, prerequisites)
+- `course_sections` (order, duration)
+- `lessons` (content_type, rich_content, order)
+- `course_tag` (pivot)
+- `media` (polymorphic)
+- `enrollments` (status, progress_percentage, last_lesson_id)
+- `course_invitations`
+- `lesson_progress` (migration exists, not fully implemented)
+
+### Existing Controllers
+- CourseController (CRUD)
+- CourseSectionController
+- LessonController
+- CourseReorderController
+- CoursePublishController
+- EnrollmentController
+- LessonPreviewController
+
+---
+
+# Day 2: Progress, Dashboard, Rating, Assessment (IN PROGRESS)
+
+## Partially Implemented Features
+
+| Feature | Status | What's Missing |
+|---------|--------|----------------|
+| Lesson Progress | 🟡 60% | Migration exists, but progress not updating |
+| Learner Dashboard | 🟡 40% | Missing "My Learning", "Invited Courses" sections |
+| Course Rating | 🟡 0% | Not started |
+| Duration Re-estimation | 🟡 80% | Re-estimate button not implemented |
+
+---
+
+## Priority 1: Lesson Progress Tracking
+
+**Problem**: `lesson_progress` migration exists but progress is not being tracked when learners view lessons.
+
+### Tasks
+1. Create `LessonProgress` model with relationships
+2. Update `LessonController@show` to record/update lesson progress
+3. Calculate progress based on content type:
+   - Text: Mark complete on view
+   - Video/Audio: Track watch time, complete at 90%+
+   - Document: Mark complete on view
+   - YouTube: Mark complete on view
+4. Update enrollment `progress_percentage` based on completed lessons
+5. Add "Tandai Selesai" (Mark as Complete) button
+6. Update sidebar to show completed lessons with checkmark
+
+### Files to Create/Modify
+```
+app/Models/LessonProgress.php                    (create)
+app/Http/Controllers/LessonProgressController.php (create)
+app/Http/Controllers/LessonController.php        (modify show)
+resources/js/Pages/lessons/Show.vue              (add complete button)
+routes/courses.php                               (add routes)
+tests/Feature/LessonProgressTest.php             (create)
+```
+
+### Database Schema (Already Exists)
+```sql
+-- lesson_progress table
+id, user_id, lesson_id, enrollment_id, progress_percentage,
+is_completed, completed_at, time_spent_seconds, last_position, timestamps
+```
+
+### API Endpoints
+```
+POST   /lessons/{lesson}/progress          # Update progress
+POST   /lessons/{lesson}/complete          # Mark as complete
+GET    /courses/{course}/my-progress       # Get user's progress for course
+```
+
+---
+
+## Priority 2: Enhance Learner Dashboard
+
+**Problem**: Learner landing page missing "My Learning" and "Invited Courses" sections.
+
+### Tasks
+1. Enhance `LearnerDashboardController`
+2. Add "My Learning" section:
+   - Enrolled courses with progress bars
+   - "Lanjutkan Belajar" (Continue Learning) button
+   - Filter: In Progress / Completed
+3. Add "Undangan Kursus" (Invited Courses) section
+4. Add carousel of featured courses (top 5)
+
+### Files to Create/Modify
+```
+app/Http/Controllers/LearnerDashboardController.php  (modify)
+resources/js/Pages/learner/Dashboard.vue             (modify/create)
+resources/js/Pages/courses/Browse.vue                (add carousel)
+resources/js/components/courses/CourseCarousel.vue   (create)
+resources/js/components/courses/MyLearningCard.vue   (create)
+```
+
+### Data Structure
+```typescript
+interface MyLearningCourse {
+  id: number;
+  title: string;
+  thumbnail_url: string;
+  progress_percentage: number;
+  last_lesson: { id: number; title: string } | null;
+  total_lessons: number;
+  completed_lessons: number;
+}
+
+interface InvitedCourse {
+  id: number;
+  title: string;
+  thumbnail_url: string;
+  invited_by: string;
+  invited_at: string;
+  invitation_id: number;
+}
+```
+
+---
+
+## Priority 3: Course Rating System
+
+**Problem**: Learners cannot rate courses.
+
+### Tasks
+1. Create `course_ratings` migration
+2. Create `CourseRating` model
+3. Create `CourseRatingController`
+4. Update `Course` model (add average rating accessor)
+5. Add rating UI in course detail page
+6. Show ratings in course browse/listing
+
+### Files to Create
+```
+database/migrations/xxxx_create_course_ratings_table.php
+app/Models/CourseRating.php
+app/Http/Controllers/CourseRatingController.php
+app/Http/Requests/StoreCourseRatingRequest.php
+resources/js/components/courses/CourseRating.vue
+resources/js/components/courses/StarRating.vue
+tests/Feature/CourseRatingTest.php
+```
+
+### Database Schema
+```sql
+CREATE TABLE course_ratings (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    course_id BIGINT REFERENCES courses(id),
+    rating TINYINT CHECK (rating >= 1 AND rating <= 5),
+    review TEXT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    UNIQUE(user_id, course_id)
+);
+```
+
+### API Endpoints
+```
+GET    /courses/{course}/ratings          # List ratings
+POST   /courses/{course}/ratings          # Create rating
+PATCH  /courses/{course}/ratings/{rating} # Update rating
+DELETE /courses/{course}/ratings/{rating} # Delete rating
+```
+
+---
+
+## Priority 4: Assessment Module (Foundation)
+
+**Problem**: No quiz/assessment functionality exists.
+
+### Tasks - Phase 1 (Foundation)
+1. Create database schema (5 tables)
+2. Create Models (5 models)
+3. Create Assessment CRUD for Content Managers
+4. Question management within assessment
+
+### Files to Create
+```
+# Migrations
+database/migrations/xxxx_create_assessments_table.php
+database/migrations/xxxx_create_questions_table.php
+database/migrations/xxxx_create_question_options_table.php
+database/migrations/xxxx_create_assessment_attempts_table.php
+database/migrations/xxxx_create_attempt_answers_table.php
+
+# Models
+app/Models/Assessment.php
+app/Models/Question.php
+app/Models/QuestionOption.php
+app/Models/AssessmentAttempt.php
+app/Models/AttemptAnswer.php
+
+# Controllers
+app/Http/Controllers/AssessmentController.php
+app/Http/Controllers/QuestionController.php
+
+# Form Requests
+app/Http/Requests/Assessment/StoreAssessmentRequest.php
+app/Http/Requests/Assessment/UpdateAssessmentRequest.php
+app/Http/Requests/Question/StoreQuestionRequest.php
+
+# Policies
+app/Policies/AssessmentPolicy.php
+
+# Vue Pages
+resources/js/Pages/assessments/Index.vue
+resources/js/Pages/assessments/Create.vue
+resources/js/Pages/assessments/Edit.vue
+resources/js/Pages/assessments/Show.vue
+
+# Tests
+tests/Feature/AssessmentCrudTest.php
+tests/Feature/QuestionCrudTest.php
+```
+
+### Database Schema
+```sql
+-- assessments
+CREATE TABLE assessments (
+    id BIGINT PRIMARY KEY,
+    course_id BIGINT NULL REFERENCES courses(id),
+    section_id BIGINT NULL REFERENCES course_sections(id),
+    lesson_id BIGINT NULL REFERENCES lessons(id),
+    title VARCHAR(255),
+    description TEXT NULL,
+    type ENUM('quiz', 'exam', 'assignment'),
+    passing_score INT DEFAULT 70,
+    time_limit_minutes INT NULL,
+    max_attempts INT NULL,
+    shuffle_questions BOOLEAN DEFAULT FALSE,
+    shuffle_options BOOLEAN DEFAULT FALSE,
+    show_results BOOLEAN DEFAULT TRUE,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- questions
+CREATE TABLE questions (
+    id BIGINT PRIMARY KEY,
+    assessment_id BIGINT REFERENCES assessments(id) ON DELETE CASCADE,
+    type ENUM('single_choice', 'multiple_choice', 'true_false'),
+    content TEXT,
+    explanation TEXT NULL,
+    points INT DEFAULT 1,
+    order INT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- question_options
+CREATE TABLE question_options (
+    id BIGINT PRIMARY KEY,
+    question_id BIGINT REFERENCES questions(id) ON DELETE CASCADE,
+    content TEXT,
+    is_correct BOOLEAN DEFAULT FALSE,
+    order INT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- assessment_attempts
+CREATE TABLE assessment_attempts (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id),
+    assessment_id BIGINT REFERENCES assessments(id),
+    score DECIMAL(5,2) NULL,
+    total_points INT,
+    earned_points INT,
+    status ENUM('in_progress', 'completed', 'abandoned'),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    time_spent_seconds INT NULL,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+-- attempt_answers
+CREATE TABLE attempt_answers (
+    id BIGINT PRIMARY KEY,
+    attempt_id BIGINT REFERENCES assessment_attempts(id) ON DELETE CASCADE,
+    question_id BIGINT REFERENCES questions(id),
+    selected_options JSON,
+    is_correct BOOLEAN,
+    points_earned INT,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+```
+
+### Question Types
+1. **Single Choice** - Select one correct answer
+2. **Multiple Choice** - Select multiple correct answers
+3. **True/False** - Binary choice
+
+---
+
+## Implementation Order
+
+```
+Day 2 Sprint:
+├── 1. Lesson Progress Tracking (2-3 hours)
+│   ├── LessonProgress model
+│   ├── Progress controller & routes
+│   ├── Update enrollment progress calculation
+│   ├── UI: Complete button, sidebar checkmarks
+│   └── Tests
+│
+├── 2. Learner Dashboard Enhancement (2-3 hours)
+│   ├── My Learning section with progress
+│   ├── Invited courses section
+│   ├── Continue learning feature
+│   └── Featured courses carousel
+│
+├── 3. Course Rating (1-2 hours)
+│   ├── Migration & Model
+│   ├── Controller & Routes
+│   ├── StarRating & CourseRating components
+│   └── Tests
+│
+└── 4. Assessment Foundation (4-6 hours)
+    ├── All 5 migrations
+    ├── All 5 models with relationships
+    ├── AssessmentController (CRUD)
+    ├── QuestionController (nested CRUD)
+    ├── Assessment management UI
+    └── Tests
+```
+
+---
+
+## Technical Notes
+
+### Lesson Progress Calculation
+```php
+// Calculate enrollment progress
+public function calculateEnrollmentProgress(Enrollment $enrollment): int
+{
+    $totalLessons = $enrollment->course->lessons()->count();
+    if ($totalLessons === 0) return 0;
+
+    $completedLessons = LessonProgress::where('enrollment_id', $enrollment->id)
+        ->where('is_completed', true)
+        ->count();
+
+    return (int) round(($completedLessons / $totalLessons) * 100);
+}
+```
+
+### Assessment Linking Strategy
+Assessments can be linked at 3 levels:
+1. **Course level**: Final exam (course_id set, others null)
+2. **Section level**: Section quiz (section_id set)
+3. **Lesson level**: Quick quiz (lesson_id set)
+
+### Model Relationships
+```php
+// Assessment
+public function course(): BelongsTo
+public function section(): BelongsTo
+public function lesson(): BelongsTo
+public function questions(): HasMany
+public function attempts(): HasMany
+
+// Question
+public function assessment(): BelongsTo
+public function options(): HasMany
+
+// User
+public function assessmentAttempts(): HasMany
+public function lessonProgress(): HasMany
+```
+
+---
+
+## Testing Requirements
+
+Each feature requires:
+1. **Feature Tests**: HTTP tests for controller actions
+2. **Unit Tests**: Model relationship and calculation tests
+3. **Authorization Tests**: Policy enforcement
+
+### Test Cases Needed
+```
+# Lesson Progress Tests
+- test_enrolled_user_can_mark_lesson_complete
+- test_progress_updates_when_lesson_completed
+- test_enrollment_progress_calculates_correctly
+- test_unenrolled_user_cannot_mark_progress
+
+# Rating Tests
+- test_enrolled_user_can_rate_course
+- test_user_can_only_rate_once
+- test_average_rating_calculates_correctly
+
+# Assessment Tests
+- test_content_manager_can_create_assessment
+- test_can_add_questions_to_assessment
+- test_question_options_saved_correctly
+- test_learner_cannot_create_assessment
+```
+
+---
+
+# Future Phases
+
+## Day 3 - Assessment Taking & Learning Paths
+- Assessment taking UI for learners
+- Auto-grading logic
+- Learning Path CRUD
+- Learning Path enrollment
+
+## Day 4 - Competencies & Certificates
+- Competency framework models
+- Grading scale management
+- Certificate templates
+- Auto-certificate on completion
+
+## Day 5 - Gamification
+- Experience points system
+- Badge definitions
+- Badge awarding logic
+- Leaderboard (optional)
+
+---
+
+## Appendix: Day 1 Implementation Reference
+
+### Technical Decisions Made
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| RBAC | Laravel built-in Gates/Policies | No external package needed, sufficient for requirements |
-| File Storage | Local storage (`storage/app/public`) | Simple setup, can migrate to S3 later |
-| WYSIWYG Editor | TipTap | Modern, Vue 3 native, stores JSON, extensible |
-| Drag & Drop | VueDraggable | Popular, Vue 3 support, based on SortableJS |
+| RBAC | Laravel Gates/Policies | Sufficient for requirements |
+| File Storage | Local storage | Can migrate to S3 later |
+| WYSIWYG Editor | TipTap | Vue 3 native, stores JSON |
+| Drag & Drop | VueDraggable | Vue 3 support |
 
----
-
-## Phase 1: Foundation - Roles & Database Schema
-
-### 1.1 User Roles Migration
-
-Add `role` enum column to users table:
-- `learner` (default)
-- `content_manager`
-- `trainer`
-- `lms_admin`
-
-### 1.2 Core Migrations (in order)
-
-| # | Migration | Key Columns |
-|---|-----------|-------------|
-| 1 | `create_categories_table` | id, name, slug, description, parent_id, order |
-| 2 | `create_tags_table` | id, name, slug |
-| 3 | `create_courses_table` | id, user_id, title, slug, short_description, long_description, objectives (json), prerequisites (json), category_id, thumbnail_path, status (enum: draft/published/archived), visibility (enum: public/restricted/hidden), difficulty_level (enum), estimated_duration_minutes, manual_duration_minutes, published_at, published_by |
-| 4 | `create_course_sections_table` | id, course_id, title, description, order, estimated_duration_minutes |
-| 5 | `create_lessons_table` | id, course_section_id, title, description, order, content_type (enum: text/video/audio/document/youtube/conference), rich_content (json), youtube_url, conference_url, conference_type, estimated_duration_minutes, is_free_preview |
-| 6 | `create_media_table` | id, mediable_type, mediable_id, collection_name, name, file_name, mime_type, disk, path, size, duration_seconds, custom_properties (json), order |
-| 7 | `create_course_tag_table` | course_id, tag_id (pivot) |
-
-### 1.3 Models to Create
-
+### Existing File Structure
 ```
 app/Models/
-├── Category.php
-├── Tag.php
-├── Course.php
-├── CourseSection.php
-├── Lesson.php
-└── Media.php
-```
+├── Category.php ✅
+├── Tag.php ✅
+├── Course.php ✅
+├── CourseSection.php ✅
+├── Lesson.php ✅
+├── Media.php ✅
+├── Enrollment.php ✅
+└── CourseInvitation.php ✅
 
-**Key Relationships:**
-- Course → hasMany Sections → hasMany Lessons
-- Course → belongsToMany Tags
-- Course → belongsTo Category
-- Course → morphMany Media
-- Lesson → morphMany Media
-
-### 1.4 Course Model Schema
-
-```php
-// app/Models/Course.php
-class Course extends Model
-{
-    use HasFactory, SoftDeletes;
-
-    protected $fillable = [
-        'user_id', 'title', 'slug', 'short_description', 'long_description',
-        'objectives', 'prerequisites', 'category_id', 'thumbnail_path',
-        'status', 'visibility', 'difficulty_level', 'estimated_duration_minutes',
-        'manual_duration_minutes', 'published_at', 'published_by',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'objectives' => 'array',
-            'prerequisites' => 'array',
-            'published_at' => 'datetime',
-        ];
-    }
-
-    // Relationships
-    public function user(): BelongsTo
-    public function category(): BelongsTo
-    public function publishedBy(): BelongsTo
-    public function sections(): HasMany
-    public function lessons(): HasManyThrough
-    public function tags(): BelongsToMany
-    public function media(): MorphMany
-
-    // Scopes
-    public function scopePublished(Builder $query): Builder
-    public function scopeDraft(Builder $query): Builder
-    public function scopeVisible(Builder $query): Builder
-
-    // Accessors
-    public function getDurationAttribute(): int
-    public function getTotalLessonsAttribute(): int
-    public function getIsEditableAttribute(): bool
-}
-```
-
----
-
-## Phase 2: Authorization with Gates & Policies
-
-### 2.1 Update User Model
-
-Add role helpers:
-```php
-public function isContentManager(): bool
-public function isTrainer(): bool
-public function isLmsAdmin(): bool
-public function isLearner(): bool
-public function canManageCourses(): bool // content_manager, trainer, lms_admin
-```
-
-### 2.2 CoursePolicy
-
-```php
-// app/Policies/CoursePolicy.php
-viewAny()       → canManageCourses()
-view()          → canManageCourses() OR owner
-create()        → canManageCourses()
-update()        → (owner OR lms_admin) AND not published (unless lms_admin)
-delete()        → (owner AND draft) OR lms_admin
-publish()       → lms_admin only
-setStatus()     → lms_admin only
-setVisibility() → lms_admin only
-```
-
-### 2.3 Register Policies
-
-Register in `app/Providers/AppServiceProvider.php`:
-- CoursePolicy
-- CourseSectionPolicy
-- LessonPolicy
-
----
-
-## Phase 3: Course CRUD
-
-### 3.1 Controllers
-
-```
 app/Http/Controllers/
-├── CourseController.php           # index, create, store, show, edit, update, destroy
-├── CourseSectionController.php    # store, update, destroy
-├── LessonController.php           # create, store, edit, update, destroy
-├── CourseReorderController.php    # sections(), lessons()
-├── CoursePublishController.php    # publish, unpublish, archive
-├── CourseDurationController.php   # recalculate, updateManual
-└── MediaController.php            # store, destroy
+├── CourseController.php ✅
+├── CourseSectionController.php ✅
+├── LessonController.php ✅
+├── CourseReorderController.php ✅
+├── CoursePublishController.php ✅
+├── EnrollmentController.php ✅
+└── LessonPreviewController.php ✅
+
+app/Policies/
+├── CoursePolicy.php ✅
+└── LessonPolicy.php ✅
+
+resources/js/Pages/
+├── courses/
+│   ├── Index.vue ✅
+│   ├── Create.vue ✅
+│   ├── Edit.vue ✅
+│   ├── Detail.vue ✅
+│   └── Browse.vue ✅
+└── lessons/
+    ├── Show.vue ✅ (Udemy-style)
+    └── Edit.vue ✅
 ```
-
-### 3.2 Form Requests
-
-```
-app/Http/Requests/
-├── Course/
-│   ├── StoreCourseRequest.php
-│   └── UpdateCourseRequest.php
-├── Section/
-│   ├── StoreSectionRequest.php
-│   └── UpdateSectionRequest.php
-├── Lesson/
-│   ├── StoreLessonRequest.php
-│   └── UpdateLessonRequest.php
-└── Media/
-    └── StoreMediaRequest.php
-```
-
-### 3.3 Validation Rules Example
-
-```php
-// StoreCourseRequest
-public function rules(): array
-{
-    return [
-        'title' => ['required', 'string', 'max:255'],
-        'short_description' => ['nullable', 'string', 'max:500'],
-        'long_description' => ['nullable', 'string'],
-        'objectives' => ['nullable', 'array'],
-        'objectives.*' => ['string', 'max:500'],
-        'prerequisites' => ['nullable', 'array'],
-        'prerequisites.*' => ['string', 'max:500'],
-        'category_id' => ['nullable', 'exists:categories,id'],
-        'thumbnail' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
-        'difficulty_level' => ['required', Rule::in(['beginner', 'intermediate', 'advanced'])],
-        'tags' => ['nullable', 'array'],
-        'tags.*' => ['exists:tags,id'],
-    ];
-}
-```
-
-### 3.4 Routes (`routes/courses.php`)
-
-```php
-Route::middleware(['auth', 'verified'])->group(function () {
-    // Course CRUD
-    Route::resource('courses', CourseController::class);
-
-    // Sections
-    Route::post('courses/{course}/sections', [CourseSectionController::class, 'store'])
-        ->name('courses.sections.store');
-    Route::patch('sections/{section}', [CourseSectionController::class, 'update'])
-        ->name('sections.update');
-    Route::delete('sections/{section}', [CourseSectionController::class, 'destroy'])
-        ->name('sections.destroy');
-
-    // Lessons
-    Route::get('sections/{section}/lessons/create', [LessonController::class, 'create'])
-        ->name('sections.lessons.create');
-    Route::post('sections/{section}/lessons', [LessonController::class, 'store'])
-        ->name('sections.lessons.store');
-    Route::get('lessons/{lesson}/edit', [LessonController::class, 'edit'])
-        ->name('lessons.edit');
-    Route::patch('lessons/{lesson}', [LessonController::class, 'update'])
-        ->name('lessons.update');
-    Route::delete('lessons/{lesson}', [LessonController::class, 'destroy'])
-        ->name('lessons.destroy');
-
-    // Reordering (AJAX)
-    Route::post('courses/{course}/sections/reorder', [CourseReorderController::class, 'sections'])
-        ->name('courses.sections.reorder');
-    Route::post('sections/{section}/lessons/reorder', [CourseReorderController::class, 'lessons'])
-        ->name('sections.lessons.reorder');
-
-    // Publishing (LMS Admin)
-    Route::post('courses/{course}/publish', [CoursePublishController::class, 'publish'])
-        ->name('courses.publish');
-    Route::post('courses/{course}/unpublish', [CoursePublishController::class, 'unpublish'])
-        ->name('courses.unpublish');
-    Route::post('courses/{course}/archive', [CoursePublishController::class, 'archive'])
-        ->name('courses.archive');
-
-    // Duration
-    Route::post('courses/{course}/duration/recalculate', [CourseDurationController::class, 'recalculate'])
-        ->name('courses.duration.recalculate');
-    Route::patch('courses/{course}/duration', [CourseDurationController::class, 'updateManual'])
-        ->name('courses.duration.update');
-
-    // Media
-    Route::post('media', [MediaController::class, 'store'])->name('media.store');
-    Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
-});
-```
-
----
-
-## Phase 4: Vue Frontend Components
-
-### 4.1 Page Components
-
-```
-resources/js/pages/courses/
-├── Index.vue                 # Course list with filters/search
-├── Create.vue                # Initial course creation form
-├── Show.vue                  # Course preview/details
-└── Edit/
-    ├── Index.vue             # Main edit page (tab container)
-    ├── Details.vue           # Basic info tab
-    ├── Outline.vue           # Sections/Lessons drag-drop accordion
-    └── Settings.vue          # Status, visibility, publish actions
-
-resources/js/pages/lessons/
-└── Edit.vue                  # Full lesson editor with TipTap
-```
-
-### 4.2 Reusable Components
-
-```
-resources/js/components/courses/
-├── CourseCard.vue            # Card for course list
-├── CourseForm.vue            # Shared form fields
-├── CourseOutline.vue         # Draggable accordion container
-├── SectionItem.vue           # Single section with lessons
-├── LessonItem.vue            # Single lesson row
-├── ThumbnailUploader.vue     # Image upload with preview
-├── ObjectivesEditor.vue      # Dynamic list input
-├── CategorySelect.vue        # Category dropdown
-├── TagsInput.vue             # Multi-select tags
-├── DifficultySelect.vue      # Difficulty dropdown
-├── StatusBadge.vue           # Status indicator
-└── DurationDisplay.vue       # Formatted duration
-
-resources/js/components/lessons/
-├── LessonEditor.vue          # TipTap WYSIWYG wrapper
-├── ContentTypeSelector.vue   # Content type tabs/buttons
-├── VideoUploader.vue         # Video upload
-├── AudioUploader.vue         # Audio upload
-├── DocumentUploader.vue      # PDF/PPT/DOC upload
-├── YouTubeEmbed.vue          # YouTube URL input + preview
-└── ConferenceLink.vue        # Zoom/Meet input
-```
-
----
-
-## Phase 5: NPM Dependencies
-
-```bash
-npm install vuedraggable@next
-npm install @tiptap/vue-3 @tiptap/starter-kit @tiptap/extension-link @tiptap/extension-image @tiptap/extension-youtube @tiptap/extension-placeholder
-```
-
----
-
-## Phase 6: Factories & Seeders (Indonesian Context)
-
-### 6.1 Factories
-
-```
-database/factories/
-├── CategoryFactory.php
-├── TagFactory.php
-├── CourseFactory.php
-├── CourseSectionFactory.php
-└── LessonFactory.php
-```
-
-### 6.2 Seeders
-
-```
-database/seeders/
-├── CategorySeeder.php        # Indonesian categories
-├── TagSeeder.php             # Indonesian tags
-├── CourseSeeder.php          # Sample courses with sections/lessons
-└── DatabaseSeeder.php        # Updated to include new seeders
-```
-
-### 6.3 Sample Indonesian Data
-
-**Categories:**
-- Teknologi Informasi
-- Bisnis & Manajemen
-- Bahasa
-- Desain & Multimedia
-- Keuangan & Akuntansi
-- Soft Skills
-
-**Sample Course Titles:**
-- Pengantar Pemrograman Python
-- Manajemen Proyek untuk Pemula
-- Desain UI/UX Modern
-- Analisis Data dengan Excel
-- Bahasa Inggris Bisnis
-- Kepemimpinan Efektif
-
----
-
-## Phase 7: Tests
-
-### 7.1 Feature Tests
-
-```
-tests/Feature/
-├── Course/
-│   ├── CourseListTest.php
-│   ├── CourseCreateTest.php
-│   ├── CourseUpdateTest.php
-│   ├── CourseDeleteTest.php
-│   ├── CoursePublishTest.php
-│   └── CoursePolicyTest.php
-├── Section/
-│   ├── SectionCrudTest.php
-│   └── SectionReorderTest.php
-├── Lesson/
-│   ├── LessonCrudTest.php
-│   └── LessonReorderTest.php
-└── Media/
-    └── MediaUploadTest.php
-```
-
-### 7.2 Unit Tests
-
-```
-tests/Unit/
-├── Models/
-│   ├── CourseTest.php        # Scopes, accessors, relationships
-│   └── LessonTest.php
-└── Services/
-    └── CourseDurationCalculatorTest.php
-```
-
-### 7.3 Example Test
-
-```php
-class CourseCreateTest extends TestCase
-{
-    use RefreshDatabase;
-
-    public function test_content_manager_can_create_course(): void
-    {
-        $user = User::factory()->create(['role' => 'content_manager']);
-
-        $response = $this->actingAs($user)->post(route('courses.store'), [
-            'title' => 'Kursus Pemrograman Python',
-            'short_description' => 'Belajar Python dari dasar',
-            'difficulty_level' => 'beginner',
-        ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('courses', [
-            'title' => 'Kursus Pemrograman Python',
-            'user_id' => $user->id,
-            'status' => 'draft',
-        ]);
-    }
-
-    public function test_learner_cannot_create_course(): void
-    {
-        $user = User::factory()->create(['role' => 'learner']);
-
-        $response = $this->actingAs($user)->post(route('courses.store'), [
-            'title' => 'Test Course',
-            'difficulty_level' => 'beginner',
-        ]);
-
-        $response->assertForbidden();
-    }
-}
-```
-
----
-
-## Implementation Order (Step by Step)
-
-### Step 1: Database & Models
-1. Create `add_role_to_users_table` migration
-2. Create all migrations (categories, tags, courses, sections, lessons, media, pivot)
-3. Create all Model classes with relationships
-4. Update User model with role helpers
-5. Run migrations
-
-### Step 2: Authorization
-1. Create CoursePolicy
-2. Create CourseSectionPolicy
-3. Create LessonPolicy
-4. Register policies in AppServiceProvider
-
-### Step 3: Backend - Course CRUD
-1. Create Form Request classes
-2. Create CourseController
-3. Create routes/courses.php and register in bootstrap/app.php
-4. Write Course CRUD tests
-
-### Step 4: Frontend - Course List & Create
-1. Create CourseCard component
-2. Create courses/Index.vue page
-3. Create CourseForm component
-4. Create courses/Create.vue page
-5. Test course creation flow
-
-### Step 5: Frontend - Course Edit with Outline
-1. Install VueDraggable
-2. Create SectionItem, LessonItem components
-3. Create CourseOutline component with drag-drop
-4. Create courses/Edit/Outline.vue page
-5. Create CourseSectionController, CourseReorderController
-6. Write section/lesson reorder tests
-
-### Step 6: Lesson Editor
-1. Install TipTap packages
-2. Create LessonEditor component
-3. Create content type components (uploaders, YouTube, conference)
-4. Create lessons/Edit.vue page
-5. Create LessonController
-6. Create MediaController for uploads
-7. Write lesson tests
-
-### Step 7: Publishing & Polish
-1. Create CoursePublishController
-2. Create courses/Edit/Settings.vue
-3. Create CourseDurationController
-4. Implement edit restrictions for published courses
-5. Complete all remaining tests
-
-### Step 8: Seeders & Final Testing
-1. Create all factories
-2. Create all seeders with Indonesian data
-3. Run full test suite
-4. Manual testing of all features
-
----
-
-## Files Summary
-
-### New Files to Create
-
-| Category | Count | Files |
-|----------|-------|-------|
-| Migrations | 8 | role, categories, tags, courses, sections, lessons, media, pivot |
-| Models | 6 | Category, Tag, Course, CourseSection, Lesson, Media |
-| Policies | 3 | CoursePolicy, CourseSectionPolicy, LessonPolicy |
-| Controllers | 7 | Course, Section, Lesson, Reorder, Publish, Duration, Media |
-| Form Requests | 6 | Store/Update for Course, Section, Lesson |
-| Vue Pages | 7 | Index, Create, Show, Edit/*, Lesson Edit |
-| Vue Components | 19 | courses/*, lessons/* |
-| Factories | 5 | Category, Tag, Course, Section, Lesson |
-| Seeders | 4 | Category, Tag, Course, DatabaseSeeder |
-| Tests | 12+ | Feature and Unit tests |
-
-### Files to Modify
-
-| File | Changes |
-|------|---------|
-| `app/Models/User.php` | Add role column cast, role helper methods |
-| `app/Providers/AppServiceProvider.php` | Register policies |
-| `bootstrap/app.php` | Register courses routes file |
-| `database/seeders/DatabaseSeeder.php` | Include new seeders |
-| `resources/js/layouts/AppLayout.vue` | Add Courses navigation link |
-
----
-
-## Future Enhancements (Not in Current Scope)
-
-Based on course-story.md, these features are planned for future implementation:
-- Assessment linking to courses/sections/lessons
-- Competency linking to courses
-- Learning Paths management
-- H5P, SCORM import
-- LTI integration
-- Learner enrollment and progress tracking
-- Certificates, badges, and XP system

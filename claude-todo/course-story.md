@@ -27,7 +27,7 @@
 - able to set course difficulty level (default : beginner/intermediate/advance).
 - system able to set estimate section duration and course duration (based on video duration, average reading, video conf duration,etc).
 - able to edit section duration and course duration estimated by system.
-- able to ask system to re-estimate section duration and course duration.
+- able to ask system to re-estimate section duration and course duration regarless of the content type.
 
 - **publishing** 
 - created course as set as status as : Draft and wait for lms admin to publish it.
@@ -42,10 +42,10 @@
 
 ### Learning paths
 - able to manage learning path using Learning Path CRUD.
-- able to create learning path by selecting/associating several courses.
-- able to arrange the order of learning path in drag and drop fashioned from courses selected.
+- able to create learning path by selecting/associating several courses .
+- able to arrange the order of learning path/sequence of courses in drag and drop fashioned from courses selected.
 - system will calculate learning path duration based on course duration.
-- manage assessment UI using interactive page (no refresh) when possible.
+- manage learning path UI using interactive page (no refresh) when possible.
 
 
 ### Assessments
@@ -77,7 +77,7 @@
 **manage by CRUD**
 - able to manage program/curriculum using Program CRUD.
 - set start date and due date on program .
-- able to links together a set of required learning paths/courses for particular program.
+- able to links together a set of required learning path or courses or combination of both for particular program.
 
 ### Course 
 **manage by CRUD**
@@ -88,6 +88,7 @@
 **see**
 - able to see all courses regardless of the status and visibility.
 - able to see detailed information learner user progress and activities on course/learning path when visiting learner user profile.
+- able to see progress of learner regardless of the content type (text, document, video, youtube link, audio) in percentage.
 
 **publish**
 - able to publish course/learning path proposed by content manager role users.
@@ -140,7 +141,8 @@
 - able to preview lesson, even not enrolled to course.
 
 **progress**
-- able to resume their last lesson on selected enrolled course.
+- able to resume their last lesson on selected enrolled course in all content type lesson (text, document, video, youtube link, audio).
+- able to see their progress percentage on every lesson regardless of the content type.
 - able to take assignment or quizzes that belong to course user enrolled.
 - able to resume their last quiz / assessment taken.
 - able to get certificate on particular course, given they pass the minimum prerequisites of the course.

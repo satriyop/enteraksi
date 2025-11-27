@@ -10,6 +10,7 @@ import {
     BookOpen,
     ChevronLeft,
     ChevronRight,
+    ChevronDown,
     PlayCircle,
     FileText,
     Eye,
@@ -22,7 +23,7 @@ import {
     Play,
     Pause,
 } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 
 interface Category {
     id: number;
@@ -105,6 +106,34 @@ const appName = computed(() => page.props.name || 'E-Learning');
 const isEnrolling = ref(false);
 const isAudioPlaying = ref(false);
 const audioPlayer = ref<HTMLAudioElement | null>(null);
+
+// Section expand/collapse state - auto-expand current lesson's section
+const expandedSections = ref<Set<number>>(new Set());
+
+onMounted(() => {
+    // Find and expand the section containing the current lesson
+    for (const section of props.course.sections) {
+        if (section.lessons.some(l => l.id === props.lesson.id)) {
+            expandedSections.value.add(section.id);
+            break;
+        }
+    }
+});
+
+const toggleSection = (sectionId: number) => {
+    if (expandedSections.value.has(sectionId)) {
+        expandedSections.value.delete(sectionId);
+    } else {
+        expandedSections.value.add(sectionId);
+    }
+};
+
+const isSectionExpanded = (sectionId: number) => expandedSections.value.has(sectionId);
+
+// Check if a section has any preview lessons
+const sectionHasPreviewLessons = (section: Section) => {
+    return section.lessons.some(l => l.is_free_preview);
+};
 
 const lessonTypeIcon = (type: string) => {
     switch (type) {
@@ -483,31 +512,65 @@ const getDocumentType = (mimeType: string): string => {
                             </CardContent>
                         </Card>
 
-                        <!-- Other Preview Lessons -->
-                        <Card v-if="allPreviewLessons.length > 1">
+                        <!-- Preview Lessons by Section -->
+                        <Card v-if="allPreviewLessons.length > 0">
                             <CardHeader>
                                 <CardTitle class="text-base flex items-center gap-2">
                                     <Eye class="h-4 w-4" />
-                                    Materi Preview Lainnya
+                                    Materi Preview
                                 </CardTitle>
                             </CardHeader>
                             <CardContent class="p-0">
-                                <div class="divide-y">
-                                    <Link
-                                        v-for="previewLesson in allPreviewLessons"
-                                        :key="previewLesson.id"
-                                        :href="`/courses/${course.id}/lessons/${previewLesson.id}/preview`"
-                                        class="flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors"
-                                        :class="{ 'bg-primary/5': previewLesson.id === lesson.id }"
-                                    >
-                                        <PlayCircle class="h-4 w-4 shrink-0" :class="previewLesson.id === lesson.id ? 'text-primary' : 'text-muted-foreground'" />
-                                        <div class="min-w-0 flex-1">
-                                            <p class="text-sm truncate" :class="{ 'font-medium text-primary': previewLesson.id === lesson.id }">
-                                                {{ previewLesson.title }}
-                                            </p>
-                                            <p class="text-xs text-muted-foreground truncate">{{ previewLesson.sectionTitle }}</p>
+                                <div class="max-h-96 overflow-y-auto">
+                                    <template v-for="section in course.sections" :key="section.id">
+                                        <div
+                                            v-if="sectionHasPreviewLessons(section)"
+                                            class="border-b last:border-b-0"
+                                        >
+                                            <!-- Section Header -->
+                                            <button
+                                                type="button"
+                                                @click="toggleSection(section.id)"
+                                                class="flex w-full items-center justify-between px-4 py-2 text-left hover:bg-muted/50 transition-colors"
+                                            >
+                                                <div class="flex items-center gap-2">
+                                                    <ChevronDown
+                                                        v-if="isSectionExpanded(section.id)"
+                                                        class="h-4 w-4 shrink-0"
+                                                    />
+                                                    <ChevronRight v-else class="h-4 w-4 shrink-0" />
+                                                    <span class="text-sm font-medium truncate">{{ section.title }}</span>
+                                                </div>
+                                                <span class="text-xs text-muted-foreground shrink-0">
+                                                    {{ section.lessons.filter(l => l.is_free_preview).length }} preview
+                                                </span>
+                                            </button>
+
+                                            <!-- Section Preview Lessons -->
+                                            <div
+                                                v-if="isSectionExpanded(section.id)"
+                                                class="bg-muted/30"
+                                            >
+                                                <template v-for="(lessonItem, index) in section.lessons" :key="lessonItem.id">
+                                                    <Link
+                                                        v-if="lessonItem.is_free_preview"
+                                                        :href="`/courses/${course.id}/lessons/${lessonItem.id}/preview`"
+                                                        class="flex items-center gap-3 px-4 py-2 border-t hover:bg-muted/50 transition-colors"
+                                                        :class="{ 'bg-primary/5': lessonItem.id === lesson.id }"
+                                                    >
+                                                        <span class="flex h-5 w-5 items-center justify-center rounded-full text-xs shrink-0"
+                                                            :class="lessonItem.id === lesson.id ? 'bg-primary text-primary-foreground' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'"
+                                                        >
+                                                            {{ index + 1 }}
+                                                        </span>
+                                                        <p class="text-sm truncate flex-1" :class="{ 'font-medium text-primary': lessonItem.id === lesson.id }">
+                                                            {{ lessonItem.title }}
+                                                        </p>
+                                                    </Link>
+                                                </template>
+                                            </div>
                                         </div>
-                                    </Link>
+                                    </template>
                                 </div>
                             </CardContent>
                         </Card>

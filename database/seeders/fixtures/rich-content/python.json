@@ -1,0 +1,531 @@
+{
+    "type": "doc",
+    "content": [
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Pendahuluan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Python adalah bahasa pemrograman tingkat tinggi yang diciptakan oleh Guido van Rossum dan pertama kali dirilis pada tahun 1991. Nama \"Python\" terinspirasi dari acara komedi Inggris \"Monty Python's Flying Circus\" yang sangat disukai oleh Guido. Bahasa ini dirancang dengan filosofi yang menekankan keterbacaan kode dan sintaks yang bersih, memungkinkan programmer untuk mengekspresikan konsep dalam lebih sedikit baris kode dibandingkan bahasa lain seperti C++ atau Java."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Dalam dunia perbankan Indonesia, Python telah menjadi salah satu bahasa pemrograman yang paling banyak digunakan untuk berbagai keperluan, mulai dari analisis data nasabah, deteksi fraud, hingga pengembangan sistem trading otomatis. Bank-bank besar seperti BCA, Mandiri, dan BNI telah mengadopsi Python dalam infrastruktur teknologi mereka untuk meningkatkan efisiensi operasional dan memberikan layanan yang lebih baik kepada nasabah."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Python memiliki komunitas yang sangat besar dan aktif di seluruh dunia, termasuk Indonesia. Hal ini berarti tersedia banyak sekali library, framework, dan tools yang dapat membantu Anda dalam mengembangkan aplikasi. Dari machine learning dengan TensorFlow dan PyTorch, hingga web development dengan Django dan Flask, Python menawarkan ekosistem yang lengkap untuk berbagai kebutuhan pengembangan perangkat lunak."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Konsep Dasar Python"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Python menggunakan indentasi untuk menentukan blok kode, berbeda dengan bahasa lain yang menggunakan kurung kurawal. Ini membuat kode Python lebih mudah dibaca dan memaksa programmer untuk menulis kode yang rapi. Setiap level indentasi biasanya menggunakan 4 spasi, meskipun tab juga diperbolehkan asalkan konsisten di seluruh file."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Variabel dalam Python bersifat dinamis, artinya Anda tidak perlu mendeklarasikan tipe data saat membuat variabel. Python akan secara otomatis menentukan tipe data berdasarkan nilai yang diberikan. Misalnya, jika Anda menulis \"x = 10\", Python akan mengenali x sebagai integer, sedangkan \"x = 10.5\" akan dikenali sebagai float."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Tipe Data Dasar"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Integer (int): Bilangan bulat seperti 1, 100, -50, dapat menyimpan nilai tanpa batas ukuran"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Float: Bilangan desimal seperti 3.14, -0.001, 2.5e10 untuk notasi ilmiah"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "String (str): Teks yang diapit tanda kutip tunggal atau ganda, mendukung Unicode"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Boolean (bool): Nilai True atau False untuk logika kondisional"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "List: Koleksi terurut yang dapat diubah, seperti [1, 2, 3, \"empat\"]"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Dictionary (dict): Pasangan key-value seperti {\"nama\": \"Budi\", \"usia\": 25}"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Tuple: Koleksi terurut yang tidak dapat diubah (immutable)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Set: Koleksi unik tanpa urutan tertentu"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Memahami tipe data sangat penting karena setiap tipe memiliki operasi dan method yang berbeda. Misalnya, string memiliki method seperti upper(), lower(), dan split(), sedangkan list memiliki append(), remove(), dan sort()."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Struktur Kontrol dan Fungsi"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Struktur kontrol adalah fondasi dari logika pemrograman. Python menyediakan beberapa struktur kontrol utama: if-elif-else untuk percabangan, for loop untuk iterasi koleksi, dan while loop untuk perulangan berdasarkan kondisi. Setiap struktur kontrol diakhiri dengan titik dua (:) dan blok kode di dalamnya harus diindentasi."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Fungsi dalam Python didefinisikan menggunakan kata kunci \"def\" diikuti nama fungsi dan parameter dalam tanda kurung. Fungsi membantu mengorganisir kode menjadi unit-unit yang dapat digunakan kembali (reusable). Python juga mendukung lambda function untuk fungsi sederhana satu baris, serta decorator untuk memodifikasi perilaku fungsi."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 3
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Langkah-langkah Membuat Fungsi"
+                }
+            ]
+        },
+        {
+            "type": "orderedList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Tentukan nama fungsi yang deskriptif menggunakan snake_case (huruf kecil dengan underscore)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Definisikan parameter yang diperlukan, termasuk default values jika ada"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Tulis docstring untuk mendokumentasikan fungsi (opsional tapi sangat direkomendasikan)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan logika fungsi dalam blok kode yang diindentasi"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Gunakan return statement untuk mengembalikan nilai (jika diperlukan)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Tambahkan type hints untuk parameter dan return value (Python 3.5+)"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "blockquote",
+            "content": [
+                {
+                    "type": "paragraph",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "Tips: Fungsi yang baik sebaiknya melakukan satu tugas spesifik (Single Responsibility Principle). Jika fungsi Anda terlalu panjang atau melakukan banyak hal, pertimbangkan untuk memecahnya menjadi fungsi-fungsi yang lebih kecil."
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Contoh Penerapan dalam Dunia Perbankan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Berikut adalah contoh penerapan Python untuk menghitung bunga deposito sederhana yang sering digunakan dalam sistem perbankan:"
+                }
+            ]
+        },
+        {
+            "type": "codeBlock",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "def hitung_bunga_deposito(pokok, suku_bunga, jangka_waktu_bulan):\n    \"\"\"\n    Menghitung bunga deposito sederhana.\n    \n    Args:\n        pokok: Jumlah deposito awal (dalam Rupiah)\n        suku_bunga: Suku bunga per tahun (dalam persen)\n        jangka_waktu_bulan: Jangka waktu deposito (dalam bulan)\n    \n    Returns:\n        Total bunga yang diperoleh\n    \"\"\"\n    bunga_per_bulan = suku_bunga \/ 100 \/ 12\n    total_bunga = pokok * bunga_per_bulan * jangka_waktu_bulan\n    return total_bunga\n\n# Contoh penggunaan\ndeposito = 100_000_000  # Rp 100 juta\nsuku_bunga = 5.5  # 5.5% per tahun\njangka_waktu = 12  # 12 bulan\n\nbunga = hitung_bunga_deposito(deposito, suku_bunga, jangka_waktu)\nprint(f\"Bunga yang diperoleh: Rp {bunga:,.0f}\")"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Contoh di atas menunjukkan bagaimana Python dapat digunakan untuk kalkulasi finansial dengan kode yang mudah dibaca dan dipahami. Penggunaan docstring dan type hints membuat kode lebih mudah dimaintain oleh tim development."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Dalam praktiknya, sistem perbankan menggunakan perhitungan yang lebih kompleks dengan mempertimbangkan faktor-faktor seperti pajak bunga (PPh 20%), bunga majemuk, dan berbagai skenario produk deposito yang berbeda."
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Latihan dan Refleksi"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Untuk memperdalam pemahaman Anda tentang Python, cobalah mengerjakan latihan-latihan berikut:"
+                }
+            ]
+        },
+        {
+            "type": "bulletList",
+            "content": [
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buatlah program kalkulator sederhana yang dapat melakukan operasi +, -, *, \/ dengan validasi input"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Implementasikan fungsi untuk mengecek apakah nomor rekening valid (10-16 digit angka)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buat program yang dapat membaca file CSV berisi data transaksi dan menghitung total per kategori"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Kembangkan fungsi untuk format nominal uang ke format Rupiah (contoh: 1000000 → Rp 1.000.000)"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "listItem",
+                    "content": [
+                        {
+                            "type": "paragraph",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Buatlah class sederhana untuk merepresentasikan akun nasabah dengan method deposit dan withdraw"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "heading",
+            "attrs": {
+                "level": 2
+            },
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Kesimpulan"
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Python adalah bahasa pemrograman yang sangat powerful namun tetap mudah dipelajari. Dengan sintaks yang bersih dan ekosistem yang kaya, Python menjadi pilihan tepat untuk berbagai kebutuhan development, terutama di industri perbankan dan finansial. Filosofi \"readability counts\" yang dianut Python membuat kode lebih mudah dimaintain dan dikembangkan oleh tim."
+                }
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Langkah selanjutnya setelah menguasai dasar-dasar Python adalah mempelajari library-library populer seperti pandas untuk data analysis, numpy untuk komputasi numerik, dan requests untuk HTTP operations. Dengan fondasi yang kuat, Anda akan siap untuk mengembangkan aplikasi yang lebih kompleks dan berkontribusi dalam proyek-proyek nyata di industri."
+                }
+            ]
+        }
+    ]
+}

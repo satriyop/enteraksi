@@ -61,7 +61,7 @@ class LearnerDashboardController extends Controller
         // Invited courses - pending invitations
         $invitedCourses = $user->pendingInvitations()
             ->with([
-                'course' => fn ($q) => $q->with(['user:id,name', 'category:id,name']),
+                'course' => fn ($q) => $q->with(['user:id,name', 'category:id,name'])->withCount('lessons'),
                 'inviter:id,name',
             ])
             ->get()
@@ -76,9 +76,11 @@ class LearnerDashboardController extends Controller
                 'duration' => $invitation->course->duration,
                 'instructor' => $invitation->course->user->name,
                 'category' => $invitation->course->category?->name,
+                'lessons_count' => $invitation->course->lessons_count,
                 'invited_by' => $invitation->inviter->name,
                 'message' => $invitation->message,
-                'invited_at' => $invitation->created_at->toDateTimeString(),
+                'invited_at' => $invitation->created_at->toISOString(),
+                'expires_at' => $invitation->expires_at?->toISOString(),
             ]);
 
         // Browse courses - published public courses (excluding enrolled and invited)

@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Services\TipTapRenderer;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
@@ -26,7 +29,7 @@ class Lesson extends Model
         'is_free_preview',
     ];
 
-    protected $appends = ['youtube_video_id'];
+    protected $appends = ['youtube_video_id', 'rich_content_html'];
 
     protected function casts(): array
     {
@@ -58,6 +61,11 @@ class Lesson extends Model
         return $this->morphMany(Media::class, 'mediable');
     }
 
+    public function progress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
+    }
+
     public function getYoutubeVideoIdAttribute(): ?string
     {
         if (! $this->youtube_url) {
@@ -87,5 +95,23 @@ class Lesson extends Model
     public function getHasConferenceAttribute(): bool
     {
         return $this->content_type === 'conference';
+    }
+
+    /**
+     * Get rich content as HTML.
+     */
+    protected function richContentHtml(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if (! $this->rich_content) {
+                    return null;
+                }
+
+                $renderer = new TipTapRenderer;
+
+                return $renderer->render($this->rich_content);
+            }
+        );
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Enrollment extends Model
 {
@@ -51,6 +52,55 @@ class Enrollment extends Model
     public function lastLesson(): BelongsTo
     {
         return $this->belongsTo(Lesson::class, 'last_lesson_id');
+    }
+
+    public function lessonProgress(): HasMany
+    {
+        return $this->hasMany(LessonProgress::class);
+    }
+
+    public function getProgressForLesson(Lesson $lesson): ?LessonProgress
+    {
+        return $this->lessonProgress()->where('lesson_id', $lesson->id)->first();
+    }
+
+    public function getOrCreateProgressForLesson(Lesson $lesson): LessonProgress
+    {
+        return $this->lessonProgress()->firstOrCreate(
+            ['lesson_id' => $lesson->id],
+            [
+                'current_page' => 1,
+                'highest_page_reached' => 1,
+                'time_spent_seconds' => 0,
+                'is_completed' => false,
+            ]
+        );
+    }
+
+    public function recalculateCourseProgress(): void
+    {
+        $totalLessons = $this->course->lessons()->count();
+
+        if ($totalLessons === 0) {
+            $this->progress_percentage = 0;
+            $this->save();
+
+            return;
+        }
+
+        $completedLessons = $this->lessonProgress()
+            ->where('is_completed', true)
+            ->count();
+
+        $this->progress_percentage = round(($completedLessons / $totalLessons) * 100, 1);
+
+        // Mark enrollment as completed if all lessons are done
+        if ($completedLessons >= $totalLessons && $this->status !== 'completed') {
+            $this->status = 'completed';
+            $this->completed_at = now();
+        }
+
+        $this->save();
     }
 
     public function scopeActive(Builder $query): Builder

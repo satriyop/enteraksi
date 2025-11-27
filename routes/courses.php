@@ -7,6 +7,7 @@ use App\Http\Controllers\CourseSectionController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonPreviewController;
+use App\Http\Controllers\LessonProgressController;
 use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Lesson View (for enrolled learners)
     Route::get('courses/{course}/lessons/{lesson}', [LessonController::class, 'show'])
         ->name('courses.lessons.show');
+
+    // Lesson Progress (for enrolled learners)
+    Route::patch('courses/{course}/lessons/{lesson}/progress', [LessonProgressController::class, 'update'])
+        ->name('courses.lessons.progress.update');
+    Route::patch('courses/{course}/lessons/{lesson}/progress/media', [LessonProgressController::class, 'updateMedia'])
+        ->name('courses.lessons.progress.media');
+    Route::post('courses/{course}/lessons/{lesson}/complete', [LessonProgressController::class, 'complete'])
+        ->name('courses.lessons.progress.complete');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
