@@ -3,6 +3,8 @@ import { index, edit, destroy } from '@/actions/App/Http/Controllers/CourseContr
 import { publish, unpublish, archive } from '@/actions/App/Http/Controllers/CoursePublishController';
 import PageHeader from '@/components/crud/PageHeader.vue';
 import FormSection from '@/components/crud/FormSection.vue';
+import FilterTabs from '@/components/crud/FilterTabs.vue';
+import CourseInvitationsTab from '@/components/courses/CourseInvitationsTab.vue';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -34,6 +36,7 @@ import {
     Target,
     CheckCircle,
     Layers,
+    Mail,
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
@@ -91,16 +94,35 @@ interface Course {
     created_at: string;
 }
 
+interface Invitation {
+    id: number;
+    user: {
+        id: number;
+        name: string;
+        email: string;
+    };
+    status: 'pending' | 'accepted' | 'declined' | 'expired';
+    message: string | null;
+    invited_by: string;
+    invited_at: string;
+    expires_at: string | null;
+    responded_at: string | null;
+}
+
 interface Props {
     course: Course;
+    invitations?: Invitation[];
     can: {
         update: boolean;
         delete: boolean;
         publish: boolean;
+        invite?: boolean;
     };
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    invitations: () => [],
+});
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -114,6 +136,23 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const expandedSections = ref<number[]>(props.course.sections.map((s) => s.id));
+const activeTab = ref('content');
+
+const tabs = computed(() => {
+    const tabList = [
+        { value: 'content', label: 'Konten Kursus', count: totalLessons.value },
+    ];
+
+    if (props.can.invite) {
+        tabList.push({
+            value: 'invitations',
+            label: 'Undangan Peserta',
+            count: props.invitations.length,
+        });
+    }
+
+    return tabList;
+});
 
 const toggleSection = (sectionId: number) => {
     const idx = expandedSections.value.indexOf(sectionId);
@@ -223,7 +262,7 @@ const totalSectionDuration = (section: Section) => {
 
         <div class="flex h-full flex-1 flex-col">
             <div class="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/90 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-                <div class="absolute inset-0 bg-[url('/images/hero-pattern.svg')] opacity-10" />
+                <div class="absolute inset-0 opacity-10" />
                 <div class="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                     <Link
                         :href="index().url"
@@ -276,45 +315,45 @@ const totalSectionDuration = (section: Section) => {
                             <template v-if="can.publish">
                                 <Button
                                     v-if="course.status === 'draft'"
-                                    class="bg-white text-primary hover:bg-white/90"
+                                    class="justify-start bg-white text-primary hover:bg-white/90 lg:w-full"
                                     @click="publishCourse"
                                 >
-                                    <Send class="mr-2 h-4 w-4" />
-                                    Terbitkan
+                                    <Send class="size-4 shrink-0" />
+                                    <span>Terbitkan</span>
                                 </Button>
                                 <Button
                                     v-if="course.status === 'published'"
                                     variant="outline"
-                                    class="border-white/30 bg-transparent text-white hover:bg-white/10"
+                                    class="justify-start border-white/30 bg-transparent text-white hover:bg-white/10 lg:w-full"
                                     @click="unpublishCourse"
                                 >
-                                    <RotateCcw class="mr-2 h-4 w-4" />
-                                    Tarik Kembali
+                                    <RotateCcw class="size-4 shrink-0" />
+                                    <span>Tarik Kembali</span>
                                 </Button>
                                 <Button
                                     v-if="course.status !== 'archived'"
                                     variant="outline"
-                                    class="border-white/30 bg-transparent text-white hover:bg-white/10"
+                                    class="justify-start border-white/30 bg-transparent text-white hover:bg-white/10 lg:w-full"
                                     @click="archiveCourse"
                                 >
-                                    <Archive class="mr-2 h-4 w-4" />
-                                    Arsipkan
+                                    <Archive class="size-4 shrink-0" />
+                                    <span>Arsipkan</span>
                                 </Button>
                             </template>
-                            <Link v-if="can.update" :href="edit(course.id).url">
-                                <Button variant="outline" class="w-full border-white/30 bg-transparent text-white hover:bg-white/10">
-                                    <Pencil class="mr-2 h-4 w-4" />
-                                    Edit Kursus
+                            <Link v-if="can.update" :href="edit(course.id).url" class="lg:w-full">
+                                <Button variant="outline" class="w-full justify-start border-white/30 bg-transparent text-white hover:bg-white/10">
+                                    <Pencil class="size-4 shrink-0" />
+                                    <span>Edit Kursus</span>
                                 </Button>
                             </Link>
                             <Button
                                 v-if="can.delete"
                                 variant="outline"
-                                class="border-red-300/50 bg-transparent text-red-200 hover:bg-red-500/20"
+                                class="justify-start border-red-300/50 bg-transparent text-red-200 hover:bg-red-500/20 lg:w-full"
                                 @click="deleteCourse"
                             >
-                                <Trash2 class="mr-2 h-4 w-4" />
-                                Hapus
+                                <Trash2 class="size-4 shrink-0" />
+                                <span>Hapus</span>
                             </Button>
                         </div>
                     </div>
@@ -324,7 +363,10 @@ const totalSectionDuration = (section: Section) => {
             <div class="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div class="grid gap-8 lg:grid-cols-3">
                     <div class="space-y-6 lg:col-span-2">
-                        <FormSection title="Konten Kursus" :description="`${course.sections.length} seksi • ${totalLessons} materi • ${formatDuration(course.estimated_duration_minutes)} total durasi`">
+                        <FilterTabs v-model="activeTab" :tabs="tabs" />
+
+                        <div v-show="activeTab === 'content'">
+                            <FormSection title="Konten Kursus" :description="`${course.sections.length} seksi • ${totalLessons} materi • ${formatDuration(course.estimated_duration_minutes)} total durasi`">
                             <div v-if="course.sections.length === 0" class="py-8 text-center">
                                 <Layers class="mx-auto h-12 w-12 text-muted-foreground/50" />
                                 <p class="mt-4 text-muted-foreground">
@@ -394,7 +436,7 @@ const totalSectionDuration = (section: Section) => {
                             </div>
                         </FormSection>
 
-                        <FormSection v-if="course.long_description" title="Tentang Kursus">
+                        <FormSection v-if="course.long_description" title="Tentang Kursus" class="mt-6">
                             <p class="whitespace-pre-wrap leading-relaxed text-muted-foreground">
                                 {{ course.long_description }}
                             </p>
@@ -413,7 +455,7 @@ const totalSectionDuration = (section: Section) => {
                             </div>
                         </FormSection>
 
-                        <FormSection v-if="course.prerequisites && course.prerequisites.length > 0" title="Prasyarat">
+                        <FormSection v-if="course.prerequisites && course.prerequisites.length > 0" title="Prasyarat" class="mt-6">
                             <ul class="space-y-2">
                                 <li
                                     v-for="(prereq, idx) in course.prerequisites"
@@ -425,6 +467,15 @@ const totalSectionDuration = (section: Section) => {
                                 </li>
                             </ul>
                         </FormSection>
+                        </div>
+
+                        <div v-show="activeTab === 'invitations'">
+                            <CourseInvitationsTab
+                                :course-id="course.id"
+                                :invitations="invitations"
+                                :can-invite="can.invite ?? false"
+                            />
+                        </div>
                     </div>
 
                     <div class="space-y-6">

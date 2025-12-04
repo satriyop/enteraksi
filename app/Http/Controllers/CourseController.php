@@ -6,6 +6,7 @@ use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
 use App\Models\Category;
 use App\Models\Course;
+use App\Models\CourseInvitation;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -140,18 +141,58 @@ class CourseController extends Controller
         // Check if course is under revision (enrolled user viewing draft course)
         $isUnderRevision = $enrollment && $course->status === 'draft';
 
+        // Get ratings data
+        $userRating = $user->courseRatings()->where('course_id', $course->id)->first();
+        $ratings = $course->ratings()
+            ->with('user:id,name')
+            ->latest()
+            ->take(10)
+            ->get();
+        $averageRating = $course->average_rating;
+        $ratingsCount = $course->ratings_count;
+
         // Use different view for learners
         $viewName = $user->isLearner() ? 'courses/Detail' : 'courses/Show';
+
+        // Load invitations for admin view
+        $invitations = [];
+        if (! $user->isLearner()) {
+            $invitations = $course->invitations()
+                ->with(['user:id,name,email', 'inviter:id,name'])
+                ->latest()
+                ->get()
+                ->map(fn ($inv) => [
+                    'id' => $inv->id,
+                    'user' => [
+                        'id' => $inv->user->id,
+                        'name' => $inv->user->name,
+                        'email' => $inv->user->email,
+                    ],
+                    'status' => $inv->status,
+                    'message' => $inv->message,
+                    'invited_by' => $inv->inviter->name,
+                    'invited_at' => $inv->created_at->toISOString(),
+                    'expires_at' => $inv->expires_at?->toISOString(),
+                    'responded_at' => $inv->responded_at?->toISOString(),
+                ]);
+        }
 
         return Inertia::render($viewName, [
             'course' => $course,
             'enrollment' => $enrollment,
             'isUnderRevision' => $isUnderRevision,
+            'userRating' => $userRating,
+            'ratings' => $ratings,
+            'averageRating' => $averageRating,
+            'ratingsCount' => $ratingsCount,
+            'invitations' => $invitations,
             'can' => [
                 'update' => Gate::allows('update', $course),
                 'delete' => Gate::allows('delete', $course),
                 'publish' => Gate::allows('publish', $course),
                 'enroll' => Gate::allows('enroll', $course),
+                'rate' => $enrollment && ! $userRating,
+                'invite' => Gate::allows('create', [CourseInvitation::class, $course]),
             ],
         ]);
     }

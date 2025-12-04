@@ -85,6 +85,11 @@ class User extends Authenticatable
             });
     }
 
+    public function courseRatings(): HasMany
+    {
+        return $this->hasMany(CourseRating::class);
+    }
+
     public function isLearner(): bool
     {
         return $this->role === 'learner';

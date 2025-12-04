@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import Navbar from '@/components/home/Navbar.vue';
 import Footer from '@/components/home/Footer.vue';
+import StarRating from '@/components/StarRating.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Textarea } from '@/components/ui/textarea';
+import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
 import {
     Clock,
     Users,
@@ -24,9 +26,13 @@ import {
     Video as VideoCall,
     Youtube,
     AlertTriangle,
+    Star,
+    Pencil,
+    Trash2,
 } from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ref, computed } from 'vue';
+import { store, update, destroy } from '@/actions/App/Http/Controllers/CourseRatingController';
 
 interface Category {
     id: number;
@@ -86,15 +92,30 @@ interface Enrollment {
     progress_percentage: number;
 }
 
+interface CourseRating {
+    id: number;
+    user_id: number;
+    course_id: number;
+    rating: number;
+    review: string | null;
+    created_at: string;
+    user: { id: number; name: string };
+}
+
 interface Props {
     course: Course;
     enrollment: Enrollment | null;
     isUnderRevision: boolean;
+    userRating: CourseRating | null;
+    ratings: CourseRating[];
+    averageRating: number | null;
+    ratingsCount: number;
     can: {
         update: boolean;
         delete: boolean;
         publish: boolean;
         enroll: boolean;
+        rate: boolean;
     };
 }
 
@@ -206,6 +227,59 @@ const handleUnenroll = () => {
 const isEnrolled = computed(() => {
     return props.enrollment && props.enrollment.status === 'active';
 });
+
+// Rating form
+const isEditingRating = ref(false);
+const ratingForm = useForm({
+    rating: props.userRating?.rating || 0,
+    review: props.userRating?.review || '',
+});
+
+const submitRating = () => {
+    if (props.userRating) {
+        // Update existing rating
+        ratingForm.patch(update.url(props.course.id, props.userRating.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                isEditingRating.value = false;
+            },
+        });
+    } else {
+        // Create new rating
+        ratingForm.post(store.url(props.course.id), {
+            preserveScroll: true,
+        });
+    }
+};
+
+const deleteRating = () => {
+    if (!props.userRating || !confirm('Apakah Anda yakin ingin menghapus rating ini?')) {
+        return;
+    }
+    router.delete(destroy.url(props.course.id, props.userRating.id), {
+        preserveScroll: true,
+    });
+};
+
+const startEditRating = () => {
+    ratingForm.rating = props.userRating?.rating || 0;
+    ratingForm.review = props.userRating?.review || '';
+    isEditingRating.value = true;
+};
+
+const cancelEditRating = () => {
+    ratingForm.rating = props.userRating?.rating || 0;
+    ratingForm.review = props.userRating?.review || '';
+    isEditingRating.value = false;
+};
+
+const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+};
 
 // Get the first lesson for "Continue Learning" button
 const firstLesson = computed(() => {
@@ -433,6 +507,154 @@ const firstLesson = computed(() => {
                             </Badge>
                         </div>
                     </div>
+
+                    <!-- Ratings & Reviews Section -->
+                    <Card class="mt-6">
+                        <CardHeader>
+                            <CardTitle class="flex items-center gap-2">
+                                <Star class="h-5 w-5" />
+                                Rating & Ulasan
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent class="space-y-6">
+                            <!-- Rating Summary -->
+                            <div class="flex items-center gap-6 pb-4 border-b">
+                                <div class="text-center">
+                                    <div class="text-4xl font-bold text-amber-600 dark:text-amber-500">
+                                        {{ averageRating?.toFixed(1) || '-' }}
+                                    </div>
+                                    <StarRating
+                                        :rating="averageRating || 0"
+                                        readonly
+                                        size="sm"
+                                        class="mt-1"
+                                    />
+                                    <div class="text-sm text-muted-foreground mt-1">
+                                        {{ ratingsCount }} ulasan
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- User Rating Form (only for enrolled users) -->
+                            <div v-if="isEnrolled" class="pb-4 border-b">
+                                <h4 class="font-medium mb-3">
+                                    {{ userRating ? 'Rating Anda' : 'Berikan Rating' }}
+                                </h4>
+
+                                <!-- Display existing rating -->
+                                <div v-if="userRating && !isEditingRating" class="space-y-3">
+                                    <div class="flex items-center gap-2">
+                                        <StarRating :rating="userRating.rating" readonly size="md" />
+                                        <span class="text-sm text-muted-foreground">
+                                            {{ formatDate(userRating.created_at) }}
+                                        </span>
+                                    </div>
+                                    <p v-if="userRating.review" class="text-sm">
+                                        {{ userRating.review }}
+                                    </p>
+                                    <div class="flex gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            @click="startEditRating"
+                                        >
+                                            <Pencil class="h-4 w-4 mr-1" />
+                                            Edit
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            @click="deleteRating"
+                                        >
+                                            <Trash2 class="h-4 w-4 mr-1" />
+                                            Hapus
+                                        </Button>
+                                    </div>
+                                </div>
+
+                                <!-- Rating form (new or edit) -->
+                                <form
+                                    v-else
+                                    @submit.prevent="submitRating"
+                                    class="space-y-4"
+                                >
+                                    <div>
+                                        <label class="text-sm font-medium mb-2 block">Rating</label>
+                                        <StarRating
+                                            v-model="ratingForm.rating"
+                                            size="lg"
+                                        />
+                                        <p v-if="ratingForm.errors.rating" class="text-sm text-destructive mt-1">
+                                            {{ ratingForm.errors.rating }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium mb-2 block">
+                                            Ulasan (opsional)
+                                        </label>
+                                        <Textarea
+                                            v-model="ratingForm.review"
+                                            placeholder="Bagikan pengalaman belajar Anda..."
+                                            rows="3"
+                                        />
+                                        <p v-if="ratingForm.errors.review" class="text-sm text-destructive mt-1">
+                                            {{ ratingForm.errors.review }}
+                                        </p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <Button
+                                            type="submit"
+                                            :disabled="ratingForm.processing || ratingForm.rating === 0"
+                                        >
+                                            {{ ratingForm.processing ? 'Menyimpan...' : (userRating ? 'Perbarui' : 'Kirim') }}
+                                        </Button>
+                                        <Button
+                                            v-if="userRating"
+                                            type="button"
+                                            variant="outline"
+                                            @click="cancelEditRating"
+                                        >
+                                            Batal
+                                        </Button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Reviews List -->
+                            <div v-if="ratings.length > 0" class="space-y-4">
+                                <h4 class="font-medium">Ulasan Terbaru</h4>
+                                <div
+                                    v-for="rating in ratings"
+                                    :key="rating.id"
+                                    class="border-b pb-4 last:border-b-0 last:pb-0"
+                                >
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                                            <User class="h-4 w-4 text-primary" />
+                                        </div>
+                                        <div>
+                                            <div class="font-medium text-sm">{{ rating.user.name }}</div>
+                                            <div class="flex items-center gap-2">
+                                                <StarRating :rating="rating.rating" readonly size="sm" />
+                                                <span class="text-xs text-muted-foreground">
+                                                    {{ formatDate(rating.created_at) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p v-if="rating.review" class="text-sm text-muted-foreground ml-10">
+                                        {{ rating.review }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- No reviews yet -->
+                            <div v-else class="text-center py-4 text-muted-foreground">
+                                <Star class="h-8 w-8 mx-auto mb-2 opacity-50" />
+                                <p>Belum ada ulasan untuk kursus ini.</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <!-- Sidebar -->
@@ -504,6 +726,21 @@ const firstLesson = computed(() => {
                         <!-- Course Info Card -->
                         <Card>
                             <CardContent class="p-6 space-y-4">
+                                <!-- Rating summary in sidebar -->
+                                <div v-if="averageRating" class="flex items-center gap-3">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
+                                        <Star class="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-muted-foreground">Rating</div>
+                                        <div class="flex items-center gap-1">
+                                            <span class="font-bold text-amber-600 dark:text-amber-400">{{ averageRating.toFixed(1) }}</span>
+                                            <StarRating :rating="averageRating" readonly size="sm" />
+                                            <span class="text-sm text-muted-foreground">({{ ratingsCount }})</span>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="flex items-center gap-3">
                                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
                                         <User class="h-5 w-5 text-primary" />

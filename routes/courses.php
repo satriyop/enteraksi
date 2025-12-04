@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\CourseInvitationController;
 use App\Http\Controllers\CoursePublishController;
+use App\Http\Controllers\CourseRatingController;
 use App\Http\Controllers\CourseReorderController;
 use App\Http\Controllers\CourseSectionController;
 use App\Http\Controllers\EnrollmentController;
@@ -39,11 +41,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('courses/{course}/unenroll', [EnrollmentController::class, 'destroy'])
         ->name('courses.unenroll');
 
-    // Course Invitations
+    // Course Ratings
+    Route::post('courses/{course}/ratings', [CourseRatingController::class, 'store'])
+        ->name('courses.ratings.store');
+    Route::patch('courses/{course}/ratings/{rating}', [CourseRatingController::class, 'update'])
+        ->name('courses.ratings.update');
+    Route::delete('courses/{course}/ratings/{rating}', [CourseRatingController::class, 'destroy'])
+        ->name('courses.ratings.destroy');
+
+    // Course Invitations (Learner accept/decline)
     Route::post('invitations/{invitation}/accept', [EnrollmentController::class, 'acceptInvitation'])
         ->name('invitations.accept');
     Route::post('invitations/{invitation}/decline', [EnrollmentController::class, 'declineInvitation'])
         ->name('invitations.decline');
+
+    // Course Invitations (Admin create/manage)
+    Route::post('courses/{course}/invitations', [CourseInvitationController::class, 'store'])
+        ->name('courses.invitations.store');
+    Route::post('courses/{course}/invitations/bulk', [CourseInvitationController::class, 'bulkStore'])
+        ->name('courses.invitations.bulk');
+    Route::delete('courses/{course}/invitations/{invitation}', [CourseInvitationController::class, 'destroy'])
+        ->name('courses.invitations.destroy');
+
+    // Learner Search API (for invitation autocomplete)
+    Route::get('api/users/search', [CourseInvitationController::class, 'searchLearners'])
+        ->name('api.users.search');
 
     // Sections
     Route::post('courses/{course}/sections', [CourseSectionController::class, 'store'])

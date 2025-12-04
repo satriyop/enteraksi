@@ -87,6 +87,16 @@ class Course extends Model
             ->withTimestamps();
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(CourseRating::class);
+    }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(CourseInvitation::class);
+    }
+
     public function media(): MorphMany
     {
         return $this->morphMany(Media::class, 'mediable');
@@ -139,6 +149,18 @@ class Course extends Model
         }
 
         return Storage::disk('public')->url($this->thumbnail_path);
+    }
+
+    public function getAverageRatingAttribute(): ?float
+    {
+        $avg = $this->ratings()->avg('rating');
+
+        return $avg !== null ? round($avg, 1) : null;
+    }
+
+    public function getRatingsCountAttribute(): int
+    {
+        return $this->ratings()->count();
     }
 
     public function calculateEstimatedDuration(): int

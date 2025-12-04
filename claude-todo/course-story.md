@@ -92,8 +92,10 @@
 
 **publish**
 - able to publish course/learning path proposed by content manager role users.
-- able to grant certificate to learner role users when passing 
+- able to grant certificate to learner role users when passing.
 
+### Cohort/Group
+- able to manage Cohort/Group of learner.
 
 ### Grading Scale
 - able to manage grading scale for competencies and job role. Default grading scale to seed into system are : 
