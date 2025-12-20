@@ -29,6 +29,7 @@ import {
     Video as VideoCall,
     Clock,
     Save,
+    Loader2,
 } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
 import draggable from 'vuedraggable';
@@ -119,6 +120,9 @@ watch(() => props.course.sections, (newSections) => {
         }
     });
 }, { deep: true });
+
+// Duration re-estimation state
+const processingDuration = ref(false);
 
 // Form states
 const objectives = ref<string[]>(
@@ -292,6 +296,38 @@ const totalLessons = computed(() =>
 );
 
 const isEditable = computed(() => props.course.status !== 'published');
+
+// Recalculate course duration
+const recalculateDuration = () => {
+    if (!isEditable.value) return;
+    
+    processingDuration.value = true;
+    
+    fetch(`/courses/${props.course.id}/recalculate-duration`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-XSRF-TOKEN': getCsrfToken(),
+        },
+        credentials: 'same-origin',
+    })
+    .then(response => {
+        if (response.ok) {
+            // Refresh the page to get updated duration
+            router.reload({ preserveScroll: true });
+        } else {
+            throw new Error('Failed to recalculate duration');
+        }
+    })
+    .catch(error => {
+        console.error('Error recalculating duration:', error);
+        alert('Gagal memperbarui durasi. Silakan coba lagi.');
+    })
+    .finally(() => {
+        processingDuration.value = false;
+    });
+};
 </script>
 
 <template>
@@ -365,6 +401,25 @@ const isEditable = computed(() => props.course.status !== 'published');
                         </div>
                     </CardHeader>
                     <CardContent>
+                        <!-- Duration Re-estimation Button -->
+                        <div v-if="isEditable" class="mb-4 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <Clock class="h-4 w-4 text-muted-foreground" />
+                                <span class="text-sm text-muted-foreground">
+                                    Durasi terhitung: {{ formatDuration(course.estimated_duration_minutes) }}
+                                </span>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                @click="recalculateDuration"
+                                :disabled="processingDuration"
+                            >
+                                <Loader2 v-if="processingDuration" class="mr-2 h-4 w-4 animate-spin" />
+                                <span>{{ processingDuration ? 'Memperbarui...' : 'Perbarui Durasi' }}</span>
+                            </Button>
+                        </div>
+                        
                         <!-- Add Section Form -->
                         <div v-if="showAddSection" class="mb-4 rounded-lg border bg-muted/30 p-4">
                             <h4 class="mb-3 font-medium">Bagian Baru</h4>

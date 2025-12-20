@@ -105,6 +105,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('courses/{course}/visibility', [CoursePublishController::class, 'updateVisibility'])
         ->name('courses.visibility');
 
+    // Duration Re-estimation
+    Route::post('courses/{course}/recalculate-duration', [\App\Http\Controllers\CourseDurationController::class, 'recalculate'])
+        ->name('courses.recalculate-duration');
+
     // Media
     Route::post('media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
