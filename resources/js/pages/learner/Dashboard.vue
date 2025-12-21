@@ -22,6 +22,7 @@ import {
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { useTimeAgo } from '@vueuse/core';
+import MyLearningCard from '@/components/courses/MyLearningCard.vue';
 
 interface CourseItem {
     id: number;
@@ -258,56 +259,22 @@ const declineInvitation = (item: InvitedCourse) => {
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        <Card v-for="item in myLearning" :key="item.id" class="group overflow-hidden">
-                            <div class="relative aspect-video bg-muted">
-                                <img
-                                    v-if="item.thumbnail_path"
-                                    :src="item.thumbnail_path"
-                                    :alt="item.title"
-                                    class="h-full w-full object-cover"
-                                />
-                                <div v-else class="flex h-full items-center justify-center">
-                                    <BookOpen class="h-12 w-12 text-muted-foreground" />
-                                </div>
-                                <!-- Progress Overlay -->
-                                <div class="absolute bottom-0 left-0 right-0 h-1 bg-muted">
-                                    <div
-                                        class="h-full bg-primary transition-all"
-                                        :style="{ width: `${item.progress_percentage}%` }"
-                                    />
-                                </div>
-                                <!-- Play Button -->
-                                <Link
-                                    :href="item.last_lesson_id ? `/lessons/${item.last_lesson_id}` : `/courses/${item.course_id}`"
-                                    class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
-                                >
-                                    <div class="rounded-full bg-white p-3">
-                                        <Play class="h-6 w-6 text-primary" />
-                                    </div>
-                                </Link>
-                            </div>
-                            <CardContent class="p-4">
-                                <Link :href="`/courses/${item.course_id}`">
-                                    <h3 class="font-semibold line-clamp-2 hover:text-primary">
-                                        {{ item.title }}
-                                    </h3>
-                                </Link>
-                                <p class="mt-1 text-sm text-muted-foreground">
-                                    {{ item.instructor }}
-                                </p>
-                                <div class="mt-2 flex items-center justify-between text-sm">
-                                    <span class="text-muted-foreground">
-                                        {{ item.progress_percentage }}% selesai
-                                    </span>
-                                    <Link
-                                        :href="item.last_lesson_id ? `/lessons/${item.last_lesson_id}` : `/courses/${item.course_id}`"
-                                        class="text-primary hover:underline"
-                                    >
-                                        Lanjutkan
-                                    </Link>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <MyLearningCard
+                            v-for="item in myLearning"
+                            :key="item.id"
+                            :course="{
+                                id: item.id,
+                                title: item.title,
+                                slug: item.slug,
+                                thumbnail_path: item.thumbnail_path,
+                                instructor: item.instructor,
+                                progress_percentage: item.progress_percentage,
+                                last_lesson_id: item.last_lesson_id,
+                                duration: item.duration,
+                                difficulty_level: item.difficulty_level,
+                                lessons_count: item.lessons_count,
+                            }"
+                        />
                     </div>
                 </section>
 

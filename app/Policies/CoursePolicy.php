@@ -12,13 +12,7 @@ class CoursePolicy
      */
     public function viewAny(User $user): bool
     {
-        // Learners cannot access the courses index
-        if ($user->isLearner()) {
-            return false;
-        }
-
-        // Content managers, trainers, and LMS admins can access the courses index
-        return $user->canManageCourses();
+        return true;
     }
 
     /**

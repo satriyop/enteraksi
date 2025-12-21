@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Course;
-use App\Models\Enrollment;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,10 +14,10 @@ class LessonProgressController extends Controller
     public function update(Request $request, Course $course, Lesson $lesson): JsonResponse
     {
         $validated = $request->validate([
-            'current_page' => ['required', 'integer', 'min:1'],
-            'total_pages' => ['nullable', 'integer', 'min:1'],
+            'current_page'        => ['required', 'integer', 'min:1'],
+            'total_pages'         => ['nullable', 'integer', 'min:1'],
             'pagination_metadata' => ['nullable', 'array'],
-            'time_spent_seconds' => ['nullable', 'numeric', 'min:0'],
+            'time_spent_seconds'  => ['nullable', 'numeric', 'min:0'],
         ]);
 
         // Verify the lesson belongs to this course
@@ -29,7 +27,7 @@ class LessonProgressController extends Controller
         }
 
         // Get user enrollment
-        $user = $request->user();
+        $user       = $request->user();
         $enrollment = $user->enrollments()
             ->where('course_id', $course->id)
             ->where('status', 'active')
@@ -66,14 +64,15 @@ class LessonProgressController extends Controller
         $enrollment->save();
 
         return response()->json([
-            'message' => 'Progress berhasil disimpan.',
-            'progress' => [
-                'current_page' => $progress->current_page,
-                'total_pages' => $progress->total_pages,
+            'message'    => 'Progress berhasil disimpan.',
+            'progress'   => [
+                'current_page'         => $progress->current_page,
+                'total_pages'          => $progress->total_pages,
                 'highest_page_reached' => $progress->highest_page_reached,
-                'is_completed' => $progress->is_completed,
-                'progress_percentage' => $progress->progress_percentage,
+                'is_completed'         => $progress->is_completed,
+                'progress_percentage'  => $progress->progress_percentage,
                 'time_spent_formatted' => $progress->time_spent_formatted,
+                'pagination_metadata'  => $progress->pagination_metadata,
             ],
             'enrollment' => [
                 'progress_percentage' => $enrollment->progress_percentage,
@@ -98,7 +97,7 @@ class LessonProgressController extends Controller
         }
 
         // Get user enrollment
-        $user = $request->user();
+        $user       = $request->user();
         $enrollment = $user->enrollments()
             ->where('course_id', $course->id)
             ->where('status', 'active')
@@ -124,12 +123,12 @@ class LessonProgressController extends Controller
         $enrollment->save();
 
         return response()->json([
-            'message' => 'Progress media berhasil disimpan.',
-            'progress' => [
-                'media_position_seconds' => $progress->media_position_seconds,
-                'media_duration_seconds' => $progress->media_duration_seconds,
+            'message'    => 'Progress media berhasil disimpan.',
+            'progress'   => [
+                'media_position_seconds'    => $progress->media_position_seconds,
+                'media_duration_seconds'    => $progress->media_duration_seconds,
                 'media_progress_percentage' => $progress->media_progress_percentage,
-                'is_completed' => $progress->is_completed,
+                'is_completed'              => $progress->is_completed,
             ],
             'enrollment' => [
                 'progress_percentage' => $enrollment->fresh()->progress_percentage,
@@ -149,7 +148,7 @@ class LessonProgressController extends Controller
         }
 
         // Get user enrollment
-        $user = $request->user();
+        $user       = $request->user();
         $enrollment = $user->enrollments()
             ->where('course_id', $course->id)
             ->where('status', 'active')
@@ -169,15 +168,20 @@ class LessonProgressController extends Controller
             $progress->markCompleted();
         }
 
+        // Update last lesson on enrollment
+        $enrollment->last_lesson_id = $lesson->id;
+        $enrollment->save();
+
         return response()->json([
-            'message' => 'Pelajaran selesai.',
-            'progress' => [
+            'message'    => 'Pelajaran selesai.',
+            'progress'   => [
                 'is_completed' => $progress->is_completed,
                 'completed_at' => $progress->completed_at,
             ],
             'enrollment' => [
                 'progress_percentage' => $enrollment->fresh()->progress_percentage,
-                'status' => $enrollment->fresh()->status,
+                'status'              => $enrollment->fresh()->status,
+                'last_lesson_id'      => $enrollment->last_lesson_id,
             ],
         ]);
     }
