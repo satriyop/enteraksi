@@ -37,6 +37,7 @@ import {
     CheckCircle,
     Layers,
     Mail,
+    Plus,
 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
@@ -548,6 +549,23 @@ const totalSectionDuration = (section: Section) => {
                                     </Badge>
                                 </div>
                             </FormSection>
+
+                           <FormSection title="Penilaian">
+                               <div class="space-y-3">
+                                   <Link :href="`/courses/${course.id}/assessments`" class="block w-full">
+                                       <Button variant="outline" class="w-full justify-start gap-2">
+                                           <FileText class="h-4 w-4" />
+                                           <span>Lihat Penilaian</span>
+                                       </Button>
+                                   </Link>
+                                   <Link :href="`/courses/${course.id}/assessments/create`" class="block w-full">
+                                       <Button class="w-full justify-start gap-2">
+                                           <Plus class="h-4 w-4" />
+                                           <span>Buat Penilaian</span>
+                                       </Button>
+                                   </Link>
+                               </div>
+                           </FormSection>
                         </div>
                     </div>
                 </div>

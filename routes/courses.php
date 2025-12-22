@@ -112,4 +112,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Media
     Route::post('media', [MediaController::class, 'store'])->name('media.store');
     Route::delete('media/{media}', [MediaController::class, 'destroy'])->name('media.destroy');
+
+    // Assessments
+    Route::prefix('courses/{course}/assessments')->group(function () {
+        Route::get('/', [\App\Http\Controllers\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('create', [\App\Http\Controllers\AssessmentController::class, 'create'])->name('assessments.create');
+        Route::post('/', [\App\Http\Controllers\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('{assessment}', [\App\Http\Controllers\AssessmentController::class, 'show'])->name('assessments.show');
+        Route::get('{assessment}/edit', [\App\Http\Controllers\AssessmentController::class, 'edit'])->name('assessments.edit');
+        Route::put('{assessment}', [\App\Http\Controllers\AssessmentController::class, 'update'])->name('assessments.update');
+        Route::delete('{assessment}', [\App\Http\Controllers\AssessmentController::class, 'destroy'])->name('assessments.destroy');
+        Route::post('{assessment}/publish', [\App\Http\Controllers\AssessmentController::class, 'publish'])->name('assessments.publish');
+        Route::post('{assessment}/unpublish', [\App\Http\Controllers\AssessmentController::class, 'unpublish'])->name('assessments.unpublish');
+        Route::post('{assessment}/archive', [\App\Http\Controllers\AssessmentController::class, 'archive'])->name('assessments.archive');
+        Route::post('{assessment}/start', [\App\Http\Controllers\AssessmentController::class, 'startAttempt'])->name('assessments.start');
+        Route::get('{assessment}/attempts/{attempt}', [\App\Http\Controllers\AssessmentController::class, 'attempt'])->name('assessments.attempt');
+        Route::post('{assessment}/attempts/{attempt}/submit', [\App\Http\Controllers\AssessmentController::class, 'submitAttempt'])->name('assessments.attempt.submit');
+        Route::get('{assessment}/attempts/{attempt}/complete', [\App\Http\Controllers\AssessmentController::class, 'attemptComplete'])->name('assessments.attempt.complete');
+        Route::get('{assessment}/attempts/{attempt}/grade', [\App\Http\Controllers\AssessmentController::class, 'grade'])->name('assessments.grade');
+        Route::post('{assessment}/attempts/{attempt}/grade', [\App\Http\Controllers\AssessmentController::class, 'submitGrade'])->name('assessments.grade.submit');
+
+        // Questions
+        Route::post('{assessment}/questions', [\App\Http\Controllers\QuestionController::class, 'store'])->name('assessments.questions.store');
+        Route::put('{assessment}/questions/{question}', [\App\Http\Controllers\QuestionController::class, 'update'])->name('assessments.questions.update');
+        Route::delete('{assessment}/questions/{question}', [\App\Http\Controllers\QuestionController::class, 'destroy'])->name('assessments.questions.destroy');
+        Route::post('{assessment}/questions/reorder', [\App\Http\Controllers\QuestionController::class, 'reorder'])->name('assessments.questions.reorder');
+    });
 });
