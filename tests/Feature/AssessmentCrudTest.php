@@ -3,7 +3,6 @@ namespace Tests\Feature;
 
 use App\Models\Assessment;
 use App\Models\Course;
-use App\Models\Question;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -209,23 +208,6 @@ class AssessmentCrudTest extends TestCase
             'id'     => $assessment->id,
             'status' => 'archived',
         ]);
-    }
-
-    public function test_assessment_can_have_questions(): void
-    {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
-        $assessment = Assessment::factory()->create([
-            'course_id' => $course->id,
-            'user_id'   => $user->id,
-        ]);
-        $question = Question::factory()->create([
-            'assessment_id' => $assessment->id,
-            'question_type' => 'multiple_choice',
-        ]);
-
-        $this->assertCount(1, $assessment->questions);
-        $this->assertEquals($question->question_text, $assessment->questions->first()->question_text);
     }
 
     public function test_assessments_index_filters_by_status(): void

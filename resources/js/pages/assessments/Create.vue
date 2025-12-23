@@ -13,6 +13,20 @@ import { Form, Head, Link } from '@inertiajs/vue3';
 import { Plus, X, Clock, Target, ListChecks, Settings, Eye, EyeOff, Shuffle } from 'lucide-vue-next';
 import { ref } from 'vue';
 
+interface FormData {
+    title: string;
+    description: string;
+    instructions: string;
+    time_limit_minutes: number | undefined;
+    passing_score: number;
+    max_attempts: number;
+    shuffle_questions: boolean;
+    show_correct_answers: boolean;
+    allow_review: boolean;
+    status: string;
+    visibility: string;
+}
+
 interface Course {
     id: number;
     title: string;
@@ -39,7 +53,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
 ];
 
-const form = ref({
+const form = ref<FormData>({
     title: '',
     description: '',
     instructions: '',
@@ -68,6 +82,7 @@ const form = ref({
 
             <Form
                 v-bind="AssessmentController.store.form(props.course.id)"
+                :data="form"
                 class="grid gap-6 lg:grid-cols-3"
                 v-slot="{ errors, processing }"
             >
@@ -200,6 +215,7 @@ const form = ref({
                                     v-model:checked="form.shuffle_questions"
                                 />
                             </div>
+                            <InputError :message="errors.shuffle_questions" class="mt-1" />
 
                             <div class="flex items-center justify-between rounded-lg border p-4">
                                 <div class="flex items-center gap-3">
@@ -217,6 +233,7 @@ const form = ref({
                                     v-model:checked="form.show_correct_answers"
                                 />
                             </div>
+                            <InputError :message="errors.show_correct_answers" class="mt-1" />
 
                             <div class="flex items-center justify-between rounded-lg border p-4">
                                 <div class="flex items-center gap-3">
@@ -234,6 +251,7 @@ const form = ref({
                                     v-model:checked="form.allow_review"
                                 />
                             </div>
+                            <InputError :message="errors.allow_review" class="mt-1" />
                         </div>
                     </FormSection>
                 </div>

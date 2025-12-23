@@ -30,9 +30,9 @@ class StoreAssessmentRequest extends FormRequest
             'time_limit_minutes'   => ['nullable', 'integer', 'min:1', 'max:360'],
             'passing_score'        => ['required', 'integer', 'min:0', 'max:100'],
             'max_attempts'         => ['required', 'integer', 'min:1', 'max:10'],
-            'shuffle_questions'    => ['required', 'boolean'],
-            'show_correct_answers' => ['required', 'boolean'],
-            'allow_review'         => ['required', 'boolean'],
+            'shuffle_questions'    => ['sometimes', 'boolean'],
+            'show_correct_answers' => ['sometimes', 'boolean'],
+            'allow_review'         => ['sometimes', 'boolean'],
             'status'               => ['required', Rule::in(['draft', 'published', 'archived'])],
             'visibility'           => ['required', Rule::in(['public', 'restricted', 'hidden'])],
         ];

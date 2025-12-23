@@ -133,7 +133,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('{assessment}/attempts/{attempt}/grade', [\App\Http\Controllers\AssessmentController::class, 'submitGrade'])->name('assessments.grade.submit');
 
         // Questions
+        Route::get('{assessment}/questions', [\App\Http\Controllers\QuestionController::class, 'index'])->name('assessments.questions.index');
         Route::post('{assessment}/questions', [\App\Http\Controllers\QuestionController::class, 'store'])->name('assessments.questions.store');
+        Route::put('{assessment}/questions', [\App\Http\Controllers\QuestionController::class, 'bulkUpdate'])->name('assessments.questions.bulkUpdate');
         Route::put('{assessment}/questions/{question}', [\App\Http\Controllers\QuestionController::class, 'update'])->name('assessments.questions.update');
         Route::delete('{assessment}/questions/{question}', [\App\Http\Controllers\QuestionController::class, 'destroy'])->name('assessments.questions.destroy');
         Route::post('{assessment}/questions/reorder', [\App\Http\Controllers\QuestionController::class, 'reorder'])->name('assessments.questions.reorder');

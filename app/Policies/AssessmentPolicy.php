@@ -87,19 +87,15 @@ class AssessmentPolicy
             return false;
         }
 
+        // LMS Admin can update any assessment
+        // Content managers can update their own assessments
+        if ($user->isLmsAdmin() or ($user->isContentManager() && $assessment->user_id === $user->id)) {
+            return true;
+        }
+
         // Cannot update published assessments
         if ($assessment->status === 'published') {
             return false;
-        }
-
-        // LMS Admin can update any assessment
-        if ($user->isLmsAdmin()) {
-            return true;
-        }
-
-        // Content managers can update their own assessments
-        if ($user->isContentManager() && $assessment->user_id === $user->id) {
-            return true;
         }
 
         return false;

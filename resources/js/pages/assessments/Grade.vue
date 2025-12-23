@@ -98,7 +98,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
     {
         title: 'Penilaian',
-        href: AssessmentController.grade().url,
+        href: AssessmentController.grade({ course: props.course.id, assessment: props.assessment.id, attempt: props.attempt.id }).url,
     },
 ];
 
@@ -190,7 +190,7 @@ const passed = ref(percentage.value >= props.assessment.passing_score);
                     </Card>
 
                     <Form
-                        v-bind="AssessmentController.submitGrade.form()"
+                        v-bind="AssessmentController.submitGrade.form({ course: props.course.id, assessment: props.assessment.id, attempt: props.attempt.id })"
                         class="space-y-6"
                         v-slot="{ errors, processing }"
                     >

@@ -71,7 +71,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
     {
         title: props.assessment.title,
-        href: AssessmentController.show().url,
+        href: AssessmentController.show({ course: props.course.id, assessment: props.assessment.id }).url,
     },
 ];
 
@@ -348,6 +348,13 @@ const getAttemptStatusBadge = (status: string) => {
                                 <Button class="w-full gap-2">
                                     <Pencil class="h-4 w-4" />
                                     Edit Penilaian
+                                </Button>
+                            </Link>
+
+                            <Link v-if="can.update" :href="`/courses/${course.id}/assessments/${assessment.id}/questions`" class="w-full block">
+                                <Button class="w-full gap-2">
+                                    <Eye class="h-4 w-4" />
+                                    Lihat Pertanyaan
                                 </Button>
                             </Link>
 

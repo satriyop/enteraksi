@@ -15,6 +15,159 @@ use Inertia\Response;
 class QuestionController extends Controller
 {
     /**
+     * Display a listing of the questions.
+     */
+    public function index(Request $request, Course $course, Assessment $assessment): Response
+    {
+        Gate::authorize('update', [$assessment, $course]);
+
+        $assessment->load(['questions.options']);
+
+        return Inertia::render('assessments/Questions', [
+            'course'     => $course,
+            'assessment' => $assessment,
+        ]);
+    }
+
+    /**
+     * Bulk update questions for an assessment.
+     */
+    public function bulkUpdate(Request $request, Course $course, Assessment $assessment): RedirectResponse
+    {
+        Gate::authorize('update', [$assessment, $course]);
+
+        // Handle JSON string from form submission BEFORE validation
+        $questionsData = $request->input('questions');
+
+        if (is_string($questionsData)) {
+            $questionsData = json_decode($questionsData, true);
+
+            // Replace the string with the decoded array in the request
+            $request->merge(['questions' => $questionsData]);
+        }
+
+        // Check if questionsData is empty after processing
+        if (empty($questionsData)) {
+            // This should not happen, but let's handle it gracefully
+            return redirect()
+                ->route('assessments.questions.index', [$course, $assessment])
+                ->with('error', 'Tidak ada pertanyaan yang dikirimkan.');
+        }
+
+        $validated = $request->validate([
+            'questions'                         => ['required', 'array'],
+            'questions.*.id'                    => ['sometimes', 'integer', 'nullable', function ($attribute, $value, $fail) {
+                // Allow 0 for new questions, but validate positive IDs exist in database
+                if ($value !== null && $value !== 0 && ! Question::where('id', $value)->exists()) {
+                    $fail('The selected ' . $attribute . ' is invalid.');
+                }
+            }],
+            'questions.*.question_text'         => ['required', 'string'],
+            'questions.*.question_type'         => ['required', 'string'],
+            'questions.*.points'                => ['required', 'integer', 'min:1'],
+            'questions.*.feedback'              => ['nullable', 'string'],
+            'questions.*.order'                 => ['sometimes', 'integer', 'min:0'],
+            'questions.*.options'               => ['sometimes', 'array'],
+            'questions.*.options.*.id'          => ['sometimes', 'integer'],
+            'questions.*.options.*.option_text' => ['required', 'string'],
+            'questions.*.options.*.is_correct'  => ['required', 'boolean'],
+            'questions.*.options.*.feedback'    => ['nullable', 'string'],
+            'questions.*.options.*.order'       => ['sometimes', 'integer', 'min:0'],
+        ]);
+
+        $existingQuestionIds  = $assessment->questions()->pluck('id')->toArray();
+        $submittedQuestionIds = [];
+
+        foreach ($validated['questions'] as $questionData) {
+            if (isset($questionData['id']) && $questionData['id'] > 0) {
+                // Update existing question
+                $question = Question::find($questionData['id']);
+                if ($question) {
+                    $question->update([
+                        'question_text' => $questionData['question_text'],
+                        'question_type' => $questionData['question_type'],
+                        'points'        => $questionData['points'],
+                        'feedback'      => $questionData['feedback'] ?? null,
+                        'order'         => $questionData['order'] ?? 0,
+                    ]);
+
+                    $submittedQuestionIds[] = $question->id;
+
+                    // Sync options for this question
+                    if (isset($questionData['options']) && is_array($questionData['options'])) {
+                        $existingOptionIds  = $question->options()->pluck('id')->toArray();
+                        $submittedOptionIds = [];
+
+                        foreach ($questionData['options'] as $optionData) {
+                            if (isset($optionData['id']) && $optionData['id'] > 0) {
+                                // Update existing option
+                                $option = $question->options()->find($optionData['id']);
+                                if ($option) {
+                                    $option->update([
+                                        'option_text' => $optionData['option_text'],
+                                        'is_correct'  => $optionData['is_correct'] ?? false,
+                                        'feedback'    => $optionData['feedback'] ?? null,
+                                        'order'       => $optionData['order'] ?? 0,
+                                    ]);
+                                    $submittedOptionIds[] = $option->id;
+                                }
+                            } else {
+                                // Create new option
+                                $option = $question->options()->create([
+                                    'option_text' => $optionData['option_text'],
+                                    'is_correct'  => $optionData['is_correct'] ?? false,
+                                    'feedback'    => $optionData['feedback'] ?? null,
+                                    'order'       => $optionData['order'] ?? 0,
+                                ]);
+                                $submittedOptionIds[] = $option->id;
+                            }
+                        }
+
+                        // Delete options that were not submitted
+                        $optionsToDelete = array_diff($existingOptionIds, $submittedOptionIds);
+                        if (! empty($optionsToDelete)) {
+                            $question->options()->whereIn('id', $optionsToDelete)->delete();
+                        }
+                    }
+                }
+            } else {
+                // Create new question
+                $question = $assessment->questions()->create([
+                    'question_text' => $questionData['question_text'],
+                    'question_type' => $questionData['question_type'],
+                    'points'        => $questionData['points'],
+                    'feedback'      => $questionData['feedback'] ?? null,
+                    'order'         => $questionData['order'] ?? 0,
+                ]);
+
+                $submittedQuestionIds[] = $question->id;
+
+                // Create options for this question
+                if (isset($questionData['options']) && is_array($questionData['options'])) {
+                    foreach ($questionData['options'] as $optionData) {
+                        $question->options()->create([
+                            'option_text' => $optionData['option_text'],
+                            'is_correct'  => $optionData['is_correct'] ?? false,
+                            'feedback'    => $optionData['feedback'] ?? null,
+                            'order'       => $optionData['order'] ?? 0,
+                        ]);
+                    }
+                }
+            }
+        }
+
+        // Delete questions that were not submitted (removed by user)
+        $questionsToDelete = array_diff($existingQuestionIds, $submittedQuestionIds);
+        if (! empty($questionsToDelete)) {
+            Question::whereIn('id', $questionsToDelete)->delete();
+        }
+
+        return redirect()
+            ->route('assessments.questions.index', [$course, $assessment])
+            ->with('success', 'Pertanyaan berhasil diperbarui.');
+    }
+
+    /**
      * Store a newly created question.
      */
     public function store(StoreQuestionRequest $request, Course $course, Assessment $assessment): RedirectResponse
