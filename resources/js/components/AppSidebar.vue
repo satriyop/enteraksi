@@ -30,7 +30,7 @@ const mainNavItems: NavItem[] = [
         icon: BookOpen,
     },
     {
-        title: 'Learning Paths',
+        title: 'Jalur Pembelajaran',
         href: learningPathsIndex(),
         icon: Map,
     },

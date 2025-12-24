@@ -64,11 +64,6 @@ class LearningPath extends Model
         return $query->where('is_published', true);
     }
 
-    public function getRouteKeyName()
-    {
-        return 'slug';
-    }
-
     protected static function boot()
     {
         parent::boot();

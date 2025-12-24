@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { show, update } from '@/actions/App/Http/Controllers/LearningPathController';
+import { router } from '@inertiajs/vue3';
 import PageHeader from '@/components/crud/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,10 +64,9 @@ interface LearningPathForm {
   title: string;
   description: string;
   objectives: string[];
-  slug: string;
   estimated_duration: number;
   difficulty_level: string;
-  thumbnail_url: string;
+  thumbnail: File | null;
   courses: Array<{
     id: number;
     title: string;
@@ -80,11 +80,11 @@ const form = useForm<LearningPathForm>({
   title: props.learningPath.title,
   description: props.learningPath.description,
   objectives: props.learningPath.objectives || [],
-  slug: props.learningPath.slug,
   estimated_duration: props.learningPath.estimated_duration,
   difficulty_level: props.learningPath.difficulty_level || 'beginner',
-  thumbnail_url: props.learningPath.thumbnail_url,
+  thumbnail: null,
   courses: [],
+  _method: 'PUT', // For file uploads with PUT method 
 });
 
 const availableCourses = ref<Course[]>(props.availableCourses
@@ -152,9 +152,15 @@ const removeObjective = (index: number) => {
 
 const submit = () => {
   form.courses = selectedCourses.value;
-  form.put(update(props.learningPath.id).url, {
+  
+  // Use the same approach as Create.vue - form.post() works with file uploads
+  form.post(update(props.learningPath.id).url, {
+    preserveScroll: true,
     onSuccess: () => {
       // Form will be reset by the redirect
+    },
+    onError: (errors) => {
+      console.log('Validation errors:', errors);
     }
   });
 };
@@ -187,7 +193,7 @@ const submit = () => {
                     <CardTitle>Informasi Jalur Pembelajaran</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <form @submit.prevent="submit" class="space-y-6">
+                    <form class="space-y-6">
                         <div class="grid gap-2">
                             <Label for="title">Title *</Label>
                             <Input
@@ -237,16 +243,6 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.objectives" />
                         </div>
 
-                        <div class="grid gap-2">
-                            <Label for="slug">Slug (URL-friendly identifier)</Label>
-                            <Input
-                                id="slug"
-                                v-model="form.slug"
-                                type="text"
-                            />
-                            <InputError class="mt-2" :message="form.errors.slug" />
-                        </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="grid gap-2">
                                 <Label for="estimated_duration">Estimated Duration (minutes)</Label>
@@ -276,13 +272,14 @@ const submit = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="thumbnail_url">Thumbnail URL</Label>
+                            <Label for="thumbnail">Thumbnail</Label>
                             <Input
-                                id="thumbnail_url"
-                                v-model="form.thumbnail_url"
-                                type="text"
+                                id="thumbnail"
+                                type="file"
+                                @input="form.thumbnail = $event.target.files[0]"
+                                accept="image/*"
                             />
-                            <InputError class="mt-2" :message="form.errors.thumbnail_url" />
+                            <InputError class="mt-2" :message="form.errors.thumbnail" />
                         </div>
 
                         <Card class="mt-6">
@@ -378,7 +375,7 @@ const submit = () => {
                                 Cancel
                             </Button>
                         </Link>
-                        <Button type="submit" :disabled="form.processing">
+                        <Button type="button" @click="submit" :disabled="form.processing">
                             <Loader2 v-if="form.processing" class="mr-2 h-4 w-4 animate-spin" />
                             Perbarui Jalur Pembelajaran
                         </Button>

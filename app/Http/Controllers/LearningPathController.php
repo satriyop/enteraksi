@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -45,6 +46,13 @@ class LearningPathController extends Controller
         $validated               = $request->validated();
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
+        $validated['slug']       = Str::slug($validated['title']) . '-' . Str::random(6);
+
+        // Handle thumbnail upload
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath              = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
+            $validated['thumbnail_url'] = $thumbnailPath;
+        }
 
         $learningPath = LearningPath::create($validated);
 
@@ -64,41 +72,55 @@ class LearningPathController extends Controller
             ->with('success', 'Learning path created successfully.');
     }
 
-    public function show(LearningPath $learningPath): Response
+    public function show(LearningPath $learning_path): Response
     {
-        Gate::authorize('view', $learningPath);
+        Gate::authorize('view', $learning_path);
 
-        $learningPath->load(['creator', 'courses' => function ($query) {
+        $learning_path->load(['creator', 'courses' => function ($query) {
             $query->with(['sections', 'enrollments'])->orderBy('position');
         }]);
 
         return Inertia::render('learning_paths/Show', [
-            'learningPath' => $learningPath,
+            'learningPath' => $learning_path,
         ]);
     }
 
-    public function edit(LearningPath $learningPath): Response
+    public function edit(LearningPath $learning_path): Response
     {
-        Gate::authorize('update', $learningPath);
+        Gate::authorize('update', $learning_path);
 
-        $learningPath->load(['courses' => function ($query) {
+        $learning_path->load(['courses' => function ($query) {
             $query->withPivot('position', 'is_required', 'prerequisites', 'min_completion_percentage');
         }]);
 
         $availableCourses = Course::published()->orderBy('title')->get();
 
         return Inertia::render('learning_paths/Edit', [
-            'learningPath'     => $learningPath,
+            'learningPath'     => $learning_path,
             'availableCourses' => $availableCourses,
         ]);
     }
 
-    public function update(UpdateLearningPathRequest $request, LearningPath $learningPath): RedirectResponse
+    public function update(UpdateLearningPathRequest $request, LearningPath $learning_path): RedirectResponse
     {
+        \Log::info('Update request data:', $request->all());
+        \Log::info('Validated data:', $request->validated());
+
         $validated               = $request->validated();
         $validated['updated_by'] = Auth::id();
 
-        $learningPath->update($validated);
+        // Handle thumbnail upload
+        if ($request->hasFile('thumbnail')) {
+            $thumbnailPath              = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
+            $validated['thumbnail_url'] = $thumbnailPath;
+        }
+
+        // Auto-generate slug from title if title changed
+        if ($request->title !== $learning_path->title) {
+            $validated['slug'] = Str::slug($request->title) . '-' . Str::random(6);
+        }
+
+        $learning_path->update($validated);
 
         // Sync courses with their positions
         if ($request->has('courses')) {
@@ -111,54 +133,54 @@ class LearningPathController extends Controller
                     'min_completion_percentage' => $courseData['min_completion_percentage'] ?? null,
                 ];
             }
-            $learningPath->courses()->sync($syncData);
+            $learning_path->courses()->sync($syncData);
         }
 
-        return redirect()->route('learning-paths.show', $learningPath)
+        return redirect()->route('learning-paths.show', $learning_path)
             ->with('success', 'Learning path updated successfully.');
     }
 
-    public function destroy(LearningPath $learningPath): RedirectResponse
+    public function destroy(LearningPath $learning_path): RedirectResponse
     {
-        Gate::authorize('delete', $learningPath);
+        Gate::authorize('delete', $learning_path);
 
-        $learningPath->delete();
+        $learning_path->delete();
 
         return redirect()->route('learning-paths.index')
             ->with('success', 'Learning path deleted successfully.');
     }
 
-    public function publish(LearningPath $learningPath): RedirectResponse
+    public function publish(LearningPath $learning_path): RedirectResponse
     {
-        Gate::authorize('publish', $learningPath);
+        Gate::authorize('publish', $learning_path);
 
-        $learningPath->update([
+        $learning_path->update([
             'is_published' => true,
             'published_at' => now(),
             'updated_by'   => Auth::id(),
         ]);
 
-        return redirect()->route('learning-paths.show', $learningPath)
+        return redirect()->route('learning-paths.show', $learning_path)
             ->with('success', 'Learning path published successfully.');
     }
 
-    public function unpublish(LearningPath $learningPath): RedirectResponse
+    public function unpublish(LearningPath $learning_path): RedirectResponse
     {
-        Gate::authorize('publish', $learningPath);
+        Gate::authorize('publish', $learning_path);
 
-        $learningPath->update([
+        $learning_path->update([
             'is_published' => false,
             'published_at' => null,
             'updated_by'   => Auth::id(),
         ]);
 
-        return redirect()->route('learning-paths.show', $learningPath)
+        return redirect()->route('learning-paths.show', $learning_path)
             ->with('success', 'Learning path unpublished successfully.');
     }
 
-    public function reorder(Request $request, LearningPath $learningPath): RedirectResponse
+    public function reorder(Request $request, LearningPath $learning_path): RedirectResponse
     {
-        Gate::authorize('reorder', $learningPath);
+        Gate::authorize('reorder', $learning_path);
 
         $request->validate([
             'course_order'            => 'required|array',
@@ -167,12 +189,12 @@ class LearningPathController extends Controller
         ]);
 
         foreach ($request->course_order as $item) {
-            $learningPath->courses()->updateExistingPivot($item['id'], [
+            $learning_path->courses()->updateExistingPivot($item['id'], [
                 'position' => $item['position'],
             ]);
         }
 
-        return redirect()->route('learning-paths.show', $learningPath)
+        return redirect()->route('learning-paths.show', $learning_path)
             ->with('success', 'Course order updated successfully.');
     }
 }

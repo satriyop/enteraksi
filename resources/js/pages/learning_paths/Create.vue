@@ -39,7 +39,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
         href: '/learning-paths',
     },
     {
-        title: 'Create',
+        title: 'Buat Jalur Pembelajaran',
         href: '/learning-paths/create',
     },
 ];
@@ -48,10 +48,9 @@ interface LearningPathForm {
   title: string;
   description: string;
   objectives: string[];
-  slug: string;
   estimated_duration: number;
   difficulty_level: string;
-  thumbnail_url: string;
+  thumbnail: File | null;
   courses: Array<{
     id: number;
     title: string;
@@ -65,10 +64,9 @@ const form = useForm<LearningPathForm>({
   title: '',
   description: '',
   objectives: [''],
-  slug: '',
   estimated_duration: 0,
   difficulty_level: 'beginner',
-  thumbnail_url: '',
+  thumbnail: null,
   courses: [],
 });
 
@@ -152,7 +150,7 @@ const submit = () => {
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbItems">
-        <Head title="Create Learning Path" />
+        <Head title="Buat Jalur Pembelajaran" />
 
         <div class="flex h-full flex-1 flex-col gap-4 p-4 md:p-6">
             <!-- Header -->
@@ -174,12 +172,12 @@ const submit = () => {
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Learning Path Information</CardTitle>
+                    <CardTitle>Informasi Jalur Pembelajaran</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form @submit.prevent="submit" class="space-y-6">
                         <div class="grid gap-2">
-                            <Label for="title">Title *</Label>
+                            <Label for="title">Judul *</Label>
                             <Input
                                 id="title"
                                 v-model="form.title"
@@ -191,7 +189,7 @@ const submit = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="description">Description</Label>
+                            <Label for="description">Deskripsi</Label>
                             <textarea
                                 id="description"
                                 v-model="form.description"
@@ -202,13 +200,13 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-3">
-                            <Label>Learning Objectives</Label>
+                            <Label>Tujuan Pembelajaran</Label>
                             <div v-for="(objective, index) in form.objectives" :key="index" class="flex gap-2">
                                 <Input
                                     v-model="form.objectives[index]"
                                     type="text"
                                     class="flex-1"
-                                    placeholder="Enter learning objective"
+                                    placeholder="Masukkan tujuan pembelajaran"
                                 />
                                 <Button
                                     type="button"
@@ -222,24 +220,14 @@ const submit = () => {
                             </div>
                             <Button type="button" variant="outline" size="sm" @click="addObjective">
                                 <Plus class="mr-2 h-4 w-4" />
-                                Add Objective
+                                Tambah Tujuan
                             </Button>
                             <InputError class="mt-2" :message="form.errors.objectives" />
                         </div>
 
-                        <div class="grid gap-2">
-                            <Label for="slug">Slug (URL-friendly identifier)</Label>
-                            <Input
-                                id="slug"
-                                v-model="form.slug"
-                                type="text"
-                            />
-                            <InputError class="mt-2" :message="form.errors.slug" />
-                        </div>
-
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="grid gap-2">
-                                <Label for="estimated_duration">Estimated Duration (minutes)</Label>
+                                <Label for="estimated_duration">Durasi Perkiraan (menit)</Label>
                                 <Input
                                     id="estimated_duration"
                                     v-model="form.estimated_duration"
@@ -250,29 +238,30 @@ const submit = () => {
                             </div>
 
                             <div class="grid gap-2">
-                                <Label for="difficulty_level">Difficulty Level</Label>
+                                <Label for="difficulty_level">Tingkat Kesulitan</Label>
                                 <select
                                     id="difficulty_level"
                                     v-model="form.difficulty_level"
                                     class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                 >
-                                    <option value="beginner">Beginner</option>
-                                    <option value="intermediate">Intermediate</option>
-                                    <option value="advanced">Advanced</option>
-                                    <option value="expert">Expert</option>
+                                    <option value="beginner">Pemula</option>
+                                    <option value="intermediate">Menengah</option>
+                                    <option value="advanced">Lanjutan</option>
+                                    <option value="expert">Ahli</option>
                                 </select>
                                 <InputError class="mt-2" :message="form.errors.difficulty_level" />
                             </div>
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="thumbnail_url">Thumbnail URL</Label>
+                            <Label for="thumbnail">Thumbnail</Label>
                             <Input
-                                id="thumbnail_url"
-                                v-model="form.thumbnail_url"
-                                type="text"
+                                id="thumbnail"
+                                type="file"
+                                @input="form.thumbnail = $event.target.files[0]"
+                                accept="image/*"
                             />
-                            <InputError class="mt-2" :message="form.errors.thumbnail_url" />
+                            <InputError class="mt-2" :message="form.errors.thumbnail" />
                         </div>
 
                         <Card class="mt-6">
@@ -322,10 +311,10 @@ const submit = () => {
                                                                         v-model:checked="element.is_required"
                                                                         id="required"
                                                                     />
-                                                                    <Label for="required">Required</Label>
+                                                                    <Label for="required">Wajib</Label>
                                                                 </div>
                                                                 <div>
-                                                                    <Label for="min_completion">Minimum Completion (%)</Label>
+                                                                    <Label for="min_completion">Kelulusan Minimum (%)</Label>
                                                                     <Input
                                                                         id="min_completion"
                                                                         v-model="element.min_completion_percentage"
@@ -336,7 +325,7 @@ const submit = () => {
                                                                     />
                                                                 </div>
                                                                 <div>
-                                                                    <Label for="prerequisites">Prerequisites (JSON)</Label>
+                                                                    <Label for="prerequisites">Prasyarat (JSON)</Label>
                                                                     <Input
                                                                         id="prerequisites"
                                                                         v-model="element.prerequisites"
@@ -351,7 +340,7 @@ const submit = () => {
                                                             @click="removeCourse(element)"
                                                             class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                                                         >
-                                                            Remove
+                                                            Hapus
                                                         </button>
                                                     </div>
                                                 </div>
@@ -365,7 +354,7 @@ const submit = () => {
                         <div class="flex justify-end gap-4 mt-6">
                             <Link :href="'/learning-paths'">
                                 <Button type="button" variant="outline">
-                                    Cancel
+                                    Batal
                                 </Button>
                             </Link>
                             <Button type="submit" :disabled="form.processing">

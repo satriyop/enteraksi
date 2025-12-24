@@ -5,6 +5,7 @@ use App\Models\Course;
 use App\Models\LearningPath;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
 
 class LearningPathCrudTest extends TestCase
@@ -36,6 +37,7 @@ class LearningPathCrudTest extends TestCase
                 'objectives'         => ['Objective 1', 'Objective 2'],
                 'estimated_duration' => 120,
                 'difficulty_level'   => 'beginner',
+                'thumbnail'          => UploadedFile::fake()->image('thumbnail.jpg'),
                 'courses'            => [
                     ['id' => $this->courses[0]->id, 'is_required' => true, 'min_completion_percentage' => 80],
                     ['id' => $this->courses[1]->id, 'is_required' => false, 'min_completion_percentage' => 70],
@@ -47,6 +49,10 @@ class LearningPathCrudTest extends TestCase
 
         $learningPath = LearningPath::first();
         $this->assertEquals(2, $learningPath->courses()->count());
+        $this->assertNotNull($learningPath->thumbnail_url);
+        $this->assertStringContainsString('learning_paths/thumbnails', $learningPath->thumbnail_url);
+        $this->assertNotNull($learningPath->slug);
+        $this->assertStringContainsString('test-learning-path', $learningPath->slug);
     }
 
     public function test_content_manager_can_create_learning_path()
@@ -62,6 +68,39 @@ class LearningPathCrudTest extends TestCase
 
         $response->assertRedirect(route('learning-paths.index'));
         $this->assertDatabaseHas('learning_paths', ['title' => 'Content Manager Learning Path']);
+    }
+
+    public function test_thumbnail_validation()
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('learning-paths.store'), [
+                'title'       => 'Test Learning Path',
+                'description' => 'Test description',
+                'thumbnail'   => UploadedFile::fake()->create('test.pdf', 1000), // Invalid file type
+                'courses'     => [
+                    ['id' => $this->courses[0]->id, 'is_required' => true],
+                ],
+            ]);
+
+        $response->assertSessionHasErrors(['thumbnail']);
+        $this->assertDatabaseMissing('learning_paths', ['title' => 'Test Learning Path']);
+    }
+
+    public function test_thumbnail_is_optional()
+    {
+        $response = $this->actingAs($this->admin)
+            ->post(route('learning-paths.store'), [
+                'title'       => 'Test Learning Path Without Thumbnail',
+                'description' => 'Test description',
+                'courses'     => [
+                    ['id' => $this->courses[0]->id, 'is_required' => true],
+                ],
+            ]);
+
+        $response->assertRedirect(route('learning-paths.index'));
+        $this->assertDatabaseHas('learning_paths', ['title' => 'Test Learning Path Without Thumbnail']);
+        $learningPath = LearningPath::where('title', 'Test Learning Path Without Thumbnail')->first();
+        $this->assertNull($learningPath->thumbnail_url);
     }
 
     public function test_learner_cannot_create_learning_path()

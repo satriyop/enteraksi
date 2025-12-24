@@ -2,7 +2,6 @@
 namespace App\Http\Requests\LearningPath;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateLearningPathRequest extends FormRequest
 {
@@ -21,15 +20,9 @@ class UpdateLearningPathRequest extends FormRequest
             'description'                         => 'nullable|string',
             'objectives'                          => 'nullable|array',
             'objectives.*'                        => 'string',
-            'slug'                                => [
-                'nullable',
-                'string',
-                'max:255',
-                Rule::unique('learning_paths', 'slug')->ignore($learningPath->id),
-            ],
             'estimated_duration'                  => 'nullable|integer|min:1',
             'difficulty_level'                    => 'nullable|string|in:beginner,intermediate,advanced,expert',
-            'thumbnail_url'                       => 'nullable|string|max:255',
+            'thumbnail'                           => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'courses'                             => 'required|array|min:1',
             'courses.*.id'                        => 'required|exists:courses,id',
             'courses.*.is_required'               => 'boolean',
