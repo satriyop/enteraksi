@@ -46,7 +46,7 @@ This document outlines the step-by-step tasks required to implement all missing 
 - **Files to Create/Modify**:
     - `app/Models/LessonProgress.php`
     - `app/Http/Controllers/LessonProgressController.php`
-    - `resources/js/Pages/lessons/Show.vue`
+    - `resources/js/pages/lessons/Show.vue`
     - `routes/courses.php`
 - **Status**: ✅ Completed
 - **Verification**: Enhanced progress tracking with last_lesson_id updates, pagination_metadata support, and comprehensive test coverage
@@ -56,7 +56,7 @@ This document outlines the step-by-step tasks required to implement all missing 
 - **Task**: Add "My Learning" section with enrolled courses and progress bars.
 - **Details**: The "My Learning" section needs to display enrolled courses with progress bars and a "Continue Learning" button.
 - **Files to Create/Modify**:
-    - `resources/js/Pages/learner/Dashboard.vue`
+    - `resources/js/pages/learner/Dashboard.vue`
     - `resources/js/components/courses/MyLearningCard.vue`
     - `app/Http/Controllers/LearnerDashboardController.php`
 - **Status**: ✅ Completed
@@ -86,13 +86,13 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Http/Requests/Question/StoreQuestionRequest.php`
     - `app/Http/Requests/Question/UpdateQuestionRequest.php`
     - `app/Policies/AssessmentPolicy.php`
-    - `resources/js/Pages/assessments/Index.vue`
-    - `resources/js/Pages/assessments/Create.vue`
-    - `resources/js/Pages/assessments/Edit.vue`
-    - `resources/js/Pages/assessments/Show.vue`
-    - `resources/js/Pages/assessments/Attempt.vue` (for learners to take assessments)
-    - `resources/js/Pages/assessments/AttemptComplete.vue` (for showing attempt results)
-    - `resources/js/Pages/assessments/Grade.vue` (for manual grading of essays)
+    - `resources/js/pages/assessments/Index.vue`
+    - `resources/js/pages/assessments/Create.vue`
+    - `resources/js/pages/assessments/Edit.vue`
+    - `resources/js/pages/assessments/Show.vue`
+    - `resources/js/pages/assessments/Attempt.vue` (for learners to take assessments)
+    - `resources/js/pages/assessments/AttemptComplete.vue` (for showing attempt results)
+    - `resources/js/pages/assessments/Grade.vue` (for manual grading of essays)
     - `tests/Feature/AssessmentCrudTest.php`
     - `tests/Feature/QuestionCrudTest.php`
 - **Status**: ✅ Completed
@@ -102,16 +102,25 @@ This document outlines the step-by-step tasks required to implement all missing 
 
 - **Task**: Create learning paths by combining multiple courses.
 - **Details**: Implement course sequencing and dependency management with drag-and-drop ordering.
-- **Files to Create**:
-    - `database/migrations/xxxx_create_learning_paths_table.php`
-    - `database/migrations/xxxx_create_learning_path_course_table.php`
+- **Files Created**:
+    - `database/migrations/2025_12_23_115003_create_learning_paths_table.php`
+    - `database/migrations/2025_12_23_115004_create_learning_path_course_table.php`
     - `app/Models/LearningPath.php`
     - `app/Http/Controllers/LearningPathController.php`
-    - `resources/js/Pages/learning_paths/Index.vue`
-    - `resources/js/Pages/learning_paths/Create.vue`
-    - `resources/js/Pages/learning_paths/Edit.vue`
-    - `resources/js/Pages/learning_paths/Show.vue`
-- **Status**: ❌ Not Started
+    - `app/Http/Requests/LearningPath/StoreLearningPathRequest.php`
+    - `app/Http/Requests/LearningPath/UpdateLearningPathRequest.php`
+    - `app/Policies/LearningPathPolicy.php`
+    - `resources/js/pages/learning_paths/Index.vue`
+    - `resources/js/pages/learning_paths/Create.vue`
+    - `resources/js/pages/learning_paths/Edit.vue`
+    - `resources/js/pages/learning_paths/Show.vue`
+    - `resources/js/routes/learning-paths/index.ts`
+    - `tests/Feature/LearningPathCrudTest.php`
+- **Files Modified**:
+    - `resources/js/components/AppSidebar.vue` (added Learning Paths navigation)
+    - `routes/web.php` (added learning paths routes)
+- **Status**: ✅ Completed
+- **Verification**: Full CRUD functionality implemented with drag-and-drop course ordering, comprehensive authorization policies, test coverage (22 tests passing), and navigation integration
 
 ### 8. Add Certificate System
 
@@ -128,10 +137,10 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Models/CompetencyMatrix.php`
     - `app/Http/Controllers/CertificateController.php`
     - `app/Http/Controllers/CompetencyController.php`
-    - `resources/js/Pages/certificates/Index.vue`
-    - `resources/js/Pages/certificates/Show.vue`
-    - `resources/js/Pages/certificates/Verify.vue` (public verification portal)
-    - `resources/js/Pages/certificates/TemplateBuilder.vue` (drag-and-drop editor)
+    - `resources/js/pages/certificates/Index.vue`
+    - `resources/js/pages/certificates/Show.vue`
+    - `resources/js/pages/certificates/Verify.vue` (public verification portal)
+    - `resources/js/pages/certificates/TemplateBuilder.vue` (drag-and-drop editor)
 - **Status**: ❌ Not Started
 
 ### 9. Implement Gamification
@@ -160,10 +169,10 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `database/migrations/xxxx_create_program_learning_path_table.php`
     - `app/Models/Program.php`
     - `app/Http/Controllers/ProgramController.php`
-    - `resources/js/Pages/programs/Index.vue`
-    - `resources/js/Pages/programs/Create.vue`
-    - `resources/js/Pages/programs/Edit.vue`
-    - `resources/js/Pages/programs/Show.vue`
+    - `resources/js/pages/programs/Index.vue`
+    - `resources/js/pages/programs/Create.vue`
+    - `resources/js/pages/programs/Edit.vue`
+    - `resources/js/pages/programs/Show.vue`
 - **Status**: ❌ Not Started
 
 ### 11. Implement Grading Scale and Competency Matrix
@@ -178,8 +187,8 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Models/JobRole.php`
     - `app/Http/Controllers/GradingScaleController.php`
     - `app/Http/Controllers/JobRoleController.php`
-    - `resources/js/Pages/grading_scales/Index.vue`
-    - `resources/js/Pages/job_roles/Index.vue`
+    - `resources/js/pages/grading_scales/Index.vue`
+    - `resources/js/pages/job_roles/Index.vue`
 - **Status**: ❌ Not Started
 
 ### 12. Implement Communication Module
@@ -198,9 +207,9 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Http/Controllers/DiscussionController.php`
     - `app/Http/Controllers/AnnouncementController.php`
     - `app/Http/Controllers/MessageController.php`
-    - `resources/js/Pages/communication/Forums.vue`
-    - `resources/js/Pages/communication/Announcements.vue`
-    - `resources/js/Pages/communication/Messages.vue`
+    - `resources/js/pages/communication/Forums.vue`
+    - `resources/js/pages/communication/Announcements.vue`
+    - `resources/js/pages/communication/Messages.vue`
 - **Status**: ❌ Not Started
 
 ### 13. Implement Video Conference Integration
@@ -213,9 +222,9 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Http/Controllers/LiveSessionController.php`
     - `app/Services/ZoomService.php`
     - `app/Services/GoogleMeetService.php`
-    - `resources/js/Pages/live_sessions/Index.vue`
-    - `resources/js/Pages/live_sessions/Create.vue`
-    - `resources/js/Pages/live_sessions/Show.vue`
+    - `resources/js/pages/live_sessions/Index.vue`
+    - `resources/js/pages/live_sessions/Create.vue`
+    - `resources/js/pages/live_sessions/Show.vue`
 - **Status**: ❌ Not Started
 
 ### 14. Implement Content Import Features
@@ -227,48 +236,7 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Services/H5PService.php`
     - `app/Services/LtiService.php`
     - `app/Http/Controllers/ContentImportController.php`
-    - `resources/js/Pages/content/Import.vue`
-- **Status**: ❌ Not Started
-
-### 7. Implement Learning Paths
-
-- **Task**: Create learning paths by combining multiple courses.
-- **Details**: Implement course sequencing and dependency management.
-- **Files to Create**:
-    - `database/migrations/xxxx_create_learning_paths_table.php`
-    - `database/migrations/xxxx_create_learning_path_course_table.php`
-    - `app/Models/LearningPath.php`
-    - `app/Http/Controllers/LearningPathController.php`
-    - `resources/js/Pages/learning_paths/Index.vue`
-    - `resources/js/Pages/learning_paths/Create.vue`
-    - `resources/js/Pages/learning_paths/Edit.vue`
-- **Status**: ❌ Not Started
-
-### 8. Add Certificate System
-
-- **Task**: Implement competency framework and certificate generation.
-- **Details**: Create certificate templates and auto-certificate issuance on course completion.
-- **Files to Create**:
-    - `database/migrations/xxxx_create_certificates_table.php`
-    - `database/migrations/xxxx_create_competencies_table.php`
-    - `app/Models/Certificate.php`
-    - `app/Models/Competency.php`
-    - `app/Http/Controllers/CertificateController.php`
-    - `resources/js/Pages/certificates/Index.vue`
-    - `resources/js/Pages/certificates/Show.vue`
-- **Status**: ❌ Not Started
-
-### 9. Implement Gamification
-
-- **Task**: Add experience points system and badge definitions.
-- **Details**: Implement badge awarding logic and achievement tracking.
-- **Files to Create**:
-    - `database/migrations/xxxx_create_badges_table.php`
-    - `database/migrations/xxxx_create_user_badges_table.php`
-    - `app/Models/Badge.php`
-    - `app/Http/Controllers/BadgeController.php`
-    - `resources/js/components/gamification/BadgeDisplay.vue`
-    - `resources/js/components/gamification/Leaderboard.vue`
+    - `resources/js/pages/content/Import.vue`
 - **Status**: ❌ Not Started
 
 ## Priority 4: Testing and Documentation
@@ -293,7 +261,7 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `tests/Feature/ContentImportTest.php`
     - `tests/Feature/LearnerProgressTest.php`
     - `tests/Feature/CertificateVerificationTest.php`
-- **Status**: ❌ Not Started
+- **Status**: ⚠️ Partially Completed (LearningPathCrudTest.php completed)
 
 ### 16. Update Documentation
 
@@ -324,9 +292,9 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Models/DataRequest.php`
     - `app/Http/Controllers/ConsentController.php`
     - `app/Http/Controllers/DataRequestController.php`
-    - `resources/js/Pages/compliance/ConsentManager.vue`
-    - `resources/js/Pages/compliance/DataSubjectRights.vue`
-    - `resources/js/Pages/compliance/AuditLogs.vue`
+    - `resources/js/pages/compliance/ConsentManager.vue`
+    - `resources/js/pages/compliance/DataSubjectRights.vue`
+    - `resources/js/pages/compliance/AuditLogs.vue`
 - **Status**: ❌ Not Started
 
 ### 18. Implement Reporting & Analytics
@@ -338,11 +306,11 @@ This document outlines the step-by-step tasks required to implement all missing 
     - `app/Models/Analytics.php`
     - `app/Http/Controllers/AnalyticsController.php`
     - `app/Http/Controllers/ReportController.php`
-    - `resources/js/Pages/analytics/StudentDashboard.vue`
-    - `resources/js/Pages/analytics/InstructorDashboard.vue`
-    - `resources/js/Pages/analytics/AdminDashboard.vue`
-    - `resources/js/Pages/reports/CustomReportBuilder.vue`
-    - `resources/js/Pages/reports/ComplianceReports.vue`
+    - `resources/js/pages/analytics/StudentDashboard.vue`
+    - `resources/js/pages/analytics/InstructorDashboard.vue`
+    - `resources/js/pages/analytics/AdminDashboard.vue`
+    - `resources/js/pages/reports/CustomReportBuilder.vue`
+    - `resources/js/pages/reports/ComplianceReports.vue`
 - **Status**: ❌ Not Started
 
 ### 19. Implement Mobile Optimization
@@ -407,7 +375,7 @@ This TODO list outlines the tasks required to complete the Enteraksi LMS project
 
 - **Priority 1**: 3 tasks (all completed) ✅
 - **Priority 2**: 2 tasks (all completed) ✅
-- **Priority 3**: 14 tasks (not started) ❌
-- **Priority 4**: 8 tasks (not started) ❌
+- **Priority 3**: 9 tasks (4 completed, 5 remaining) ⚠️
+- **Priority 4**: 8 tasks (partially completed) ⚠️
 
-**Total Tasks**: 27 (was 11, now 27 after comprehensive analysis)
+**Total Tasks**: 22 (was 11, now 22 after comprehensive analysis)

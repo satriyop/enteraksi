@@ -1,8 +1,6 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Requests\Question\StoreQuestionRequest;
-use App\Http\Requests\Question\UpdateQuestionRequest;
 use App\Models\Assessment;
 use App\Models\Course;
 use App\Models\Question;
@@ -164,67 +162,6 @@ class QuestionController extends Controller
 
         return redirect()
             ->route('assessments.questions.index', [$course, $assessment])
-            ->with('success', 'Pertanyaan berhasil diperbarui.');
-    }
-
-    /**
-     * Store a newly created question.
-     */
-    public function store(StoreQuestionRequest $request, Course $course, Assessment $assessment): RedirectResponse
-    {
-        Gate::authorize('update', [$assessment, $course]);
-
-        $validated                  = $request->validated();
-        $validated['assessment_id'] = $assessment->id;
-
-        $question = Question::create($validated);
-
-        // Create options if provided
-        if (isset($validated['options']) && is_array($validated['options'])) {
-            foreach ($validated['options'] as $optionData) {
-                $question->options()->create([
-                    'option_text' => $optionData['text'],
-                    'is_correct'  => $optionData['is_correct'] ?? false,
-                    'feedback'    => $optionData['feedback'] ?? null,
-                    'order'       => $optionData['order'] ?? 0,
-                ]);
-            }
-        }
-
-        return redirect()
-            ->route('assessments.edit', [$course, $assessment])
-            ->with('success', 'Pertanyaan berhasil ditambahkan.');
-    }
-
-    /**
-     * Update the specified question.
-     */
-    public function update(UpdateQuestionRequest $request, Course $course, Assessment $assessment, Question $question): RedirectResponse
-    {
-        Gate::authorize('update', [$assessment, $course]);
-
-        $validated = $request->validated();
-
-        $question->update($validated);
-
-        // Update options if provided
-        if (isset($validated['options']) && is_array($validated['options'])) {
-            // Delete existing options
-            $question->options()->delete();
-
-            // Create new options
-            foreach ($validated['options'] as $optionData) {
-                $question->options()->create([
-                    'option_text' => $optionData['text'],
-                    'is_correct'  => $optionData['is_correct'] ?? false,
-                    'feedback'    => $optionData['feedback'] ?? null,
-                    'order'       => $optionData['order'] ?? 0,
-                ]);
-            }
-        }
-
-        return redirect()
-            ->route('assessments.edit', [$course, $assessment])
             ->with('success', 'Pertanyaan berhasil diperbarui.');
     }
 

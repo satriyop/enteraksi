@@ -12,9 +12,10 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as coursesIndex } from '@/routes/courses';
+import { index as learningPathsIndex } from '@/routes/learning-paths';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, LayoutGrid } from 'lucide-vue-next';
+import { BookOpen, LayoutGrid, Map } from 'lucide-vue-next';
 import AppLogo from './AppLogo.vue';
 
 const mainNavItems: NavItem[] = [
@@ -27,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Kursus',
         href: coursesIndex(),
         icon: BookOpen,
+    },
+    {
+        title: 'Learning Paths',
+        href: learningPathsIndex(),
+        icon: Map,
     },
 ];
 </script>

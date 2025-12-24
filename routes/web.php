@@ -16,4 +16,6 @@ Route::get('learner/dashboard', LearnerDashboardController::class)
     ->middleware(['auth', 'verified'])
     ->name('learner.dashboard');
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/courses.php';
+require __DIR__ . '/learning_paths.php';
