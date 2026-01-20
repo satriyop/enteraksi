@@ -200,10 +200,8 @@ class AssessmentAttemptFlowTest extends TestCase
         $response = $this->actingAs($this->learner)
             ->post("/courses/{$this->course->id}/assessments/{$this->assessment->id}/start");
 
-        // Note: Current implementation only checks if enrollment exists, not status
-        // This test documents current behavior - dropped learners can still attempt
-        // TODO: Should probably check enrollment status in canBeAttemptedBy
-        $response->assertRedirect();
+        // Dropped enrollments cannot access content or attempt assessments
+        $response->assertForbidden();
     }
 
     // ========== Multiple Attempts ==========

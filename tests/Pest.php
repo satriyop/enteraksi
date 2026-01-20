@@ -78,3 +78,63 @@ function asLearner(): Tests\TestCase
 {
     return asRole('learner');
 }
+
+/**
+ * Create a published course with content.
+ */
+function createPublishedCourseWithContent(int $sectionCount = 1, int $lessonsPerSection = 3): App\Models\Course
+{
+    $course = App\Models\Course::factory()->published()->public()->create();
+
+    for ($i = 0; $i < $sectionCount; $i++) {
+        $section = App\Models\CourseSection::factory()->create([
+            'course_id' => $course->id,
+            'order' => $i + 1,
+        ]);
+
+        App\Models\Lesson::factory()->count($lessonsPerSection)->create([
+            'course_section_id' => $section->id,
+        ]);
+    }
+
+    return $course;
+}
+
+/**
+ * Create an enrolled user for a course.
+ *
+ * @return array{user: App\Models\User, course: App\Models\Course, enrollment: App\Models\Enrollment}
+ */
+function createEnrolledLearner(?App\Models\Course $course = null): array
+{
+    $user = App\Models\User::factory()->create(['role' => 'learner']);
+    $course = $course ?? App\Models\Course::factory()->published()->create();
+
+    $enrollment = App\Models\Enrollment::factory()->create([
+        'user_id' => $user->id,
+        'course_id' => $course->id,
+        'status' => 'active',
+    ]);
+
+    return [
+        'user' => $user,
+        'course' => $course,
+        'enrollment' => $enrollment,
+    ];
+}
+
+/**
+ * Assert that an event was dispatched with specific properties.
+ */
+function assertEventDispatched(string $eventClass, ?callable $callback = null): void
+{
+    Illuminate\Support\Facades\Event::assertDispatched($eventClass, $callback);
+}
+
+/**
+ * Get the ProgressTrackingService instance.
+ */
+function progressService(): App\Domain\Progress\Services\ProgressTrackingService
+{
+    return app(App\Domain\Progress\Contracts\ProgressTrackingServiceContract::class);
+}

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
@@ -36,6 +37,8 @@ class EnrollmentLifecycleTest extends TestCase
 
     private Course $restrictedCourse;
 
+    private ProgressTrackingServiceContract $progressService;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -43,6 +46,8 @@ class EnrollmentLifecycleTest extends TestCase
         $this->learner = User::factory()->create(['role' => 'learner']);
         $this->admin = User::factory()->create(['role' => 'lms_admin']);
         $this->contentManager = User::factory()->create(['role' => 'content_manager']);
+
+        $this->progressService = app(ProgressTrackingServiceContract::class);
 
         // Create public published course
         $this->publicCourse = Course::factory()->published()->create([
@@ -259,7 +264,7 @@ class EnrollmentLifecycleTest extends TestCase
             'highest_page_reached' => 1,
         ]);
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         // 1/3 = 33.3%
@@ -278,7 +283,7 @@ class EnrollmentLifecycleTest extends TestCase
             'course_id' => $emptyCourse->id,
         ]);
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertEquals(0, $enrollment->progress_percentage);
@@ -301,7 +306,7 @@ class EnrollmentLifecycleTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertEquals(100, $enrollment->progress_percentage);
@@ -326,7 +331,7 @@ class EnrollmentLifecycleTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertEquals('completed', $enrollment->status);
@@ -353,7 +358,7 @@ class EnrollmentLifecycleTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertNotNull($enrollment->completed_at);
@@ -381,7 +386,7 @@ class EnrollmentLifecycleTest extends TestCase
             'current_page' => 1,
         ]);
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertEquals('active', $enrollment->status);
@@ -527,7 +532,7 @@ class EnrollmentLifecycleTest extends TestCase
 
         $lesson = $this->publicCourse->lessons->first();
 
-        $progress = $enrollment->getOrCreateProgressForLesson($lesson);
+        $progress = $this->progressService->getOrCreateProgress($enrollment, $lesson);
 
         $this->assertNotNull($progress);
         $this->assertEquals(1, $progress->current_page);
@@ -555,7 +560,7 @@ class EnrollmentLifecycleTest extends TestCase
             'time_spent_seconds' => 300,
         ]);
 
-        $progress = $enrollment->getOrCreateProgressForLesson($lesson);
+        $progress = $this->progressService->getOrCreateProgress($enrollment, $lesson);
 
         $this->assertEquals($existingProgress->id, $progress->id);
         $this->assertEquals(5, $progress->current_page);
@@ -652,9 +657,9 @@ class EnrollmentLifecycleTest extends TestCase
         ]);
 
         // Recalculate multiple times
-        $enrollment->recalculateCourseProgress();
-        $enrollment->recalculateCourseProgress();
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
+        $this->progressService->recalculateCourseProgress($enrollment);
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         // Should still be 33.3%
@@ -678,12 +683,12 @@ class EnrollmentLifecycleTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $completedAt = $enrollment->completed_at;
 
         // Recalculate again
         sleep(1); // Ensure time passes
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         // Should still be completed with same timestamp
@@ -717,7 +722,7 @@ class EnrollmentLifecycleTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         // 7/10 = 70%

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
-use App\Models\AttemptAnswer;
 use App\Models\Course;
 use App\Models\CourseInvitation;
 use App\Models\CourseSection;
@@ -42,6 +42,8 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
 
     private Course $course;
 
+    private ProgressTrackingServiceContract $progressService;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -54,6 +56,8 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             'user_id' => $this->contentManager->id,
             'visibility' => 'public',
         ]);
+
+        $this->progressService = app(ProgressTrackingServiceContract::class);
     }
 
     // ========== ASSESSMENT ATTEMPT LIMITS ==========
@@ -147,7 +151,7 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             'course_id' => $emptyCourse->id,
         ]);
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
 
         $this->assertEquals(0, $enrollment->progress_percentage);
         $this->assertEquals('active', $enrollment->status);
@@ -171,7 +175,7 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             'current_page' => 1,
         ]);
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         $this->assertEquals(100, $enrollment->progress_percentage);
@@ -203,7 +207,7 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             ]);
         }
 
-        $enrollment->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment);
         $enrollment->refresh();
 
         // Should round to 1 decimal: 42.857... → 42.9
@@ -490,8 +494,8 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             ]);
         }
 
-        $enrollment1->recalculateCourseProgress();
-        $enrollment2->recalculateCourseProgress();
+        $this->progressService->recalculateCourseProgress($enrollment1);
+        $this->progressService->recalculateCourseProgress($enrollment2);
 
         $enrollment1->refresh();
         $enrollment2->refresh();

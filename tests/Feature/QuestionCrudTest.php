@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature;
 
 use App\Models\Assessment;
@@ -15,20 +16,20 @@ class QuestionCrudTest extends TestCase
 
     public function test_content_managers_can_create_questions(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'What is 2 + 2?',
                 'question_type' => 'multiple_choice',
-                'points'        => 1,
-                'options'       => [
+                'points' => 1,
+                'options' => [
                     ['option_text' => '3', 'is_correct' => false],
                     ['option_text' => '4', 'is_correct' => true],
                     ['option_text' => '5', 'is_correct' => false],
@@ -46,12 +47,12 @@ class QuestionCrudTest extends TestCase
 
     public function test_content_managers_can_update_questions(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
         $question = Question::factory()->create([
             'assessment_id' => $assessment->id,
@@ -60,11 +61,11 @@ class QuestionCrudTest extends TestCase
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
-                'id'            => $question->id,
+                'id' => $question->id,
                 'question_text' => 'Updated question text',
                 'question_type' => 'multiple_choice',
-                'points'        => 2,
-                'options'       => [
+                'points' => 2,
+                'options' => [
                     ['option_text' => 'Option 1', 'is_correct' => true],
                     ['option_text' => 'Option 2', 'is_correct' => false],
                 ],
@@ -73,20 +74,20 @@ class QuestionCrudTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseHas('questions', [
-            'id'            => $question->id,
+            'id' => $question->id,
             'question_text' => 'Updated question text',
-            'points'        => 2,
+            'points' => 2,
         ]);
     }
 
     public function test_content_managers_can_delete_questions(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
         $question = Question::factory()->create([
             'assessment_id' => $assessment->id,
@@ -113,19 +114,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_question_validation_requires_text(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => '',
                 'question_type' => 'multiple_choice',
-                'points'        => 1,
+                'points' => 1,
             ]],
         ]);
 
@@ -134,19 +135,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_question_validation_requires_valid_type(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Test question',
                 'question_type' => 'invalid_type',
-                'points'        => 1,
+                'points' => 1,
             ]],
         ]);
 
@@ -156,20 +157,20 @@ class QuestionCrudTest extends TestCase
 
     public function test_multiple_choice_questions_require_options(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Test question',
                 'question_type' => 'multiple_choice',
-                'points'        => 1,
-                'options'       => [],
+                'points' => 1,
+                'options' => [],
             ]],
         ]);
 
@@ -179,19 +180,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_question_points_must_be_positive(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Test question',
                 'question_type' => 'short_answer',
-                'points'        => 0,
+                'points' => 0,
             ]],
         ]);
 
@@ -200,20 +201,20 @@ class QuestionCrudTest extends TestCase
 
     public function test_true_false_question_creation(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Is the sky blue?',
                 'question_type' => 'true_false',
-                'points'        => 1,
-                'options'       => [
+                'points' => 1,
+                'options' => [
                     ['option_text' => 'True', 'is_correct' => true],
                     ['option_text' => 'False', 'is_correct' => false],
                 ],
@@ -231,19 +232,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_short_answer_question_creation(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'What is the capital of France?',
                 'question_type' => 'short_answer',
-                'points'        => 2,
+                'points' => 2,
             ]],
         ]);
 
@@ -258,19 +259,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_essay_question_creation(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Describe the causes of World War II in detail.',
                 'question_type' => 'essay',
-                'points'        => 10,
+                'points' => 10,
             ]],
         ]);
 
@@ -285,19 +286,19 @@ class QuestionCrudTest extends TestCase
 
     public function test_file_upload_question_creation(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Upload your project proposal document.',
                 'question_type' => 'file_upload',
-                'points'        => 15,
+                'points' => 15,
             ]],
         ]);
 
@@ -312,20 +313,20 @@ class QuestionCrudTest extends TestCase
 
     public function test_matching_question_creation(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Match the terms with their definitions.',
                 'question_type' => 'matching',
-                'points'        => 5,
-                'options'       => [
+                'points' => 5,
+                'options' => [
                     ['option_text' => 'Term 1', 'is_correct' => false, 'match_text' => 'Definition 1'],
                     ['option_text' => 'Term 2', 'is_correct' => false, 'match_text' => 'Definition 2'],
                     ['option_text' => 'Term 3', 'is_correct' => false, 'match_text' => 'Definition 3'],
@@ -345,11 +346,11 @@ class QuestionCrudTest extends TestCase
     public function test_question_type_methods_work_correctly(): void
     {
         $multipleChoice = Question::factory()->multipleChoice()->create();
-        $trueFalse      = Question::factory()->trueFalse()->create();
-        $shortAnswer    = Question::factory()->shortAnswer()->create();
-        $essay          = Question::factory()->essay()->create();
-        $fileUpload     = Question::factory()->fileUpload()->create();
-        $matching       = Question::factory()->matching()->create();
+        $trueFalse = Question::factory()->trueFalse()->create();
+        $shortAnswer = Question::factory()->shortAnswer()->create();
+        $essay = Question::factory()->essay()->create();
+        $fileUpload = Question::factory()->fileUpload()->create();
+        $matching = Question::factory()->matching()->create();
 
         $this->assertTrue($multipleChoice->isMultipleChoice());
         $this->assertFalse($multipleChoice->isTrueFalse());
@@ -372,10 +373,10 @@ class QuestionCrudTest extends TestCase
 
     public function test_manual_grading_requirement_for_question_types(): void
     {
-        $essay          = Question::factory()->essay()->create();
-        $fileUpload     = Question::factory()->fileUpload()->create();
+        $essay = Question::factory()->essay()->create();
+        $fileUpload = Question::factory()->fileUpload()->create();
         $multipleChoice = Question::factory()->multipleChoice()->create();
-        $shortAnswer    = Question::factory()->shortAnswer()->create();
+        $shortAnswer = Question::factory()->shortAnswer()->create();
 
         $this->assertTrue($essay->requiresManualGrading());
         $this->assertTrue($fileUpload->requiresManualGrading());
@@ -386,11 +387,11 @@ class QuestionCrudTest extends TestCase
     public function test_question_type_labels_are_correct(): void
     {
         $multipleChoice = Question::factory()->multipleChoice()->create();
-        $trueFalse      = Question::factory()->trueFalse()->create();
-        $matching       = Question::factory()->matching()->create();
-        $shortAnswer    = Question::factory()->shortAnswer()->create();
-        $essay          = Question::factory()->essay()->create();
-        $fileUpload     = Question::factory()->fileUpload()->create();
+        $trueFalse = Question::factory()->trueFalse()->create();
+        $matching = Question::factory()->matching()->create();
+        $shortAnswer = Question::factory()->shortAnswer()->create();
+        $essay = Question::factory()->essay()->create();
+        $fileUpload = Question::factory()->fileUpload()->create();
 
         $this->assertEquals('Pilihan Ganda', $multipleChoice->getQuestionTypeLabel());
         $this->assertEquals('Benar/Salah', $trueFalse->getQuestionTypeLabel());
@@ -402,20 +403,20 @@ class QuestionCrudTest extends TestCase
 
     public function test_question_with_multiple_correct_options(): void
     {
-        $user       = User::factory()->create(['role' => 'content_manager']);
-        $course     = Course::factory()->create(['user_id' => $user->id]);
+        $user = User::factory()->create(['role' => 'content_manager']);
+        $course = Course::factory()->create(['user_id' => $user->id]);
         $assessment = Assessment::factory()->create([
             'course_id' => $course->id,
-            'user_id'   => $user->id,
-            'status'    => 'draft',
+            'user_id' => $user->id,
+            'status' => 'draft',
         ]);
 
         $response = $this->actingAs($user)->put("/courses/{$course->id}/assessments/{$assessment->id}/questions", [
             'questions' => [[
                 'question_text' => 'Select all that apply: Which of these are programming languages?',
                 'question_type' => 'multiple_choice',
-                'points'        => 3,
-                'options'       => [
+                'points' => 3,
+                'options' => [
                     ['option_text' => 'PHP', 'is_correct' => true],
                     ['option_text' => 'JavaScript', 'is_correct' => true],
                     ['option_text' => 'HTML', 'is_correct' => false],
