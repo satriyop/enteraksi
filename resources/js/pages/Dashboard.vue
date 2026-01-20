@@ -13,12 +13,19 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
 import { BookOpen, GraduationCap, Users } from 'lucide-vue-next';
 
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
+
+/** Dashboard statistics */
+interface DashboardStats {
+    programs: number;
+    courses: number;
+    learners: number;
+}
+
 interface Props {
-    stats: {
-        programs: number;
-        courses: number;
-        learners: number;
-    };
+    stats: DashboardStats;
 }
 
 const props = defineProps<Props>();

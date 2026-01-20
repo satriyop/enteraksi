@@ -1,53 +1,42 @@
 <script setup lang="ts">
 import Navbar from '@/components/home/Navbar.vue';
 import Footer from '@/components/home/Footer.vue';
+import BrowseCourseCard from '@/components/courses/BrowseCourseCard.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import {
-    Clock,
-    Users,
-    BookOpen,
-    Search,
-    Filter,
-    X,
-} from 'lucide-vue-next';
+import { BookOpen, Search, Filter, X } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
+import type { Category, DifficultyLevel, PaginationLink, UserSummary } from '@/types';
 
-interface Category {
-    id: number;
-    name: string;
-}
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
 
-interface User {
-    id: number;
-    name: string;
-}
-
-interface Course {
+/** Course card for browse page */
+interface BrowseCourse {
     id: number;
     title: string;
     slug: string;
     short_description: string;
     thumbnail_path: string | null;
-    difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+    difficulty_level: DifficultyLevel;
     estimated_duration_minutes: number;
     manual_duration_minutes: number | null;
-    user: User;
+    user: UserSummary;
     category: Category | null;
     lessons_count: number;
     enrollments_count: number;
 }
 
 interface PaginatedCourses {
-    data: Course[];
+    data: BrowseCourse[];
     current_page: number;
     last_page: number;
     per_page: number;
     total: number;
-    links: Array<{ url: string | null; label: string; active: boolean }>;
+    links: PaginationLink[];
 }
 
 interface Filters {
@@ -71,34 +60,6 @@ const searchQuery = ref(props.filters.search || '');
 const selectedCategory = ref(props.filters.category_id || '');
 const selectedDifficulty = ref(props.filters.difficulty_level || '');
 const showFilters = ref(false);
-
-const difficultyLabel = (level: string) => {
-    const labels: Record<string, string> = {
-        beginner: 'Pemula',
-        intermediate: 'Menengah',
-        advanced: 'Lanjutan',
-    };
-    return labels[level] || level;
-};
-
-const difficultyColor = (level: string) => {
-    const colors: Record<string, string> = {
-        beginner: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-        intermediate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-        advanced: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    };
-    return colors[level] || '';
-};
-
-const formatDuration = (course: Course) => {
-    const minutes = course.manual_duration_minutes ?? course.estimated_duration_minutes ?? 0;
-    if (!minutes) return '-';
-    if (minutes < 60) return `${minutes} menit`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) return `${hours} jam`;
-    return `${hours}j ${remainingMinutes}m`;
-};
 
 const applyFilters = () => {
     const params: Record<string, string> = {};
@@ -217,59 +178,11 @@ watch(searchQuery, () => {
 
             <!-- Course Grid -->
             <div v-if="courses.data.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                <Card v-for="course in courses.data" :key="course.id" class="group overflow-hidden">
-                    <Link :href="`/courses/${course.id}`">
-                        <div class="relative aspect-video bg-muted">
-                            <img
-                                v-if="course.thumbnail_path"
-                                :src="`/storage/${course.thumbnail_path}`"
-                                :alt="course.title"
-                                class="h-full w-full object-cover transition-transform group-hover:scale-105"
-                            />
-                            <div v-else class="flex h-full items-center justify-center">
-                                <BookOpen class="h-12 w-12 text-muted-foreground" />
-                            </div>
-                            <Badge
-                                class="absolute left-2 top-2"
-                                :class="difficultyColor(course.difficulty_level)"
-                            >
-                                {{ difficultyLabel(course.difficulty_level) }}
-                            </Badge>
-                        </div>
-                    </Link>
-                    <CardContent class="p-4">
-                        <Link :href="`/courses/${course.id}`">
-                            <h3 class="font-semibold line-clamp-2 hover:text-primary">
-                                {{ course.title }}
-                            </h3>
-                        </Link>
-                        <p class="mt-1 text-sm text-muted-foreground line-clamp-2">
-                            {{ course.short_description }}
-                        </p>
-                        <p class="mt-2 text-sm text-muted-foreground">
-                            {{ course.user.name }}
-                        </p>
-                        <div class="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span class="flex items-center gap-1">
-                                <Clock class="h-3 w-3" />
-                                {{ formatDuration(course) }}
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <BookOpen class="h-3 w-3" />
-                                {{ course.lessons_count }} materi
-                            </span>
-                            <span class="flex items-center gap-1">
-                                <Users class="h-3 w-3" />
-                                {{ course.enrollments_count }}
-                            </span>
-                        </div>
-                        <Link :href="`/courses/${course.id}`" class="mt-4 block">
-                            <Button class="w-full" variant="outline" size="sm">
-                                Lihat Detail
-                            </Button>
-                        </Link>
-                    </CardContent>
-                </Card>
+                <BrowseCourseCard
+                    v-for="course in courses.data"
+                    :key="course.id"
+                    :course="course"
+                />
             </div>
 
             <!-- Empty State -->

@@ -8,18 +8,29 @@ import SearchInput from '@/components/crud/SearchInput.vue';
 import Pagination from '@/components/crud/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import {
+    type BreadcrumbItem,
+    type PaginatedResponse,
+    type PaginationLink,
+    AssessmentStatus,
+    AssessmentVisibility,
+} from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, FileText, Clock, CheckCircle, Users, Eye, Pencil, Trash2, LayoutGrid, List, PlayCircle } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 
-interface Assessment {
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
+
+/** Assessment list item with computed counts */
+interface AssessmentListItem {
     id: number;
     title: string;
     description: string;
-    status: string;
-    visibility: string;
-    time_limit_minutes: number;
+    status: AssessmentStatus;
+    visibility: AssessmentVisibility;
+    time_limit_minutes: number | null;
     passing_score: number;
     max_attempts: number;
     questions_count: number;
@@ -28,26 +39,21 @@ interface Assessment {
     updated_at: string;
 }
 
-interface Course {
+/** Minimal course info for breadcrumbs */
+interface AssessmentCourse {
     id: number;
     title: string;
 }
 
+interface Filters {
+    search?: string;
+    status?: string;
+}
+
 interface Props {
-    course: Course;
-    assessments: {
-        data: Assessment[];
-        links: { url: string | null; label: string; active: boolean }[];
-        current_page: number;
-        last_page: number;
-        from: number;
-        to: number;
-        total: number;
-    };
-    filters: {
-        search?: string;
-        status?: string;
-    };
+    course: AssessmentCourse;
+    assessments: PaginatedResponse<AssessmentListItem>;
+    filters: Filters;
 }
 
 const props = defineProps<Props>();

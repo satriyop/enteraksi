@@ -8,19 +8,24 @@ import SearchInput from '@/components/crud/SearchInput.vue';
 import Pagination from '@/components/crud/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type PaginatedResponse, DifficultyLevel } from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, BookOpen, Layers, Eye, Pencil, Trash2, LayoutGrid, List, CheckCircle, Clock } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 
-interface LearningPath {
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
+
+/** Learning path list item with computed counts */
+interface LearningPathListItem {
     id: number;
     title: string;
     slug: string;
-    description: string;
+    description: string | null;
     is_published: boolean;
     estimated_duration: number;
-    difficulty_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+    difficulty_level: DifficultyLevel | 'expert';
     thumbnail_url: string | null;
     courses_count: number;
     created_at: string;
@@ -29,20 +34,14 @@ interface LearningPath {
     } | null;
 }
 
+interface Filters {
+    search?: string;
+    status?: string;
+}
+
 interface Props {
-    learningPaths: {
-        data: LearningPath[];
-        links: { url: string | null; label: string; active: boolean }[];
-        current_page: number;
-        last_page: number;
-        from: number;
-        to: number;
-        total: number;
-    };
-    filters: {
-        search?: string;
-        status?: string;
-    };
+    learningPaths: PaginatedResponse<LearningPathListItem>;
+    filters: Filters;
 }
 
 const props = defineProps<Props>();
@@ -64,7 +63,7 @@ const statusTabs = computed(() => [
     { value: 'draft', label: 'Draft' },
 ]);
 
-const statusBadge = (learningPath: LearningPath) => {
+const statusBadge = (learningPath: LearningPathListItem) => {
     return learningPath.is_published
         ? { label: 'Terbit', variant: 'default' as const }
         : { label: 'Draft', variant: 'secondary' as const };
@@ -94,7 +93,7 @@ const formatDuration = (minutes: number) => {
     return `${hours}j ${remainingMinutes}m`;
 };
 
-const getLearningPathActions = (learningPath: LearningPath) => [
+const getLearningPathActions = (learningPath: LearningPathListItem) => [
     { label: 'Lihat', href: show(learningPath.id).url, icon: Eye },
     { label: 'Edit', href: edit(learningPath.id).url, icon: Pencil },
     {
@@ -107,7 +106,7 @@ const getLearningPathActions = (learningPath: LearningPath) => [
     { label: 'Hapus', icon: Trash2, variant: 'destructive' as const, onClick: () => deleteLearningPath(learningPath) },
 ];
 
-const getLearningPathMeta = (learningPath: LearningPath) => [
+const getLearningPathMeta = (learningPath: LearningPathListItem) => [
     { icon: Layers, label: `${learningPath.courses_count ?? 0} kursus` },
     { icon: Clock, label: formatDuration(learningPath.estimated_duration) },
 ];
@@ -125,15 +124,15 @@ watch(status, (value) => {
     router.get(index().url, { search: search.value, status: value }, { preserveState: true, replace: true });
 });
 
-const publishLearningPath = (learningPath: LearningPath) => {
+const publishLearningPath = (learningPath: LearningPathListItem) => {
     router.put(publish(learningPath.id).url, {}, { preserveScroll: true });
 };
 
-const unpublishLearningPath = (learningPath: LearningPath) => {
+const unpublishLearningPath = (learningPath: LearningPathListItem) => {
     router.put(unpublish(learningPath.id).url, {}, { preserveScroll: true });
 };
 
-const deleteLearningPath = (learningPath: LearningPath) => {
+const deleteLearningPath = (learningPath: LearningPathListItem) => {
     if (confirm(`Apakah Anda yakin ingin menghapus jalur pembelajaran "${learningPath.title}"?`)) {
         router.delete(destroy(learningPath.id).url);
     }

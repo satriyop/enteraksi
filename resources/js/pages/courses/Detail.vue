@@ -1,91 +1,71 @@
 <script setup lang="ts">
+// =============================================================================
+// Course Detail Page (Public View)
+// Uses CourseContentOutline, CourseRatingsSection, CourseEnrollmentCard, CourseMetaCard
+// =============================================================================
+
 import Navbar from '@/components/home/Navbar.vue';
 import Footer from '@/components/home/Footer.vue';
-import StarRating from '@/components/StarRating.vue';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import { Head, Link, router, usePage, useForm } from '@inertiajs/vue3';
-import {
-    Clock,
-    Users,
-    BookOpen,
-    ChevronDown,
-    ChevronRight,
-    PlayCircle,
-    FileText,
-    CheckCircle,
-    User,
-    BarChart,
-    FolderOpen,
-    Eye,
-    Lock,
-    Headphones,
-    FileDown,
-    Video as VideoCall,
-    Youtube,
-    AlertTriangle,
-    Star,
-    Pencil,
-    Trash2,
-} from 'lucide-vue-next';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ref, computed } from 'vue';
-import { store, update, destroy } from '@/actions/App/Http/Controllers/CourseRatingController';
+import CourseContentOutline from '@/components/courses/CourseContentOutline.vue';
+import CourseRatingsSection from '@/components/courses/CourseRatingsSection.vue';
+import CourseEnrollmentCard from '@/components/courses/CourseEnrollmentCard.vue';
+import CourseMetaCard from '@/components/courses/CourseMetaCard.vue';
+import { Head, Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, AlertTriangle, Clock, Users } from 'lucide-vue-next';
+import { computed } from 'vue';
+import { formatDuration, difficultyLabel, difficultyColor } from '@/lib/utils';
+import type {
+    Category,
+    Tag,
+    ContentType,
+    DifficultyLevel,
+    UserSummary,
+} from '@/types';
 
-interface Category {
-    id: number;
-    name: string;
-}
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
 
-interface Tag {
-    id: number;
-    name: string;
-}
-
-interface User {
-    id: number;
-    name: string;
-}
-
-interface Lesson {
+interface OutlineLesson {
     id: number;
     title: string;
-    content_type: 'text' | 'video' | 'youtube' | 'audio' | 'document' | 'conference';
+    content_type: ContentType;
     estimated_duration_minutes: number | null;
     order: number;
     is_free_preview: boolean;
 }
 
-interface Section {
+interface OutlineSection {
     id: number;
     title: string;
     order: number;
-    lessons: Lesson[];
+    lessons: OutlineLesson[];
 }
 
-interface Course {
+interface PublicCourse {
     id: number;
     title: string;
     slug: string;
     short_description: string;
     description: string | null;
     thumbnail_path: string | null;
-    difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+    difficulty_level: DifficultyLevel;
     estimated_duration_minutes: number;
     manual_duration_minutes: number | null;
     status: string;
     visibility: string;
-    user: User;
+    user: UserSummary;
     category: Category | null;
     tags: Tag[];
-    sections: Section[];
+    sections: OutlineSection[];
     lessons_count: number;
     enrollments_count: number;
 }
 
-interface Enrollment {
+interface UserEnrollment {
     id: number;
     status: string;
     enrolled_at: string;
@@ -99,12 +79,12 @@ interface CourseRating {
     rating: number;
     review: string | null;
     created_at: string;
-    user: { id: number; name: string };
+    user: UserSummary;
 }
 
 interface Props {
-    course: Course;
-    enrollment: Enrollment | null;
+    course: PublicCourse;
+    enrollment: UserEnrollment | null;
     isUnderRevision: boolean;
     userRating: CourseRating | null;
     ratings: CourseRating[];
@@ -119,173 +99,41 @@ interface Props {
     };
 }
 
+// =============================================================================
+// Component Setup
+// =============================================================================
+
 const props = defineProps<Props>();
 
 const page = usePage();
 const appName = computed(() => page.props.name || 'E-Learning');
 
-// Auto-expand sections: all sections for enrolled users, or sections with preview for non-enrolled
-const isUserEnrolled = props.enrollment && props.enrollment.status === 'active';
-const initialExpandedSections = isUserEnrolled
-    ? props.course.sections.map(section => section.id)
-    : props.course.sections
-        .filter(section => section.lessons.some(lesson => lesson.is_free_preview))
-        .map(section => section.id);
+// =============================================================================
+// Computed
+// =============================================================================
 
-const expandedSections = ref<number[]>(initialExpandedSections);
-const isEnrolling = ref(false);
-
-const toggleSection = (sectionId: number) => {
-    const index = expandedSections.value.indexOf(sectionId);
-    if (index === -1) {
-        expandedSections.value.push(sectionId);
-    } else {
-        expandedSections.value.splice(index, 1);
-    }
-};
-
-const isSectionExpanded = (sectionId: number) => {
-    return expandedSections.value.includes(sectionId);
-};
-
-const difficultyLabel = (level: string) => {
-    const labels: Record<string, string> = {
-        beginner: 'Pemula',
-        intermediate: 'Menengah',
-        advanced: 'Lanjutan',
-    };
-    return labels[level] || level;
-};
-
-const difficultyColor = (level: string) => {
-    const colors: Record<string, string> = {
-        beginner: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-        intermediate: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-        advanced: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    };
-    return colors[level] || '';
-};
-
-const formatDuration = (minutes: number | null) => {
-    if (!minutes) return '-';
-    if (minutes < 60) return `${minutes} menit`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) return `${hours} jam`;
-    return `${hours}j ${remainingMinutes}m`;
-};
+const isEnrolled = computed(() =>
+    props.enrollment && props.enrollment.status === 'active'
+);
 
 const totalDuration = computed(() => {
     const minutes = props.course.manual_duration_minutes ?? props.course.estimated_duration_minutes ?? 0;
-    return formatDuration(minutes);
+    return formatDuration(minutes, 'long');
 });
 
-const totalLessons = computed(() => {
-    return props.course.sections.reduce((total, section) => total + section.lessons.length, 0);
-});
+const totalLessons = computed(() =>
+    props.course.sections.reduce((total, section) => total + section.lessons.length, 0)
+);
 
-const lessonTypeIcon = (type: string) => {
-    switch (type) {
-        case 'video':
-            return PlayCircle;
-        case 'youtube':
-            return Youtube;
-        case 'audio':
-            return Headphones;
-        case 'document':
-            return FileDown;
-        case 'conference':
-            return VideoCall;
-        case 'text':
-        default:
-            return FileText;
-    }
-};
+const previewLessonsCount = computed(() =>
+    props.course.sections.reduce((total, section) =>
+        total + section.lessons.filter(l => l.is_free_preview).length, 0)
+);
 
-const previewLessonsCount = computed(() => {
-    return props.course.sections.reduce((total, section) => {
-        return total + section.lessons.filter(l => l.is_free_preview).length;
-    }, 0);
-});
-
-const handleEnroll = () => {
-    isEnrolling.value = true;
-    router.post(`/courses/${props.course.id}/enroll`, {}, {
-        onFinish: () => {
-            isEnrolling.value = false;
-        },
-    });
-};
-
-const handleUnenroll = () => {
-    if (!confirm('Apakah Anda yakin ingin membatalkan pendaftaran dari kursus ini?')) {
-        return;
-    }
-    router.delete(`/courses/${props.course.id}/unenroll`);
-};
-
-const isEnrolled = computed(() => {
-    return props.enrollment && props.enrollment.status === 'active';
-});
-
-// Rating form
-const isEditingRating = ref(false);
-const ratingForm = useForm({
-    rating: props.userRating?.rating || 0,
-    review: props.userRating?.review || '',
-});
-
-const submitRating = () => {
-    if (props.userRating) {
-        // Update existing rating
-        ratingForm.patch(update.url(props.course.id, props.userRating.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                isEditingRating.value = false;
-            },
-        });
-    } else {
-        // Create new rating
-        ratingForm.post(store.url(props.course.id), {
-            preserveScroll: true,
-        });
-    }
-};
-
-const deleteRating = () => {
-    if (!props.userRating || !confirm('Apakah Anda yakin ingin menghapus rating ini?')) {
-        return;
-    }
-    router.delete(destroy.url(props.course.id, props.userRating.id), {
-        preserveScroll: true,
-    });
-};
-
-const startEditRating = () => {
-    ratingForm.rating = props.userRating?.rating || 0;
-    ratingForm.review = props.userRating?.review || '';
-    isEditingRating.value = true;
-};
-
-const cancelEditRating = () => {
-    ratingForm.rating = props.userRating?.rating || 0;
-    ratingForm.review = props.userRating?.review || '';
-    isEditingRating.value = false;
-};
-
-const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-    });
-};
-
-// Get the first lesson for "Continue Learning" button
-const firstLesson = computed(() => {
+const firstLessonId = computed(() => {
     for (const section of props.course.sections) {
         if (section.lessons.length > 0) {
-            return section.lessons.sort((a, b) => a.order - b.order)[0];
+            return section.lessons.sort((a, b) => a.order - b.order)[0].id;
         }
     }
     return null;
@@ -380,123 +228,13 @@ const firstLesson = computed(() => {
                         </CardContent>
                     </Card>
 
-                    <!-- Course Content -->
-                    <Card>
-                        <CardHeader>
-                            <CardTitle class="flex items-center gap-2">
-                                <FolderOpen class="h-5 w-5" />
-                                Konten Kursus
-                            </CardTitle>
-                            <p class="text-sm text-muted-foreground">
-                                {{ course.sections.length }} bagian • {{ totalLessons }} materi • {{ totalDuration }} total durasi
-                            </p>
-                        </CardHeader>
-                        <CardContent>
-                            <div v-if="course.sections.length === 0" class="py-8 text-center text-muted-foreground">
-                                Belum ada konten untuk kursus ini.
-                            </div>
-                            <div v-else class="space-y-2">
-                                <div
-                                    v-for="section in course.sections"
-                                    :key="section.id"
-                                    class="rounded-lg border"
-                                >
-                                    <!-- Section Header -->
-                                    <button
-                                        type="button"
-                                        @click="toggleSection(section.id)"
-                                        class="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors"
-                                    >
-                                        <div class="flex items-center gap-2">
-                                            <ChevronDown
-                                                v-if="isSectionExpanded(section.id)"
-                                                class="h-4 w-4 shrink-0"
-                                            />
-                                            <ChevronRight v-else class="h-4 w-4 shrink-0" />
-                                            <span class="font-medium">{{ section.title }}</span>
-                                        </div>
-                                        <span class="text-sm text-muted-foreground">
-                                            {{ section.lessons.length }} materi
-                                        </span>
-                                    </button>
-
-                                    <!-- Section Lessons -->
-                                    <div
-                                        v-if="isSectionExpanded(section.id)"
-                                        class="border-t bg-muted/30"
-                                    >
-                                        <template v-for="lesson in section.lessons" :key="lesson.id">
-                                            <!-- Enrolled users can click any lesson -->
-                                            <Link
-                                                v-if="isEnrolled"
-                                                :href="`/courses/${course.id}/lessons/${lesson.id}`"
-                                                class="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 transition-colors hover:bg-primary/5 cursor-pointer"
-                                            >
-                                                <component
-                                                    :is="lessonTypeIcon(lesson.content_type)"
-                                                    class="h-4 w-4 shrink-0 text-primary"
-                                                />
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm truncate text-foreground">
-                                                        {{ lesson.title }}
-                                                    </p>
-                                                </div>
-                                                <span v-if="lesson.estimated_duration_minutes" class="text-xs text-muted-foreground">
-                                                    {{ lesson.estimated_duration_minutes }} min
-                                                </span>
-                                            </Link>
-                                            <!-- Non-enrolled users: preview lessons are clickable -->
-                                            <Link
-                                                v-else-if="lesson.is_free_preview"
-                                                :href="`/courses/${course.id}/lessons/${lesson.id}/preview`"
-                                                class="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 transition-colors hover:bg-primary/5 cursor-pointer"
-                                            >
-                                                <component
-                                                    :is="lessonTypeIcon(lesson.content_type)"
-                                                    class="h-4 w-4 shrink-0 text-primary"
-                                                />
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm truncate text-primary font-medium">
-                                                        {{ lesson.title }}
-                                                    </p>
-                                                </div>
-                                                <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <Badge class="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 gap-1">
-                                                        <Eye class="h-3 w-3" />
-                                                        Preview
-                                                    </Badge>
-                                                    <span v-if="lesson.estimated_duration_minutes">
-                                                        {{ lesson.estimated_duration_minutes }} min
-                                                    </span>
-                                                </div>
-                                            </Link>
-                                            <!-- Non-enrolled users: locked lessons -->
-                                            <div
-                                                v-else
-                                                class="flex items-center gap-3 px-4 py-3 border-b last:border-b-0 transition-colors opacity-60"
-                                            >
-                                                <component
-                                                    :is="lessonTypeIcon(lesson.content_type)"
-                                                    class="h-4 w-4 shrink-0 text-muted-foreground"
-                                                />
-                                                <div class="flex-1 min-w-0">
-                                                    <p class="text-sm truncate">
-                                                        {{ lesson.title }}
-                                                    </p>
-                                                </div>
-                                                <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                                                    <Lock class="h-3 w-3" />
-                                                    <span v-if="lesson.estimated_duration_minutes">
-                                                        {{ lesson.estimated_duration_minutes }} min
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <!-- Course Content Outline -->
+                    <CourseContentOutline
+                        :course-id="course.id"
+                        :sections="course.sections"
+                        :total-duration-minutes="course.manual_duration_minutes ?? course.estimated_duration_minutes"
+                        :is-enrolled="isEnrolled"
+                    />
 
                     <!-- Tags -->
                     <div v-if="course.tags.length > 0" class="mt-6">
@@ -508,300 +246,42 @@ const firstLesson = computed(() => {
                         </div>
                     </div>
 
-                    <!-- Ratings & Reviews Section -->
-                    <Card class="mt-6">
-                        <CardHeader>
-                            <CardTitle class="flex items-center gap-2">
-                                <Star class="h-5 w-5" />
-                                Rating & Ulasan
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent class="space-y-6">
-                            <!-- Rating Summary -->
-                            <div class="flex items-center gap-6 pb-4 border-b">
-                                <div class="text-center">
-                                    <div class="text-4xl font-bold text-amber-600 dark:text-amber-500">
-                                        {{ averageRating?.toFixed(1) || '-' }}
-                                    </div>
-                                    <StarRating
-                                        :rating="averageRating || 0"
-                                        readonly
-                                        size="sm"
-                                        class="mt-1"
-                                    />
-                                    <div class="text-sm text-muted-foreground mt-1">
-                                        {{ ratingsCount }} ulasan
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- User Rating Form (only for enrolled users) -->
-                            <div v-if="isEnrolled" class="pb-4 border-b">
-                                <h4 class="font-medium mb-3">
-                                    {{ userRating ? 'Rating Anda' : 'Berikan Rating' }}
-                                </h4>
-
-                                <!-- Display existing rating -->
-                                <div v-if="userRating && !isEditingRating" class="space-y-3">
-                                    <div class="flex items-center gap-2">
-                                        <StarRating :rating="userRating.rating" readonly size="md" />
-                                        <span class="text-sm text-muted-foreground">
-                                            {{ formatDate(userRating.created_at) }}
-                                        </span>
-                                    </div>
-                                    <p v-if="userRating.review" class="text-sm">
-                                        {{ userRating.review }}
-                                    </p>
-                                    <div class="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            @click="startEditRating"
-                                        >
-                                            <Pencil class="h-4 w-4 mr-1" />
-                                            Edit
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            @click="deleteRating"
-                                        >
-                                            <Trash2 class="h-4 w-4 mr-1" />
-                                            Hapus
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <!-- Rating form (new or edit) -->
-                                <form
-                                    v-else
-                                    @submit.prevent="submitRating"
-                                    class="space-y-4"
-                                >
-                                    <div>
-                                        <label class="text-sm font-medium mb-2 block">Rating</label>
-                                        <StarRating
-                                            v-model="ratingForm.rating"
-                                            size="lg"
-                                        />
-                                        <p v-if="ratingForm.errors.rating" class="text-sm text-destructive mt-1">
-                                            {{ ratingForm.errors.rating }}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <label class="text-sm font-medium mb-2 block">
-                                            Ulasan (opsional)
-                                        </label>
-                                        <Textarea
-                                            v-model="ratingForm.review"
-                                            placeholder="Bagikan pengalaman belajar Anda..."
-                                            rows="3"
-                                        />
-                                        <p v-if="ratingForm.errors.review" class="text-sm text-destructive mt-1">
-                                            {{ ratingForm.errors.review }}
-                                        </p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <Button
-                                            type="submit"
-                                            :disabled="ratingForm.processing || ratingForm.rating === 0"
-                                        >
-                                            {{ ratingForm.processing ? 'Menyimpan...' : (userRating ? 'Perbarui' : 'Kirim') }}
-                                        </Button>
-                                        <Button
-                                            v-if="userRating"
-                                            type="button"
-                                            variant="outline"
-                                            @click="cancelEditRating"
-                                        >
-                                            Batal
-                                        </Button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Reviews List -->
-                            <div v-if="ratings.length > 0" class="space-y-4">
-                                <h4 class="font-medium">Ulasan Terbaru</h4>
-                                <div
-                                    v-for="rating in ratings"
-                                    :key="rating.id"
-                                    class="border-b pb-4 last:border-b-0 last:pb-0"
-                                >
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
-                                            <User class="h-4 w-4 text-primary" />
-                                        </div>
-                                        <div>
-                                            <div class="font-medium text-sm">{{ rating.user.name }}</div>
-                                            <div class="flex items-center gap-2">
-                                                <StarRating :rating="rating.rating" readonly size="sm" />
-                                                <span class="text-xs text-muted-foreground">
-                                                    {{ formatDate(rating.created_at) }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <p v-if="rating.review" class="text-sm text-muted-foreground ml-10">
-                                        {{ rating.review }}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- No reviews yet -->
-                            <div v-else class="text-center py-4 text-muted-foreground">
-                                <Star class="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <p>Belum ada ulasan untuk kursus ini.</p>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <!-- Ratings & Reviews -->
+                    <div class="mt-6">
+                        <CourseRatingsSection
+                            :course-id="course.id"
+                            :is-enrolled="isEnrolled"
+                            :user-rating="userRating"
+                            :ratings="ratings"
+                            :average-rating="averageRating"
+                            :ratings-count="ratingsCount"
+                        />
+                    </div>
                 </div>
 
                 <!-- Sidebar -->
                 <div class="lg:col-span-1">
                     <div class="sticky top-4 space-y-4">
                         <!-- Enrollment Card -->
-                        <Card>
-                            <CardContent class="p-6">
-                                <!-- Already Enrolled -->
-                                <div v-if="isEnrolled" class="space-y-4">
-                                    <div class="flex items-center gap-2 text-green-600 dark:text-green-400">
-                                        <CheckCircle class="h-5 w-5" />
-                                        <span class="font-medium">Anda sudah terdaftar</span>
-                                    </div>
-                                    <div class="text-sm text-muted-foreground">
-                                        Progress: {{ enrollment?.progress_percentage || 0 }}%
-                                    </div>
-                                    <div class="w-full bg-muted rounded-full h-2">
-                                        <div
-                                            class="bg-primary h-2 rounded-full transition-all"
-                                            :style="{ width: `${enrollment?.progress_percentage || 0}%` }"
-                                        />
-                                    </div>
-                                    <Link
-                                        v-if="firstLesson"
-                                        :href="`/courses/${course.id}/lessons/${firstLesson.id}`"
-                                        class="block"
-                                    >
-                                        <Button class="w-full" size="lg">
-                                            Lanjutkan Belajar
-                                        </Button>
-                                    </Link>
-                                    <Button
-                                        variant="outline"
-                                        class="w-full"
-                                        size="sm"
-                                        @click="handleUnenroll"
-                                    >
-                                        Batalkan Pendaftaran
-                                    </Button>
-                                </div>
-
-                                <!-- Not Enrolled -->
-                                <div v-else class="space-y-4">
-                                    <div class="text-center">
-                                        <div class="text-3xl font-bold text-primary mb-1">Gratis</div>
-                                        <p class="text-sm text-muted-foreground">Akses penuh ke semua materi</p>
-                                    </div>
-                                    <Button
-                                        v-if="can.enroll"
-                                        class="w-full"
-                                        size="lg"
-                                        @click="handleEnroll"
-                                        :disabled="isEnrolling"
-                                    >
-                                        {{ isEnrolling ? 'Mendaftar...' : 'Daftar Sekarang' }}
-                                    </Button>
-                                    <p v-else class="text-sm text-center text-muted-foreground">
-                                        Kursus ini tidak tersedia untuk pendaftaran.
-                                    </p>
-                                    <div v-if="previewLessonsCount > 0" class="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t">
-                                        <Eye class="h-4 w-4 text-green-600" />
-                                        <span>{{ previewLessonsCount }} materi dapat dipreview gratis</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <CourseEnrollmentCard
+                            :course-id="course.id"
+                            :enrollment="enrollment"
+                            :can-enroll="can.enroll"
+                            :preview-lessons-count="previewLessonsCount"
+                            :first-lesson-id="firstLessonId"
+                        />
 
                         <!-- Course Info Card -->
-                        <Card>
-                            <CardContent class="p-6 space-y-4">
-                                <!-- Rating summary in sidebar -->
-                                <div v-if="averageRating" class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
-                                        <Star class="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Rating</div>
-                                        <div class="flex items-center gap-1">
-                                            <span class="font-bold text-amber-600 dark:text-amber-400">{{ averageRating.toFixed(1) }}</span>
-                                            <StarRating :rating="averageRating" readonly size="sm" />
-                                            <span class="text-sm text-muted-foreground">({{ ratingsCount }})</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <User class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Instruktur</div>
-                                        <div class="font-medium">{{ course.user.name }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <BookOpen class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Jumlah Materi</div>
-                                        <div class="font-medium">{{ totalLessons }} materi</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <Clock class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Total Durasi</div>
-                                        <div class="font-medium">{{ totalDuration }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <Users class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Peserta</div>
-                                        <div class="font-medium">{{ course.enrollments_count }} peserta</div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <BarChart class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Tingkat Kesulitan</div>
-                                        <div class="font-medium">{{ difficultyLabel(course.difficulty_level) }}</div>
-                                    </div>
-                                </div>
-
-                                <div v-if="course.category" class="flex items-center gap-3">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
-                                        <FolderOpen class="h-5 w-5 text-primary" />
-                                    </div>
-                                    <div>
-                                        <div class="text-sm text-muted-foreground">Kategori</div>
-                                        <div class="font-medium">{{ course.category.name }}</div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        <CourseMetaCard
+                            :instructor="course.user"
+                            :lessons-count="totalLessons"
+                            :duration-minutes="course.manual_duration_minutes ?? course.estimated_duration_minutes"
+                            :enrollments-count="course.enrollments_count"
+                            :difficulty-level="course.difficulty_level"
+                            :category="course.category"
+                            :average-rating="averageRating"
+                            :ratings-count="ratingsCount"
+                        />
                     </div>
                 </div>
             </div>

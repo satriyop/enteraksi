@@ -14,6 +14,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
+
 interface Props {
     mustVerifyEmail: boolean;
     status?: string;

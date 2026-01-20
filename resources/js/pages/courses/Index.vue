@@ -8,25 +8,32 @@ import SearchInput from '@/components/crud/SearchInput.vue';
 import Pagination from '@/components/crud/Pagination.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import {
+    type BreadcrumbItem,
+    type Category,
+    type CourseStatus,
+    type CourseVisibility,
+    type DifficultyLevel,
+    type PaginationLink,
+} from '@/types';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { Plus, BookOpen, Clock, Layers, Eye, Pencil, Trash2, LayoutGrid, List } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
+import { formatDuration, difficultyLabel, courseStatusLabel } from '@/lib/utils';
 
-interface Category {
-    id: number;
-    name: string;
-    slug: string;
-}
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
 
-interface Course {
+/** Course item for list display */
+interface CourseListItem {
     id: number;
     title: string;
     slug: string;
     short_description: string;
-    status: 'draft' | 'published' | 'archived';
-    visibility: 'public' | 'restricted' | 'hidden';
-    difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+    status: CourseStatus;
+    visibility: CourseVisibility;
+    difficulty_level: DifficultyLevel;
     estimated_duration_minutes: number;
     thumbnail_path: string | null;
     category: Category | null;
@@ -37,8 +44,8 @@ interface Course {
 
 interface Props {
     courses: {
-        data: Course[];
-        links: { url: string | null; label: string; active: boolean }[];
+        data: CourseListItem[];
+        links: PaginationLink[];
         current_page: number;
         last_page: number;
         from: number;
@@ -86,38 +93,19 @@ const statusBadge = (courseStatus: string) => {
     }
 };
 
-const difficultyLabel = (level: string) => {
-    switch (level) {
-        case 'beginner':
-            return 'Pemula';
-        case 'intermediate':
-            return 'Menengah';
-        case 'advanced':
-            return 'Lanjutan';
-        default:
-            return level;
-    }
-};
+/** Format duration for display in course meta */
+const getFormattedDuration = (minutes: number) => formatDuration(minutes, 'long');
 
-const formatDuration = (minutes: number) => {
-    if (!minutes) return '0 menit';
-    if (minutes < 60) return `${minutes} menit`;
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
-    if (remainingMinutes === 0) return `${hours} jam`;
-    return `${hours}j ${remainingMinutes}m`;
-};
-
-const getCourseActions = (course: Course) => [
+const getCourseActions = (course: CourseListItem) => [
     { label: 'Lihat', href: show(course.id).url, icon: Eye },
     { label: 'Edit', href: edit(course.id).url, icon: Pencil },
     { label: 'Hapus', icon: Trash2, variant: 'destructive' as const, onClick: () => deleteCourse(course) },
 ];
 
-const getCourseMeta = (course: Course) => [
+const getCourseMeta = (course: CourseListItem) => [
     { icon: Layers, label: `${course.sections_count ?? 0} seksi` },
     { icon: BookOpen, label: `${course.lessons_count ?? 0} materi` },
-    { icon: Clock, label: formatDuration(course.estimated_duration_minutes) },
+    { icon: Clock, label: getFormattedDuration(course.estimated_duration_minutes) },
 ];
 
 let searchTimeout: ReturnType<typeof setTimeout>;
@@ -133,7 +121,7 @@ watch(status, (value) => {
     router.get(index().url, { search: search.value, status: value }, { preserveState: true, replace: true });
 });
 
-const deleteCourse = (course: Course) => {
+const deleteCourse = (course: CourseListItem) => {
     if (confirm(`Apakah Anda yakin ingin menghapus kursus "${course.title}"?`)) {
         router.delete(destroy(course.id).url);
     }

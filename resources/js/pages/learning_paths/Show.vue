@@ -1,50 +1,62 @@
 <script setup lang="ts">
 import { show, edit } from '@/actions/App/Http/Controllers/LearningPathController';
 import PageHeader from '@/components/crud/PageHeader.vue';
+import LearningPathCourseCard from '@/components/learning_paths/LearningPathCourseCard.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AppLayout from '@/layouts/AppLayout.vue';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, DifficultyLevel } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import { ArrowLeft, Pencil, Eye, BookOpen, Clock, Layers, CheckCircle, AlertCircle } from 'lucide-vue-next';
+import { ArrowLeft, Pencil, BookOpen, Clock } from 'lucide-vue-next';
 
-interface Course {
-    id: number;
-    title: string;
-    description: string;
-    slug: string;
-    estimated_duration: number;
-    difficulty_level: string;
-    thumbnail_url: string;
-    sections_count: number;
-    enrollments_count: number;
-    pivot: {
-        is_required: boolean;
-        min_completion_percentage: number;
-        prerequisites: string | null;
-    };
+// =============================================================================
+// Page-Specific Types
+// =============================================================================
+
+/** Course pivot data from learning path relationship */
+interface CoursePivot {
+    is_required: boolean;
+    min_completion_percentage: number;
+    prerequisites: string | null;
 }
 
-interface LearningPath {
+/** Course in learning path with pivot data */
+interface LearningPathCourse {
     id: number;
     title: string;
-    description: string;
+    description: string | null;
+    slug: string;
+    estimated_duration: number;
+    difficulty_level: DifficultyLevel;
+    thumbnail_url: string | null;
+    sections_count: number;
+    enrollments_count: number;
+    pivot: CoursePivot;
+}
+
+/** Creator info */
+interface Creator {
+    name: string;
+}
+
+/** Full learning path details for show page */
+interface LearningPathDetails {
+    id: number;
+    title: string;
+    description: string | null;
     objectives: string[];
     slug: string;
     estimated_duration: number;
-    difficulty_level: string;
-    thumbnail_url: string;
+    difficulty_level: DifficultyLevel | 'expert';
+    thumbnail_url: string | null;
     is_published: boolean;
-    creator: {
-        name: string;
-    };
-    courses: Course[];
+    creator: Creator | null;
+    courses: LearningPathCourse[];
 }
 
 interface Props {
-    learningPath: LearningPath;
+    learningPath: LearningPathDetails;
 }
 
 const props = defineProps<Props>();
@@ -65,11 +77,6 @@ const formatDuration = (minutes: number | null | undefined) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
-};
-
-const getProgress = (course: Course | any) => {
-    // This would be replaced with actual progress calculation
-    return Math.min(100, Math.floor(Math.random() * 100));
 };
 
 const difficultyLabel = (level: string) => {
@@ -180,88 +187,15 @@ const difficultyLabel = (level: string) => {
                 </CardHeader>
                 <CardContent>
                     <div class="space-y-6">
-                        <div
+                        <LearningPathCourseCard
                             v-for="(course, index) in learningPath.courses"
                             :key="course.id"
-                            class="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-                        >
-                            <div class="flex justify-between items-start mb-3">
-                                <h4 class="text-lg font-medium">
-                                    {{ index + 1 }}. {{ course.title }}
-                                </h4>
-                                <div class="flex items-center gap-2">
-                                    <Badge v-if="course.pivot.is_required" variant="destructive">
-                                        Wajib
-                                    </Badge>
-                                    <Badge v-else variant="secondary">
-                                        Opsional
-                                    </Badge>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                                    <div
-                                        class="bg-blue-600 h-2.5 rounded-full"
-                                        :style="{ width: getProgress(course) + '%' }"
-                                    ></div>
-                                </div>
-                                <p class="text-sm text-muted-foreground mt-1">
-                                    {{ getProgress(course) }}% Selesai
-                                </p>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div>
-                                    <p class="text-muted-foreground">
-                                        {{ course.description || 'No description available.' }}
-                                    </p>
-                                </div>
-                                <div class="space-y-1">
-                                    <div class="flex items-center gap-2">
-                                        <Layers class="h-4 w-4" />
-                                        <span class="font-medium">Sections:</span>
-                                        <span>{{ course.sections_count || 0 }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-medium">Enrollments:</span>
-                                        <span>{{ course.enrollments_count || 0 }}</span>
-                                    </div>
-                                    <div v-if="course.pivot.min_completion_percentage" class="flex items-center gap-2">
-                                        <CheckCircle class="h-4 w-4" />
-                                        <span class="font-medium">Persentase Penyelesaian Minimum:</span>
-                                        <span>{{ course.pivot.min_completion_percentage }}%</span>
-                                    </div>
-                                    <div v-if="course.pivot.prerequisites" class="flex items-center gap-2">
-                                        <AlertCircle class="h-4 w-4" />
-                                        <span class="font-medium">Prasyarat:</span>
-                                        <span>{{ course.pivot.prerequisites }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="mt-4 flex gap-2">
-                                <Link :href="'/courses/' + course.id">
-                                    <Button variant="outline" size="sm" class="gap-2">
-                                        <Eye class="h-4 w-4" />
-                                        Lihat Kursus
-                                    </Button>
-                                </Link>
-                                <Link :href="'/courses/' + course.id + '/lessons'">
-                                    <Button size="sm" class="gap-2">
-                                        <BookOpen class="h-4 w-4" />
-                                        Mulai Belajar
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
+                            :course="course"
+                            :index="index"
+                        />
                     </div>
                 </CardContent>
             </Card>
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-/* Add any component-specific styles here */
-</style>
