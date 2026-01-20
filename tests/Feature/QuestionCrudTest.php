@@ -150,10 +150,8 @@ class QuestionCrudTest extends TestCase
             ]],
         ]);
 
-        // This test will fail due to database constraint, which is expected behavior
-        // The database constraint provides stronger validation than Laravel validation
-        // $response->assertSessionHasErrors(['questions.0.question_type']);
-        $this->markTestSkipped('Database constraint handles question_type validation');
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['questions.0.question_type']);
     }
 
     public function test_multiple_choice_questions_require_options(): void
@@ -175,9 +173,8 @@ class QuestionCrudTest extends TestCase
             ]],
         ]);
 
-        // The bulk update approach handles validation differently
-        // $response->assertSessionHasErrors(['questions.0.options']);
-        $this->markTestSkipped('Bulk update approach handles options validation differently');
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['questions.0.options']);
     }
 
     public function test_question_points_must_be_positive(): void

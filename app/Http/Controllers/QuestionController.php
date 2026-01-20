@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Assessment;
@@ -7,6 +8,7 @@ use App\Models\Question;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,7 +24,7 @@ class QuestionController extends Controller
         $assessment->load(['questions.options']);
 
         return Inertia::render('assessments/Questions', [
-            'course'     => $course,
+            'course' => $course,
             'assessment' => $assessment,
         ]);
     }
@@ -52,28 +54,45 @@ class QuestionController extends Controller
                 ->with('error', 'Tidak ada pertanyaan yang dikirimkan.');
         }
 
+        $validQuestionTypes = ['multiple_choice', 'true_false', 'matching', 'short_answer', 'essay', 'file_upload'];
+
         $validated = $request->validate([
-            'questions'                         => ['required', 'array'],
-            'questions.*.id'                    => ['sometimes', 'integer', 'nullable', function ($attribute, $value, $fail) {
+            'questions' => ['required', 'array'],
+            'questions.*.id' => ['sometimes', 'integer', 'nullable', function ($attribute, $value, $fail) {
                 // Allow 0 for new questions, but validate positive IDs exist in database
                 if ($value !== null && $value !== 0 && ! Question::where('id', $value)->exists()) {
-                    $fail('The selected ' . $attribute . ' is invalid.');
+                    $fail('The selected '.$attribute.' is invalid.');
                 }
             }],
-            'questions.*.question_text'         => ['required', 'string'],
-            'questions.*.question_type'         => ['required', 'string'],
-            'questions.*.points'                => ['required', 'integer', 'min:1'],
-            'questions.*.feedback'              => ['nullable', 'string'],
-            'questions.*.order'                 => ['sometimes', 'integer', 'min:0'],
-            'questions.*.options'               => ['sometimes', 'array'],
-            'questions.*.options.*.id'          => ['sometimes', 'integer'],
+            'questions.*.question_text' => ['required', 'string'],
+            'questions.*.question_type' => ['required', 'string', Rule::in($validQuestionTypes)],
+            'questions.*.points' => ['required', 'integer', 'min:1'],
+            'questions.*.feedback' => ['nullable', 'string'],
+            'questions.*.order' => ['sometimes', 'integer', 'min:0'],
+            'questions.*.options' => ['sometimes', 'array', function ($attribute, $value, $fail) use ($request) {
+                // Extract the question index from the attribute (e.g., "questions.0.options" -> 0)
+                preg_match('/questions\.(\d+)\.options/', $attribute, $matches);
+                $index = $matches[1] ?? null;
+
+                if ($index !== null) {
+                    $questionType = $request->input("questions.{$index}.question_type");
+
+                    // Multiple choice and matching questions require at least 2 options
+                    if (in_array($questionType, ['multiple_choice', 'matching'])) {
+                        if (! is_array($value) || count($value) < 2) {
+                            $fail('Pertanyaan pilihan ganda dan pencocokan memerlukan minimal 2 opsi.');
+                        }
+                    }
+                }
+            }],
+            'questions.*.options.*.id' => ['sometimes', 'integer'],
             'questions.*.options.*.option_text' => ['required', 'string'],
-            'questions.*.options.*.is_correct'  => ['required', 'boolean'],
-            'questions.*.options.*.feedback'    => ['nullable', 'string'],
-            'questions.*.options.*.order'       => ['sometimes', 'integer', 'min:0'],
+            'questions.*.options.*.is_correct' => ['required', 'boolean'],
+            'questions.*.options.*.feedback' => ['nullable', 'string'],
+            'questions.*.options.*.order' => ['sometimes', 'integer', 'min:0'],
         ]);
 
-        $existingQuestionIds  = $assessment->questions()->pluck('id')->toArray();
+        $existingQuestionIds = $assessment->questions()->pluck('id')->toArray();
         $submittedQuestionIds = [];
 
         foreach ($validated['questions'] as $questionData) {
@@ -84,16 +103,16 @@ class QuestionController extends Controller
                     $question->update([
                         'question_text' => $questionData['question_text'],
                         'question_type' => $questionData['question_type'],
-                        'points'        => $questionData['points'],
-                        'feedback'      => $questionData['feedback'] ?? null,
-                        'order'         => $questionData['order'] ?? 0,
+                        'points' => $questionData['points'],
+                        'feedback' => $questionData['feedback'] ?? null,
+                        'order' => $questionData['order'] ?? 0,
                     ]);
 
                     $submittedQuestionIds[] = $question->id;
 
                     // Sync options for this question
                     if (isset($questionData['options']) && is_array($questionData['options'])) {
-                        $existingOptionIds  = $question->options()->pluck('id')->toArray();
+                        $existingOptionIds = $question->options()->pluck('id')->toArray();
                         $submittedOptionIds = [];
 
                         foreach ($questionData['options'] as $optionData) {
@@ -103,9 +122,9 @@ class QuestionController extends Controller
                                 if ($option) {
                                     $option->update([
                                         'option_text' => $optionData['option_text'],
-                                        'is_correct'  => $optionData['is_correct'] ?? false,
-                                        'feedback'    => $optionData['feedback'] ?? null,
-                                        'order'       => $optionData['order'] ?? 0,
+                                        'is_correct' => $optionData['is_correct'] ?? false,
+                                        'feedback' => $optionData['feedback'] ?? null,
+                                        'order' => $optionData['order'] ?? 0,
                                     ]);
                                     $submittedOptionIds[] = $option->id;
                                 }
@@ -113,9 +132,9 @@ class QuestionController extends Controller
                                 // Create new option
                                 $option = $question->options()->create([
                                     'option_text' => $optionData['option_text'],
-                                    'is_correct'  => $optionData['is_correct'] ?? false,
-                                    'feedback'    => $optionData['feedback'] ?? null,
-                                    'order'       => $optionData['order'] ?? 0,
+                                    'is_correct' => $optionData['is_correct'] ?? false,
+                                    'feedback' => $optionData['feedback'] ?? null,
+                                    'order' => $optionData['order'] ?? 0,
                                 ]);
                                 $submittedOptionIds[] = $option->id;
                             }
@@ -133,9 +152,9 @@ class QuestionController extends Controller
                 $question = $assessment->questions()->create([
                     'question_text' => $questionData['question_text'],
                     'question_type' => $questionData['question_type'],
-                    'points'        => $questionData['points'],
-                    'feedback'      => $questionData['feedback'] ?? null,
-                    'order'         => $questionData['order'] ?? 0,
+                    'points' => $questionData['points'],
+                    'feedback' => $questionData['feedback'] ?? null,
+                    'order' => $questionData['order'] ?? 0,
                 ]);
 
                 $submittedQuestionIds[] = $question->id;
@@ -145,9 +164,9 @@ class QuestionController extends Controller
                     foreach ($questionData['options'] as $optionData) {
                         $question->options()->create([
                             'option_text' => $optionData['option_text'],
-                            'is_correct'  => $optionData['is_correct'] ?? false,
-                            'feedback'    => $optionData['feedback'] ?? null,
-                            'order'       => $optionData['order'] ?? 0,
+                            'is_correct' => $optionData['is_correct'] ?? false,
+                            'feedback' => $optionData['feedback'] ?? null,
+                            'order' => $optionData['order'] ?? 0,
                         ]);
                     }
                 }
@@ -187,7 +206,7 @@ class QuestionController extends Controller
         Gate::authorize('update', [$assessment, $course]);
 
         $validated = $request->validate([
-            'question_ids'   => 'required|array',
+            'question_ids' => 'required|array',
             'question_ids.*' => 'exists:questions,id',
         ]);
 
@@ -209,9 +228,9 @@ class QuestionController extends Controller
         $assessment->load(['questions.options']);
 
         return Inertia::render('assessments/Grade', [
-            'course'     => $course,
+            'course' => $course,
             'assessment' => $assessment,
-            'attempt'    => $attempt,
+            'attempt' => $attempt,
         ]);
     }
 
@@ -223,27 +242,27 @@ class QuestionController extends Controller
         Gate::authorize('grade', [$attempt, $assessment, $course]);
 
         $validated = $request->validate([
-            'answers'              => 'required|array',
-            'answers.*.id'         => 'required|exists:attempt_answers,id',
-            'answers.*.score'      => 'required|integer|min:0',
+            'answers' => 'required|array',
+            'answers.*.id' => 'required|exists:attempt_answers,id',
+            'answers.*.score' => 'required|integer|min:0',
             'answers.*.is_correct' => 'required|boolean',
-            'answers.*.feedback'   => 'nullable|string',
-            'feedback'             => 'nullable|string',
+            'answers.*.feedback' => 'nullable|string',
+            'feedback' => 'nullable|string',
         ]);
 
         $totalScore = 0;
-        $maxScore   = $assessment->total_points;
+        $maxScore = $assessment->total_points;
 
         foreach ($validated['answers'] as $answerData) {
             $answer = $attempt->answers()->find($answerData['id']);
 
             if ($answer) {
                 $answer->update([
-                    'score'      => $answerData['score'],
+                    'score' => $answerData['score'],
                     'is_correct' => $answerData['is_correct'],
-                    'feedback'   => $answerData['feedback'] ?? null,
-                    'graded_by'  => auth()->id(),
-                    'graded_at'  => now(),
+                    'feedback' => $answerData['feedback'] ?? null,
+                    'graded_by' => auth()->id(),
+                    'graded_at' => now(),
                 ]);
 
                 $totalScore += $answerData['score'];
@@ -252,17 +271,17 @@ class QuestionController extends Controller
 
         // Update attempt
         $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
-        $passed     = $percentage >= $assessment->passing_score;
+        $passed = $percentage >= $assessment->passing_score;
 
         $attempt->update([
-            'status'     => 'graded',
-            'score'      => $totalScore,
-            'max_score'  => $maxScore,
+            'status' => 'graded',
+            'score' => $totalScore,
+            'max_score' => $maxScore,
             'percentage' => $percentage,
-            'passed'     => $passed,
-            'feedback'   => $validated['feedback'] ?? null,
-            'graded_by'  => auth()->id(),
-            'graded_at'  => now(),
+            'passed' => $passed,
+            'feedback' => $validated['feedback'] ?? null,
+            'graded_by' => auth()->id(),
+            'graded_at' => now(),
         ]);
 
         return redirect()
