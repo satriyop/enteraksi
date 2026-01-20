@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Policies;
 
 use App\Models\Course;
@@ -36,12 +37,12 @@ class CoursePolicy
         }
 
         // Learners can view published public courses
-        if ($course->status === 'published' && $course->visibility === 'public') {
+        if ($course->isPublished() && $course->visibility === 'public') {
             return true;
         }
 
         // Learners can view published restricted courses if invited
-        if ($course->status === 'published' && $course->visibility === 'restricted') {
+        if ($course->isPublished() && $course->visibility === 'restricted') {
             return $user->courseInvitations()->where('course_id', $course->id)->where('status', 'pending')->exists();
         }
 
@@ -67,7 +68,7 @@ class CoursePolicy
         }
 
         // Cannot edit published courses unless LMS Admin
-        if ($course->status === 'published') {
+        if ($course->isPublished()) {
             return false;
         }
 
@@ -86,7 +87,7 @@ class CoursePolicy
         }
 
         // Owner can only delete draft courses
-        return $course->user_id === $user->id && $course->status === 'draft';
+        return $course->user_id === $user->id && $course->isDraft();
     }
 
     /**
@@ -151,7 +152,7 @@ class CoursePolicy
     public function enroll(User $user, Course $course): bool
     {
         // Can only enroll in published courses
-        if ($course->status !== 'published') {
+        if (! $course->isPublished()) {
             return false;
         }
 

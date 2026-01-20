@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,12 +24,13 @@ class LearningPath extends Model
         'estimated_duration',
         'difficulty_level',
         'thumbnail_url',
+        'prerequisite_mode',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
         'published_at' => 'datetime',
-        'objectives'   => 'array',
+        'objectives' => 'array',
     ];
 
     public function creator(): BelongsTo
@@ -57,6 +59,16 @@ class LearningPath extends Model
     public function enrollments()
     {
         return $this->hasManyThrough(Enrollment::class, Course::class);
+    }
+
+    public function learnerEnrollments()
+    {
+        return $this->hasMany(LearningPathEnrollment::class);
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->is_published;
     }
 
     public function scopePublished($query)

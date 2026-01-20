@@ -35,11 +35,12 @@ class LessonPolicy
             return true;
         }
 
-        // For learners: must be enrolled with active status
-        return $user->enrollments()
+        // For learners: must be enrolled and have content access (active or completed)
+        $enrollment = $user->enrollments()
             ->where('course_id', $course->id)
-            ->where('status', 'active')
-            ->exists();
+            ->first();
+
+        return $enrollment?->canAccessContent() ?? false;
     }
 
     /**

@@ -2,16 +2,21 @@
 
 namespace App\Models;
 
+use App\Domain\Enrollment\States\ActiveState;
+use App\Domain\Enrollment\States\CompletedState;
+use App\Domain\Enrollment\States\DroppedState;
+use App\Domain\Enrollment\States\EnrollmentState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\ModelStates\HasStates;
 
 class Enrollment extends Model
 {
     /** @use HasFactory<\Database\Factories\EnrollmentFactory> */
-    use HasFactory;
+    use HasFactory, HasStates;
 
     protected $fillable = [
         'user_id',
@@ -28,10 +33,38 @@ class Enrollment extends Model
     protected function casts(): array
     {
         return [
+            'status' => EnrollmentState::class,
             'enrolled_at' => 'datetime',
             'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
+    }
+
+    // State helper methods
+
+    public function isActive(): bool
+    {
+        return $this->status instanceof ActiveState;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status instanceof CompletedState;
+    }
+
+    public function isDropped(): bool
+    {
+        return $this->status instanceof DroppedState;
+    }
+
+    public function canAccessContent(): bool
+    {
+        return $this->status->canAccessContent();
+    }
+
+    public function canTrackProgress(): bool
+    {
+        return $this->status->canTrackProgress();
     }
 
     public function user(): BelongsTo
@@ -64,45 +97,6 @@ class Enrollment extends Model
         return $this->lessonProgress()->where('lesson_id', $lesson->id)->first();
     }
 
-    public function getOrCreateProgressForLesson(Lesson $lesson): LessonProgress
-    {
-        return $this->lessonProgress()->firstOrCreate(
-            ['lesson_id' => $lesson->id],
-            [
-                'current_page' => 1,
-                'highest_page_reached' => 1,
-                'time_spent_seconds' => 0,
-                'is_completed' => false,
-            ]
-        );
-    }
-
-    public function recalculateCourseProgress(): void
-    {
-        $totalLessons = $this->course->lessons()->count();
-
-        if ($totalLessons === 0) {
-            $this->progress_percentage = 0;
-            $this->save();
-
-            return;
-        }
-
-        $completedLessons = $this->lessonProgress()
-            ->where('is_completed', true)
-            ->count();
-
-        $this->progress_percentage = round(($completedLessons / $totalLessons) * 100, 1);
-
-        // Mark enrollment as completed if all lessons are done
-        if ($completedLessons >= $totalLessons && $this->status !== 'completed') {
-            $this->status = 'completed';
-            $this->completed_at = now();
-        }
-
-        $this->save();
-    }
-
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
@@ -120,11 +114,11 @@ class Enrollment extends Model
 
     public function getIsCompletedAttribute(): bool
     {
-        return $this->status === 'completed';
+        return $this->isCompleted();
     }
 
     public function getIsActiveAttribute(): bool
     {
-        return $this->status === 'active';
+        return $this->isActive();
     }
 }

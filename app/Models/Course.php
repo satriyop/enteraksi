@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Domain\Course\States\ArchivedState;
+use App\Domain\Course\States\CourseState;
+use App\Domain\Course\States\DraftState;
+use App\Domain\Course\States\PublishedState;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,10 +16,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
+use Spatie\ModelStates\HasStates;
 
 class Course extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasStates, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -39,10 +44,38 @@ class Course extends Model
     protected function casts(): array
     {
         return [
+            'status' => CourseState::class,
             'objectives' => 'array',
             'prerequisites' => 'array',
             'published_at' => 'datetime',
         ];
+    }
+
+    // State helper methods
+
+    public function isDraft(): bool
+    {
+        return $this->status instanceof DraftState;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status instanceof PublishedState;
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->status instanceof ArchivedState;
+    }
+
+    public function canBeEdited(): bool
+    {
+        return $this->status->canEdit();
+    }
+
+    public function canAcceptEnrollments(): bool
+    {
+        return $this->status->canEnroll();
     }
 
     public function user(): BelongsTo
@@ -78,6 +111,11 @@ class Course extends Model
     public function enrollments(): HasMany
     {
         return $this->hasMany(Enrollment::class);
+    }
+
+    public function assessments(): HasMany
+    {
+        return $this->hasMany(Assessment::class);
     }
 
     public function enrolledUsers(): BelongsToMany
@@ -139,7 +177,7 @@ class Course extends Model
 
     public function getIsEditableAttribute(): bool
     {
-        return $this->status !== 'published';
+        return $this->canBeEdited();
     }
 
     public function getThumbnailUrlAttribute(): ?string

@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CourseSection extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'course_id',
@@ -18,6 +19,25 @@ class CourseSection extends Model
         'order',
         'estimated_duration_minutes',
     ];
+
+    protected static function booted(): void
+    {
+        // Cascade soft delete to lessons when section is deleted
+        static::deleting(function (CourseSection $section) {
+            if ($section->isForceDeleting()) {
+                // Force delete lessons if section is being force deleted
+                $section->lessons()->forceDelete();
+            } else {
+                // Soft delete lessons when section is soft deleted
+                $section->lessons()->delete();
+            }
+        });
+
+        // Restore lessons when section is restored
+        static::restoring(function (CourseSection $section) {
+            $section->lessons()->onlyTrashed()->restore();
+        });
+    }
 
     public function course(): BelongsTo
     {

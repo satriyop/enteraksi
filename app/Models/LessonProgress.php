@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LessonProgress extends Model
 {
+    use HasFactory;
+
     protected $table = 'lesson_progress';
 
     protected $fillable = [
@@ -52,71 +55,6 @@ class LessonProgress extends Model
         return $this->belongsTo(Lesson::class);
     }
 
-    public function updateProgress(int $page, ?int $totalPages = null, ?array $metadata = null): self
-    {
-        $this->current_page = $page;
-        $this->last_viewed_at = now();
-
-        if ($totalPages !== null) {
-            $this->total_pages = $totalPages;
-        }
-
-        if ($metadata !== null) {
-            $this->pagination_metadata = $metadata;
-        }
-
-        // Update highest page reached
-        if ($page > $this->highest_page_reached) {
-            $this->highest_page_reached = $page;
-        }
-
-        // Auto-complete when reaching last page
-        if ($this->total_pages !== null && $this->highest_page_reached >= $this->total_pages && ! $this->is_completed) {
-            $this->markCompleted();
-        }
-
-        $this->save();
-
-        return $this;
-    }
-
-    public function addTimeSpent(float $seconds): self
-    {
-        $this->time_spent_seconds += $seconds;
-        $this->save();
-
-        return $this;
-    }
-
-    /**
-     * Update media (video/audio) progress.
-     *
-     * Auto-completes when media progress reaches 90% or more.
-     */
-    public function updateMediaProgress(int $positionSeconds, int $durationSeconds): self
-    {
-        $this->media_position_seconds = $positionSeconds;
-        $this->media_duration_seconds = $durationSeconds;
-        $this->last_viewed_at = now();
-
-        // Calculate progress percentage
-        if ($durationSeconds > 0) {
-            $percentage = ($positionSeconds / $durationSeconds) * 100;
-            $this->media_progress_percentage = min(100, round($percentage, 2));
-
-            // Auto-complete at 90% watched
-            if ($percentage >= 90 && ! $this->is_completed) {
-                $this->markCompleted();
-
-                return $this;
-            }
-        }
-
-        $this->save();
-
-        return $this;
-    }
-
     /**
      * Check if this is a media-based lesson (video/youtube/audio).
      */
@@ -131,18 +69,6 @@ class LessonProgress extends Model
     public function getResumePositionAttribute(): ?int
     {
         return $this->media_position_seconds;
-    }
-
-    public function markCompleted(): self
-    {
-        $this->is_completed = true;
-        $this->completed_at = now();
-        $this->save();
-
-        // Recalculate course progress
-        $this->enrollment->recalculateCourseProgress();
-
-        return $this;
     }
 
     public function getProgressPercentageAttribute(): float

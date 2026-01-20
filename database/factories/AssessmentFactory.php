@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Factories;
 
 use App\Models\Assessment;
@@ -13,22 +14,23 @@ class AssessmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'course_id'            => Course::factory(),
-            'user_id'              => User::factory(),
-            'title'                => $this->faker->sentence(4),
-            'slug'                 => $this->faker->unique()->slug . '-' . $this->faker->randomNumber(6),
-            'description'          => $this->faker->paragraph,
-            'instructions'         => $this->faker->paragraphs(3, true),
-            'time_limit_minutes'   => $this->faker->randomElement([null, 30, 60, 90]),
-            'passing_score'        => $this->faker->numberBetween(60, 90),
-            'max_attempts'         => $this->faker->numberBetween(1, 5),
-            'shuffle_questions'    => $this->faker->boolean,
+            'course_id' => Course::factory(),
+            'user_id' => User::factory(),
+            'title' => $this->faker->sentence(4),
+            'slug' => $this->faker->unique()->slug.'-'.$this->faker->randomNumber(6),
+            'description' => $this->faker->paragraph,
+            'instructions' => $this->faker->paragraphs(3, true),
+            'time_limit_minutes' => $this->faker->randomElement([null, 30, 60, 90]),
+            'passing_score' => $this->faker->numberBetween(60, 90),
+            'max_attempts' => $this->faker->numberBetween(1, 5),
+            'shuffle_questions' => $this->faker->boolean,
             'show_correct_answers' => $this->faker->boolean,
-            'allow_review'         => $this->faker->boolean,
-            'status'               => 'draft',
-            'visibility'           => 'public',
-            'published_at'         => null,
-            'published_by'         => null,
+            'allow_review' => $this->faker->boolean,
+            'is_required' => true,
+            'status' => 'draft',
+            'visibility' => 'public',
+            'published_at' => null,
+            'published_by' => null,
         ];
     }
 
@@ -36,7 +38,7 @@ class AssessmentFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status'       => 'published',
+                'status' => 'published',
                 'published_at' => now(),
                 'published_by' => User::factory(),
             ];
@@ -74,10 +76,24 @@ class AssessmentFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status'       => 'draft',
+                'status' => 'draft',
                 'published_at' => null,
                 'published_by' => null,
             ];
         });
+    }
+
+    public function optional(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_required' => false,
+        ]);
+    }
+
+    public function required(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_required' => true,
+        ]);
     }
 }

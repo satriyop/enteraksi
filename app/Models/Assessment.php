@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Builder;
@@ -26,6 +27,7 @@ class Assessment extends Model
         'shuffle_questions',
         'show_correct_answers',
         'allow_review',
+        'is_required',
         'status',
         'visibility',
         'published_at',
@@ -35,10 +37,11 @@ class Assessment extends Model
     protected function casts(): array
     {
         return [
-            'published_at'         => 'datetime',
-            'shuffle_questions'    => 'boolean',
+            'published_at' => 'datetime',
+            'shuffle_questions' => 'boolean',
             'show_correct_answers' => 'boolean',
-            'allow_review'         => 'boolean',
+            'allow_review' => 'boolean',
+            'is_required' => 'boolean',
         ];
     }
 
@@ -104,7 +107,7 @@ class Assessment extends Model
 
     public function generateSlug(): string
     {
-        return Str::slug($this->title) . '-' . Str::random(6);
+        return Str::slug($this->title).'-'.Str::random(6);
     }
 
     public function canBeAttemptedBy(User $user): bool
@@ -114,8 +117,9 @@ class Assessment extends Model
             return false;
         }
 
-        // Check if user is enrolled in the course
-        if (! $user->enrollments()->where('course_id', $this->course_id)->exists()) {
+        // Check if user is enrolled in the course and has content access
+        $enrollment = $user->enrollments()->where('course_id', $this->course_id)->first();
+        if (! $enrollment || ! $enrollment->canAccessContent()) {
             return false;
         }
 

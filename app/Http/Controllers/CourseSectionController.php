@@ -7,6 +7,7 @@ use App\Http\Requests\Section\UpdateSectionRequest;
 use App\Models\Course;
 use App\Models\CourseSection;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 
 class CourseSectionController extends Controller
 {
@@ -48,6 +49,8 @@ class CourseSectionController extends Controller
      */
     public function destroy(CourseSection $section): RedirectResponse
     {
+        Gate::authorize('delete', $section);
+
         $course = $section->course;
 
         $section->delete();
