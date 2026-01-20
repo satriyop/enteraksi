@@ -127,6 +127,52 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        /*
+        |--------------------------------------------------------------------------
+        | Domain-Specific Channels
+        |--------------------------------------------------------------------------
+        */
+
+        'domain' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/domain.log'),
+            'level' => 'debug',
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
+        'events' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/events.log'),
+            'level' => 'info',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
+        'debug' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/debug.log'),
+            'level' => 'debug',
+            'days' => 7,
+            'replace_placeholders' => true,
+        ],
+
+        'queries' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/queries.log'),
+            'level' => 'debug',
+            'days' => 3,
+            'replace_placeholders' => true,
+        ],
+
+        'metrics' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/metrics.log'),
+            'level' => 'info',
+            'days' => 30,
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];
