@@ -129,4 +129,14 @@ class Assessment extends Model
 
         return true;
     }
+
+    /**
+     * Determine if any question in this assessment requires manual grading.
+     */
+    public function requiresManualGrading(): bool
+    {
+        return $this->questions()
+            ->whereIn('question_type', ['essay', 'file_upload'])
+            ->exists();
+    }
 }

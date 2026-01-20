@@ -81,17 +81,20 @@ class AssessmentAutoGradingTest extends TestCase
             'points' => 10,
         ]);
 
-        $this->actingAs($this->learner)
+        $response = $this->actingAs($this->learner)
             ->post("/courses/{$this->course->id}/assessments/{$this->assessment->id}/attempts/{$this->attempt->id}/submit", [
                 'answers' => [
                     ['question_id' => $question->id, 'answer_text' => 'true'],
                 ],
             ]);
 
+        $response->assertRedirect();
+
         $answer = AttemptAnswer::where('assessment_attempt_id', $this->attempt->id)
             ->where('question_id', $question->id)
             ->first();
 
+        $this->assertNotNull($answer, 'AttemptAnswer was not created');
         // Note: Current implementation checks for 'true' or 'benar'
         $this->assertTrue($answer->is_correct);
         $this->assertEquals(10, $answer->score);

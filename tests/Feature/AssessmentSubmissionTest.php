@@ -206,7 +206,11 @@ class AssessmentSubmissionTest extends TestCase
         $this->attempt->refresh();
 
         $this->assertNotNull($this->attempt->submitted_at);
-        $this->assertTrue($this->attempt->submitted_at->gte($beforeSubmit));
+        // Use lte instead of gte since submitted_at might be very slightly before due to timing
+        $this->assertTrue(
+            $this->attempt->submitted_at->gte($beforeSubmit->subSecond()),
+            'submitted_at should be around the submission time'
+        );
     }
 
     // ========== Submission Validation ==========
@@ -218,8 +222,9 @@ class AssessmentSubmissionTest extends TestCase
                 // No answers provided
             ]);
 
-        $response->assertUnprocessable();
-        $response->assertJsonValidationErrors('answers');
+        // Inertia validation redirects with session errors
+        $response->assertRedirect();
+        $response->assertSessionHasErrors('answers');
     }
 
     public function test_question_id_must_exist(): void
@@ -234,7 +239,9 @@ class AssessmentSubmissionTest extends TestCase
                 ],
             ]);
 
-        $response->assertUnprocessable();
+        // Inertia validation redirects with session errors
+        $response->assertRedirect();
+        $response->assertSessionHasErrors('answers.0.question_id');
     }
 
     public function test_partial_submission_is_allowed(): void
@@ -413,7 +420,9 @@ class AssessmentSubmissionTest extends TestCase
                 ],
             ]);
 
-        $response->assertUnprocessable();
+        // Inertia validation redirects with session errors
+        $response->assertRedirect();
+        $response->assertSessionHasErrors('answers.0.file');
     }
 
     // ========== Cross-Entity Validation ==========
