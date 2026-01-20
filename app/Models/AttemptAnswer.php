@@ -11,7 +11,7 @@ class AttemptAnswer extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'attempt_id',
+        'assessment_attempt_id',
         'question_id',
         'answer_text',
         'file_path',
@@ -32,7 +32,7 @@ class AttemptAnswer extends Model
 
     public function attempt(): BelongsTo
     {
-        return $this->belongsTo(AssessmentAttempt::class);
+        return $this->belongsTo(AssessmentAttempt::class, 'assessment_attempt_id');
     }
 
     public function question(): BelongsTo

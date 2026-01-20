@@ -29,6 +29,17 @@ class AssessmentAttemptFactory extends Factory
         ];
     }
 
+    public function inProgress(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'status'       => 'in_progress',
+                'started_at'   => now(),
+                'submitted_at' => null,
+            ];
+        });
+    }
+
     public function submitted(): static
     {
         return $this->state(function (array $attributes) {

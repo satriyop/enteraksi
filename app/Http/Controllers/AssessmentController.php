@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Assessment\StoreAssessmentRequest;
 use App\Http\Requests\Assessment\UpdateAssessmentRequest;
 use App\Models\Assessment;
+use App\Models\AssessmentAttempt;
+use App\Models\AttemptAnswer;
 use App\Models\Course;
 use App\Models\Question;
 use Illuminate\Http\RedirectResponse;
