@@ -315,11 +315,6 @@ class AssessmentAttemptFlowTest extends TestCase
 
     public function test_learner_can_view_own_in_progress_attempt(): void
     {
-        // TODO: Debug authorization issue - policy returns 403 unexpectedly
-        // The test data setup appears correct but authorization fails
-        // Skipping until we can investigate the viewAttempt policy
-        $this->markTestSkipped('Authorization issue - needs investigation');
-
         $attempt = AssessmentAttempt::create([
             'assessment_id' => $this->assessment->id,
             'user_id' => $this->learner->id,
@@ -355,9 +350,6 @@ class AssessmentAttemptFlowTest extends TestCase
 
     public function test_admin_can_view_any_attempt(): void
     {
-        // TODO: Same authorization issue as learner test
-        $this->markTestSkipped('Authorization issue - needs investigation');
-
         $attempt = AssessmentAttempt::factory()->create([
             'assessment_id' => $this->assessment->id,
             'user_id' => $this->learner->id,
@@ -371,9 +363,6 @@ class AssessmentAttemptFlowTest extends TestCase
 
     public function test_content_manager_can_view_attempts_on_own_assessment(): void
     {
-        // TODO: Same authorization issue
-        $this->markTestSkipped('Authorization issue - needs investigation');
-
         $attempt = AssessmentAttempt::factory()->create([
             'assessment_id' => $this->assessment->id,
             'user_id' => $this->learner->id,
