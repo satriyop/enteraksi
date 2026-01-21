@@ -56,8 +56,8 @@ export default defineConfig({
                         '@tiptap/extension-underline',
                         '@tiptap/extension-code-block-lowlight',
                     ],
-                    // Utilities
-                    'vendor-utils': ['@vueuse/core', 'lucide-vue-next'],
+                    // Icons only - let vueuse chunk automatically to avoid initialization order issues
+                    'vendor-icons': ['lucide-vue-next'],
                 },
             },
         },
