@@ -437,6 +437,205 @@ php artisan test --coverage
 php artisan test --parallel
 ```
 
+## Authorization Testing Patterns
+
+### 403 vs 302: Know the Difference
+
+When testing authorization failures:
+- **403 Forbidden** = Policy returned `false` (correct authorization denial)
+- **302 Redirect** = Validation failed or middleware redirect (wrong!)
+
+If you expect 403 but get 302, the policy is allowing the action but something else fails.
+
+```php
+// CORRECT: Tests authorization denial
+it('content manager cannot edit published course', function () {
+    $cm = User::factory()->create(['role' => 'content_manager']);
+    $course = Course::factory()->published()->create(['user_id' => $cm->id]);
+
+    $this->actingAs($cm)
+        ->put("/courses/{$course->id}", ['title' => 'New Title'])
+        ->assertForbidden();  // ← 403, not assertRedirect()
+});
+
+// WRONG: This tests validation, not authorization
+it('content manager cannot edit published course', function () {
+    // ... same setup ...
+    ->assertRedirect();  // ← 302 means policy allowed it, but validation failed
+});
+```
+
+### Cascade Authorization Testing
+
+When child policies delegate to parent, test both levels:
+
+```php
+describe('Published Course Content Restrictions', function () {
+    beforeEach(function () {
+        $this->cm = User::factory()->create(['role' => 'content_manager']);
+        $this->course = Course::factory()->published()->create(['user_id' => $this->cm->id]);
+        $this->section = CourseSection::factory()->create(['course_id' => $this->course->id]);
+    });
+
+    // Parent level
+    it('CM cannot edit published course metadata', function () {
+        $this->actingAs($this->cm)
+            ->put("/courses/{$this->course->id}", ['title' => 'X'])
+            ->assertForbidden();
+    });
+
+    // Child level - section (inherits from course)
+    it('CM cannot add section to published course', function () {
+        $this->actingAs($this->cm)
+            ->post("/courses/{$this->course->id}/sections", ['title' => 'X'])
+            ->assertForbidden();
+    });
+
+    // Grandchild level - lesson (inherits from course via section)
+    it('CM cannot add lesson to published course', function () {
+        $this->actingAs($this->cm)
+            ->post("/sections/{$this->section->id}/lessons", ['title' => 'X'])
+            ->assertForbidden();
+    });
+});
+```
+
+### Authorization Test Matrix
+
+Always test role × state × ownership combinations:
+
+```php
+describe('Course Update Authorization Matrix', function () {
+    // Admin tests (always allowed)
+    it('admin can update any draft course', fn() => ...);
+    it('admin can update any published course', fn() => ...);
+
+    // CM + own course tests (state-dependent)
+    it('CM can update own draft course', fn() => ...);
+    it('CM cannot update own published course', fn() => ...);  // ← Key test
+
+    // CM + other's course tests (always denied)
+    it('CM cannot update other draft course', fn() => ...);
+    it('CM cannot update other published course', fn() => ...);
+
+    // Learner tests (always denied)
+    it('learner cannot update any course', fn() => ...);
+});
+```
+
+## Testing Services That Return Value Objects
+
+When domain services return Result DTOs containing value objects (not Eloquent models), tests need special handling to access relationships.
+
+### The Problem
+
+After refactoring Result DTOs to use value objects:
+
+```php
+// EnrollmentResult now contains EnrollmentData (value object), NOT Enrollment (model)
+final readonly class EnrollmentResult
+{
+    public function __construct(
+        public EnrollmentData $enrollment,  // Value object, not model!
+        public bool $isNewEnrollment,
+    ) {}
+}
+```
+
+Tests that previously accessed model relationships break:
+
+```php
+// ❌ BROKEN: Value objects don't have relationships
+$result = $enrollmentService->enroll($dto);
+$courseProgress = $result->enrollment->courseProgress();  // ERROR!
+// EnrollmentData doesn't have courseProgress() method - that's on the Enrollment model
+```
+
+### The Fix: Fetch Model for Relationships
+
+When you need relationship access, fetch the actual model using the ID from the value object:
+
+```php
+// ✅ FIXED: Fetch model to access relationships
+$result = $enrollmentService->enroll($dto);
+
+// Use value object for primitive assertions
+expect($result->enrollment->userId)->toBe($user->id);
+expect($result->enrollment->status)->toBe('active');
+
+// Fetch model when you need relationships
+$enrollment = LearningPathEnrollment::find($result->enrollment->id);
+$courseProgress = $enrollment->courseProgress()->orderBy('position')->get();
+
+expect($courseProgress)->toHaveCount(2);
+expect($courseProgress[0]->course_id)->toBe($course1->id);
+```
+
+### Property Naming: camelCase vs snake_case
+
+Value objects use **camelCase** properties while Eloquent models use **snake_case**:
+
+```php
+// ❌ WRONG: snake_case on value object
+expect($result->enrollment->user_id)->toBe($user->id);      // Error!
+expect($result->enrollment->learning_path_id)->toBe($path->id);
+
+// ✅ RIGHT: camelCase on value object
+expect($result->enrollment->userId)->toBe($user->id);
+expect($result->enrollment->learningPathId)->toBe($path->id);
+
+// ✅ RIGHT: snake_case on Eloquent model
+$enrollment = LearningPathEnrollment::find($result->enrollment->id);
+expect($enrollment->user_id)->toBe($user->id);
+```
+
+### Complete Test Migration Example
+
+Before (accessing model directly from result):
+```php
+it('creates enrollment with course progress', function () {
+    $result = $pathEnrollmentService->enroll($learner, $path);
+
+    // ❌ These all break with value object results
+    expect($result->enrollment->user_id)->toBe($learner->id);
+    expect($result->enrollment->courseProgress)->toHaveCount(2);
+    expect($result->enrollment->learningPath->title)->toBe('My Path');
+});
+```
+
+After (adapted for value objects):
+```php
+it('creates enrollment with course progress', function () {
+    $result = $pathEnrollmentService->enroll($learner, $path);
+
+    // ✅ Primitive assertions on value object (camelCase!)
+    expect($result->enrollment->userId)->toBe($learner->id);
+    expect($result->isNewEnrollment)->toBeTrue();
+
+    // ✅ Fetch model for relationship assertions
+    $enrollment = LearningPathEnrollment::find($result->enrollment->id);
+
+    $courseProgress = $enrollment->courseProgress()->orderBy('position')->get();
+    expect($courseProgress)->toHaveCount(2);
+    expect($courseProgress->first()->course_id)->toBe($course1->id);
+
+    // ✅ Or use database assertions
+    $this->assertDatabaseHas('learning_path_course_progress', [
+        'learning_path_enrollment_id' => $result->enrollment->id,
+        'course_id' => $course1->id,
+    ]);
+});
+```
+
+### Key Points
+
+| Need | Approach |
+|------|----------|
+| Primitive values (id, userId, status) | Access directly on value object |
+| Relationships (courseProgress, user) | Fetch model by ID first |
+| Property names | camelCase on value objects, snake_case on models |
+| Database verification | Use `assertDatabaseHas()` |
+
 ## Gotchas & Best Practices
 
 1. **Always call `parent::setUp()`** first in setUp()
@@ -449,6 +648,9 @@ php artisan test --parallel
 8. **Use `expect()` for Pest** - More readable than PHPUnit assertions
 9. **assertDatabaseHas for persistence** - Verify database state after actions
 10. **Test services via contracts** - `app(ServiceContract::class)`
+11. **assertForbidden() for authorization** - Not assertRedirect(), which tests validation
+12. **Test cascade authorization** - If child delegates to parent, test both levels
+13. **Value object results** - Fetch model by ID when testing relationships
 
 ## Creating New Tests
 

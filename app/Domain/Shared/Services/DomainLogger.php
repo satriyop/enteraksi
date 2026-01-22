@@ -96,7 +96,7 @@ class DomainLogger
             array_map(fn ($frame) => [
                 'file' => $frame['file'] ?? 'unknown',
                 'line' => $frame['line'] ?? 0,
-                'function' => $frame['function'] ?? 'unknown',
+                'function' => $frame['function'],
             ], $e->getTrace()),
             0,
             5

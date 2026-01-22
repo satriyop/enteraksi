@@ -2,7 +2,6 @@
 
 namespace App\Domain\LearningPath\Contracts;
 
-use App\Domain\LearningPath\DTOs\PathEnrollmentResult;
 use App\Models\LearningPath;
 use App\Models\LearningPathEnrollment;
 use App\Models\User;
@@ -13,10 +12,29 @@ interface PathEnrollmentServiceContract
     /**
      * Enroll a user in a learning path.
      *
+     * Note: preserveProgress only applies when re-enrolling (dropped → active).
+     * Default is true to honor learner's previous work.
+     *
      * @throws \App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException
      * @throws \App\Domain\LearningPath\Exceptions\PathNotPublishedException
      */
-    public function enroll(User $user, LearningPath $path): PathEnrollmentResult;
+    public function enroll(User $user, LearningPath $path, bool $preserveProgress = true): LearningPathEnrollment;
+
+    /**
+     * Reactivate a dropped path enrollment.
+     *
+     * Default preserveProgress=true to honor learner's previous work.
+     * This matches EnrollmentService::reactivateCourseEnrollment() for API consistency.
+     */
+    public function reactivatePathEnrollment(
+        LearningPathEnrollment $enrollment,
+        bool $preserveProgress = true
+    ): LearningPathEnrollment;
+
+    /**
+     * Get a dropped enrollment for user and learning path.
+     */
+    public function getDroppedEnrollment(User $user, LearningPath $path): ?LearningPathEnrollment;
 
     /**
      * Check if user can enroll in a path.

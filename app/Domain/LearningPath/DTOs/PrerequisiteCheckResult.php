@@ -2,17 +2,15 @@
 
 namespace App\Domain\LearningPath\DTOs;
 
-use App\Domain\Shared\DTOs\DataTransferObject;
-
-final class PrerequisiteCheckResult extends DataTransferObject
+final readonly class PrerequisiteCheckResult
 {
     /**
      * @param  array<int, array{id: int, title: string}>  $missingPrerequisites
      */
     public function __construct(
-        public readonly bool $isMet,
-        public readonly array $missingPrerequisites = [],
-        public readonly ?string $reason = null,
+        public bool $isMet,
+        public array $missingPrerequisites = [],
+        public ?string $reason = null,
     ) {}
 
     public static function met(): self

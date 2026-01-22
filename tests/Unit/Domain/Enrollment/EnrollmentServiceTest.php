@@ -1,7 +1,6 @@
 <?php
 
 use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\Enrollment\DTOs\CreateEnrollmentDTO;
 use App\Domain\Enrollment\Events\EnrollmentCompleted;
 use App\Domain\Enrollment\Events\UserDropped;
 use App\Domain\Enrollment\Events\UserEnrolled;
@@ -24,18 +23,17 @@ describe('EnrollmentService', function () {
             $user = User::factory()->create();
             $course = Course::factory()->published()->create();
 
-            $dto = new CreateEnrollmentDTO(
+            // Service now returns Enrollment model directly
+            $enrollment = $this->service->enroll(
                 userId: $user->id,
                 courseId: $course->id,
             );
 
-            $result = $this->service->enroll($dto);
-
-            expect($result->isNewEnrollment)->toBeTrue();
-            expect($result->enrollment->user_id)->toBe($user->id);
-            expect($result->enrollment->course_id)->toBe($course->id);
-            expect($result->enrollment->isActive())->toBeTrue();
-            expect($result->enrollment->progress_percentage)->toBe(0);
+            expect($enrollment)->toBeInstanceOf(Enrollment::class);
+            expect($enrollment->user_id)->toBe($user->id);
+            expect($enrollment->course_id)->toBe($course->id);
+            expect($enrollment->isActive())->toBeTrue();
+            expect($enrollment->progress_percentage)->toBe(0);
 
             Event::assertDispatched(UserEnrolled::class);
         });
@@ -44,12 +42,10 @@ describe('EnrollmentService', function () {
             $user = User::factory()->create();
             $course = Course::factory()->draft()->create();
 
-            $dto = new CreateEnrollmentDTO(
+            $this->service->enroll(
                 userId: $user->id,
                 courseId: $course->id,
             );
-
-            $this->service->enroll($dto);
         })->throws(CourseNotPublishedException::class);
 
         it('throws exception when already enrolled', function () {
@@ -60,12 +56,10 @@ describe('EnrollmentService', function () {
                 'course_id' => $course->id,
             ]);
 
-            $dto = new CreateEnrollmentDTO(
+            $this->service->enroll(
                 userId: $user->id,
                 courseId: $course->id,
             );
-
-            $this->service->enroll($dto);
         })->throws(AlreadyEnrolledException::class);
 
         it('allows enrollment with invited_by', function () {
@@ -73,15 +67,13 @@ describe('EnrollmentService', function () {
             $inviter = User::factory()->create();
             $course = Course::factory()->published()->create();
 
-            $dto = new CreateEnrollmentDTO(
+            $enrollment = $this->service->enroll(
                 userId: $user->id,
                 courseId: $course->id,
                 invitedBy: $inviter->id,
             );
 
-            $result = $this->service->enroll($dto);
-
-            expect($result->enrollment->invited_by)->toBe($inviter->id);
+            expect($enrollment->invited_by)->toBe($inviter->id);
         });
     });
 
@@ -121,11 +113,13 @@ describe('EnrollmentService', function () {
         });
     });
 
-    describe('drop', function () {
+    // Note: drop() and complete() are now on the Enrollment model
+    // These tests verify the model methods work correctly
+    describe('Enrollment model drop', function () {
         it('drops active enrollment', function () {
             $enrollment = Enrollment::factory()->active()->create();
 
-            $this->service->drop($enrollment, 'Test reason');
+            $enrollment->drop('Test reason');
 
             expect($enrollment->fresh()->isDropped())->toBeTrue();
             Event::assertDispatched(UserDropped::class);
@@ -134,15 +128,15 @@ describe('EnrollmentService', function () {
         it('throws exception for completed enrollment', function () {
             $enrollment = Enrollment::factory()->completed()->create();
 
-            $this->service->drop($enrollment);
+            $enrollment->drop();
         })->throws(InvalidStateTransitionException::class);
     });
 
-    describe('complete', function () {
+    describe('Enrollment model complete', function () {
         it('marks enrollment as completed', function () {
             $enrollment = Enrollment::factory()->active()->create();
 
-            $this->service->complete($enrollment);
+            $enrollment->complete();
 
             expect($enrollment->fresh()->isCompleted())->toBeTrue();
             expect($enrollment->fresh()->completed_at)->not->toBeNull();
@@ -153,7 +147,7 @@ describe('EnrollmentService', function () {
             $enrollment = Enrollment::factory()->completed()->create();
             $originalCompletedAt = $enrollment->completed_at;
 
-            $this->service->complete($enrollment);
+            $enrollment->complete();
 
             expect($enrollment->fresh()->completed_at->timestamp)
                 ->toBe($originalCompletedAt->timestamp);

@@ -4,6 +4,7 @@ namespace App\Domain\Course\Events;
 
 use App\Domain\Shared\Contracts\DomainEvent;
 use App\Models\Course;
+use App\Models\Enrollment;
 
 class CourseUnpublished extends DomainEvent
 {
@@ -26,7 +27,10 @@ class CourseUnpublished extends DomainEvent
             'course_id' => $this->course->id,
             'course_title' => $this->course->title,
             'previous_status' => $this->previousStatus,
-            'active_enrollments_count' => $this->course->enrollments()->active()->count(),
+            'active_enrollments_count' => Enrollment::query()
+                ->where('course_id', $this->course->id)
+                ->active()
+                ->count(),
         ];
     }
 

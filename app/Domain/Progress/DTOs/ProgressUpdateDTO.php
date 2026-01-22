@@ -2,9 +2,7 @@
 
 namespace App\Domain\Progress\DTOs;
 
-use App\Domain\Shared\DTOs\DataTransferObject;
-
-final class ProgressUpdateDTO extends DataTransferObject
+final readonly class ProgressUpdateDTO
 {
     public function __construct(
         public int $enrollmentId,

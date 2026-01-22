@@ -4,6 +4,7 @@ namespace App\Domain\Course\Events;
 
 use App\Domain\Shared\Contracts\DomainEvent;
 use App\Models\Course;
+use App\Models\Enrollment;
 
 class CourseArchived extends DomainEvent
 {
@@ -27,7 +28,10 @@ class CourseArchived extends DomainEvent
             'course_title' => $this->course->title,
             'previous_status' => $this->previousStatus,
             'total_enrollments' => $this->course->enrollments()->count(),
-            'completed_enrollments' => $this->course->enrollments()->completed()->count(),
+            'completed_enrollments' => Enrollment::query()
+                ->where('course_id', $this->course->id)
+                ->completed()
+                ->count(),
         ];
     }
 

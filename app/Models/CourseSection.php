@@ -2,12 +2,28 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property int $course_id
+ * @property string $title
+ * @property string|null $description
+ * @property int $order
+ * @property int|null $estimated_duration_minutes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read Course $course
+ * @property-read Collection<int, Lesson> $lessons
+ */
 class CourseSection extends Model
 {
     use HasFactory, SoftDeletes;
@@ -60,12 +76,20 @@ class CourseSection extends Model
             return $this->estimated_duration_minutes;
         }
 
-        return $this->lessons->sum('estimated_duration_minutes') ?? 0;
+        return $this->calculateEstimatedDuration();
     }
 
+    /**
+     * Calculate total estimated duration from lessons.
+     *
+     * Uses single SQL query instead of loading all lessons.
+     */
     public function calculateEstimatedDuration(): int
     {
-        return $this->lessons->sum('estimated_duration_minutes') ?? 0;
+        return (int) DB::table('lessons')
+            ->where('course_section_id', $this->id)
+            ->whereNull('deleted_at')
+            ->sum('estimated_duration_minutes');
     }
 
     public function updateEstimatedDuration(): void

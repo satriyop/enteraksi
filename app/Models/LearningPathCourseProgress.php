@@ -7,12 +7,30 @@ use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\LearningPath\States\CourseProgressState;
 use App\Domain\LearningPath\States\InProgressCourseState;
 use App\Domain\LearningPath\States\LockedCourseState;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\ModelStates\HasStates;
 
+/**
+ * @property int $id
+ * @property int $learning_path_enrollment_id
+ * @property int $course_id
+ * @property CourseProgressState $state
+ * @property int $position
+ * @property int|null $course_enrollment_id
+ * @property Carbon|null $unlocked_at
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read LearningPathEnrollment $enrollment
+ * @property-read Course $course
+ * @property-read Enrollment|null $courseEnrollment
+ * @property-read LearningPathCourse|null $pathCourse
+ */
 class LearningPathCourseProgress extends Model
 {
     use HasFactory, HasStates;

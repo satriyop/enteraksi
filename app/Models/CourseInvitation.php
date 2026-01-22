@@ -2,11 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $course_id
+ * @property int $invited_by
+ * @property string $status
+ * @property string|null $message
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $responded_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read bool $is_expired
+ * @property-read User $user
+ * @property-read Course $course
+ * @property-read User $inviter
+ *
+ * @method static Builder|CourseInvitation pending()
+ * @method static Builder|CourseInvitation forUser(User $user)
+ * @method static Builder|CourseInvitation notExpired()
+ */
 class CourseInvitation extends Model
 {
     /** @use HasFactory<\Database\Factories\CourseInvitationFactory> */

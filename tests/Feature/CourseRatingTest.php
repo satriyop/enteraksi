@@ -255,7 +255,9 @@ class CourseRatingTest extends TestCase
             'rating' => 3,
         ]);
 
-        $this->assertEquals(4.0, $this->course->average_rating);
+        // Reload course with eager-loaded average to avoid N+1
+        $course = Course::withAvg('ratings', 'rating')->find($this->course->id);
+        $this->assertEquals(4.0, $course->average_rating);
     }
 
     public function test_course_ratings_count_is_correct(): void
@@ -264,7 +266,9 @@ class CourseRatingTest extends TestCase
             'course_id' => $this->course->id,
         ]);
 
-        $this->assertEquals(5, $this->course->ratings_count);
+        // Reload course with eager-loaded count to avoid N+1
+        $course = Course::withCount('ratings')->find($this->course->id);
+        $this->assertEquals(5, $course->ratings_count);
     }
 
     public function test_course_detail_shows_ratings(): void

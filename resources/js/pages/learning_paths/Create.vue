@@ -33,12 +33,16 @@ interface AvailableCourse {
     thumbnail_url: string | null;
 }
 
+interface CoursePrerequisites {
+    completed_courses: number[];
+}
+
 interface SelectedCourse {
     id: number;
     title: string;
     is_required: boolean;
     min_completion_percentage: number;
-    prerequisites: string | null;
+    prerequisites: CoursePrerequisites | null;
 }
 
 interface Props {

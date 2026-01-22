@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Factories;
 
 use App\Models\LearningPath;
@@ -43,22 +44,23 @@ class LearningPathFactory extends Factory
         $title = fake()->unique()->randomElement($titles);
 
         return [
-            'title'              => $title,
-            'description'        => fake('id_ID')->paragraphs(3, true),
-            'objectives'         => [
+            'title' => $title,
+            'description' => fake('id_ID')->paragraphs(3, true),
+            'objectives' => [
                 fake('id_ID')->sentence(),
                 fake('id_ID')->sentence(),
                 fake('id_ID')->sentence(),
                 fake('id_ID')->sentence(),
             ],
-            'slug'               => Str::slug($title) . '-' . Str::random(6),
-            'created_by'         => User::factory(),
-            'updated_by'         => User::factory(),
-            'is_published'       => false,
-            'published_at'       => null,
+            'slug' => Str::slug($title).'-'.Str::random(6),
+            'created_by' => User::factory(),
+            'updated_by' => User::factory(),
+            'is_published' => false,
+            'published_at' => null,
             'estimated_duration' => fake()->numberBetween(120, 600),
-            'difficulty_level'   => fake()->randomElement(['beginner', 'intermediate', 'advanced', 'expert']),
-            'thumbnail_url'      => fake()->imageUrl(640, 480, 'education', true),
+            'difficulty_level' => fake()->randomElement(['beginner', 'intermediate', 'advanced', 'expert']),
+            'thumbnail_url' => fake()->imageUrl(640, 480, 'education', true),
+            'prerequisite_mode' => 'sequential',
         ];
     }
 
@@ -67,7 +69,7 @@ class LearningPathFactory extends Factory
      */
     public function published(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_published' => true,
             'published_at' => now(),
         ]);
@@ -78,7 +80,7 @@ class LearningPathFactory extends Factory
      */
     public function unpublished(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'is_published' => false,
             'published_at' => null,
         ]);
@@ -89,8 +91,8 @@ class LearningPathFactory extends Factory
      */
     public function beginner(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'difficulty_level'   => 'beginner',
+        return $this->state(fn (array $attributes) => [
+            'difficulty_level' => 'beginner',
             'estimated_duration' => fake()->numberBetween(60, 180),
         ]);
     }
@@ -100,8 +102,8 @@ class LearningPathFactory extends Factory
      */
     public function intermediate(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'difficulty_level'   => 'intermediate',
+        return $this->state(fn (array $attributes) => [
+            'difficulty_level' => 'intermediate',
             'estimated_duration' => fake()->numberBetween(180, 360),
         ]);
     }
@@ -111,8 +113,8 @@ class LearningPathFactory extends Factory
      */
     public function advanced(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'difficulty_level'   => 'advanced',
+        return $this->state(fn (array $attributes) => [
+            'difficulty_level' => 'advanced',
             'estimated_duration' => fake()->numberBetween(240, 480),
         ]);
     }
@@ -122,8 +124,8 @@ class LearningPathFactory extends Factory
      */
     public function expert(): static
     {
-        return $this->state(fn(array $attributes) => [
-            'difficulty_level'   => 'expert',
+        return $this->state(fn (array $attributes) => [
+            'difficulty_level' => 'expert',
             'estimated_duration' => fake()->numberBetween(300, 600),
         ]);
     }
@@ -133,7 +135,7 @@ class LearningPathFactory extends Factory
      */
     public function short(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'estimated_duration' => fake()->numberBetween(60, 120),
         ]);
     }
@@ -143,7 +145,7 @@ class LearningPathFactory extends Factory
      */
     public function long(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'estimated_duration' => fake()->numberBetween(480, 720),
         ]);
     }

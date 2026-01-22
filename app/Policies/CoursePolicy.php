@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\Course;
 use App\Models\User;
 
@@ -18,8 +19,11 @@ class CoursePolicy
 
     /**
      * Determine whether the user can view the model.
+     *
+     * Requires EnrollmentContext to avoid hidden queries in authorization.
+     * Controllers must pre-fetch context before calling this policy.
      */
-    public function view(User $user, Course $course): bool
+    public function view(User $user, Course $course, EnrollmentContext $context): bool
     {
         // Course managers can view all courses
         if ($user->canManageCourses()) {
@@ -32,7 +36,7 @@ class CoursePolicy
         }
 
         // Enrolled learners can always view their courses (even if draft/under revision)
-        if ($user->enrollments()->where('course_id', $course->id)->exists()) {
+        if ($context->hasAnyEnrollment) {
             return true;
         }
 
@@ -43,7 +47,7 @@ class CoursePolicy
 
         // Learners can view published restricted courses if invited
         if ($course->isPublished() && $course->visibility === 'restricted') {
-            return $user->courseInvitations()->where('course_id', $course->id)->where('status', 'pending')->exists();
+            return $context->hasPendingInvitation;
         }
 
         return false;
@@ -59,21 +63,24 @@ class CoursePolicy
 
     /**
      * Determine whether the user can update the model.
+     *
+     * Content managers can only edit their own DRAFT courses.
+     * Published courses are "frozen" for content managers - they must ask an admin
+     * to unpublish first or have the admin make the changes.
      */
     public function update(User $user, Course $course): bool
     {
-        // LMS Admin can always edit
+        // LMS Admin can always edit any course (draft or published)
         if ($user->isLmsAdmin()) {
             return true;
         }
 
-        // Cannot edit published courses unless LMS Admin
-        if ($course->isPublished()) {
-            return false;
+        // Content manager can only edit their own draft courses
+        if ($course->user_id === $user->id && $user->canManageCourses()) {
+            return $course->isDraft();
         }
 
-        // Owner can edit their own draft/archived courses
-        return $course->user_id === $user->id && $user->canManageCourses();
+        return false;
     }
 
     /**
@@ -148,8 +155,11 @@ class CoursePolicy
 
     /**
      * Determine whether the user can enroll in the course.
+     *
+     * Requires EnrollmentContext to avoid database queries in authorization.
+     * Controllers must pre-fetch the context before calling this policy.
      */
-    public function enroll(User $user, Course $course): bool
+    public function enroll(User $user, Course $course, EnrollmentContext $context): bool
     {
         // Can only enroll in published courses
         if (! $course->isPublished()) {
@@ -157,7 +167,7 @@ class CoursePolicy
         }
 
         // Can't enroll if already actively enrolled
-        if ($user->enrollments()->where('course_id', $course->id)->where('status', 'active')->exists()) {
+        if ($context->isActivelyEnrolled) {
             return false;
         }
 
@@ -168,10 +178,7 @@ class CoursePolicy
 
         // Restricted courses - only if invited
         if ($course->visibility === 'restricted') {
-            return $user->courseInvitations()
-                ->where('course_id', $course->id)
-                ->where('status', 'pending')
-                ->exists();
+            return $context->hasPendingInvitation;
         }
 
         return false;

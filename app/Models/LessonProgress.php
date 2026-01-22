@@ -2,10 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property int $id
+ * @property int $enrollment_id
+ * @property int $lesson_id
+ * @property int $current_page
+ * @property int $total_pages
+ * @property int $highest_page_reached
+ * @property float $time_spent_seconds
+ * @property int|null $media_position_seconds
+ * @property int|null $media_duration_seconds
+ * @property float|null $media_progress_percentage
+ * @property bool $is_completed
+ * @property Carbon|null $last_viewed_at
+ * @property Carbon|null $completed_at
+ * @property array|null $pagination_metadata
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read int|null $resume_position
+ * @property-read Enrollment $enrollment
+ * @property-read Lesson $lesson
+ */
 class LessonProgress extends Model
 {
     use HasFactory;

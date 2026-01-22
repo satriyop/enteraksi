@@ -335,9 +335,6 @@ describe('Resource Isolation', function () {
         });
 
         it('content manager cannot grade another content managers assessment attempts', function () {
-            // Skip: AssessmentController::grade() method not yet implemented
-            $this->markTestSkipped('Grade method not yet implemented in AssessmentController');
-
             $cm1 = User::factory()->create(['role' => 'content_manager']);
             $cm2 = User::factory()->create(['role' => 'content_manager']);
             $learner = User::factory()->create(['role' => 'learner']);

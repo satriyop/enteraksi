@@ -15,8 +15,10 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
             return 0;
         }
 
+        // Only count completions for lessons that still exist (not soft-deleted)
         $completedLessons = $enrollment->lessonProgress()
             ->where('is_completed', true)
+            ->whereHas('lesson')
             ->count();
 
         return round(($completedLessons / $totalLessons) * 100, 1);
@@ -30,8 +32,10 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
             return false;
         }
 
+        // Only count completions for lessons that still exist (not soft-deleted)
         $completedLessons = $enrollment->lessonProgress()
             ->where('is_completed', true)
+            ->whereHas('lesson')
             ->count();
 
         return $completedLessons >= $totalLessons;

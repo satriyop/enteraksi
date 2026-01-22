@@ -393,6 +393,87 @@ import { Plus, Edit, Trash2 } from 'lucide-vue-next';
 </template>
 ```
 
+### 10. API Resources with Inertia
+
+**Problem:** Controller transformation methods bloat controllers. API Resources can help but have Inertia-specific gotchas.
+
+**Resource Structure:**
+```
+app/Http/Resources/
+├── LearningPath/
+│   ├── LearningPathBrowseResource.php   # List page (minimal)
+│   ├── LearningPathShowResource.php     # Detail page (full)
+│   └── LearningPathCourseResource.php   # Nested course data
+├── Enrollment/
+│   ├── PathEnrollmentIndexResource.php
+│   └── PathEnrollmentBasicResource.php
+└── Progress/
+    └── PathProgressResource.php
+```
+
+**Critical: Disable Wrapping for Inertia**
+```php
+// app/Http/Resources/LearningPath/LearningPathBrowseResource.php
+class LearningPathBrowseResource extends JsonResource
+{
+    // REQUIRED: Disable 'data' wrapping for Inertia
+    public static $wrap = null;
+
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            // ... fields
+            'creator' => $this->whenLoaded('creator', fn () => [
+                'id' => $this->creator->id,
+                'name' => $this->creator->name,
+            ]),
+        ];
+    }
+}
+```
+
+**Critical: Pagination with Resources**
+
+Using `::collection()` loses pagination when `$wrap = null`. Use `->through()` instead:
+
+```php
+// ❌ WRONG: Pagination lost
+'learningPaths' => LearningPathBrowseResource::collection($paginatedPaths),
+// Test expects 'learningPaths.current_page' - FAILS!
+
+// ✅ CORRECT: Preserves pagination structure
+'learningPaths' => $paginatedPaths->through(
+    fn ($path) => (new LearningPathBrowseResource($path))->resolve()
+),
+// Test expects 'learningPaths.data', 'learningPaths.current_page' - PASSES!
+```
+
+**For non-paginated single resources:**
+```php
+// Single resource - works fine
+'learningPath' => new LearningPathShowResource($learningPath),
+'enrollment' => $enrollment ? new PathEnrollmentBasicResource($enrollment) : null,
+```
+
+**DTO Resources (non-Eloquent):**
+```php
+// For DTOs like PathProgressResult
+class PathProgressResource extends JsonResource
+{
+    public static $wrap = null;
+
+    public function toArray(Request $request): array
+    {
+        // Access DTO via $this->resource
+        $baseResponse = $this->resource->toResponse();
+        // ... transform and enrich
+        return $baseResponse;
+    }
+}
+```
+
 ## Gotchas & Best Practices
 
 1. **Always type page props** - Use `AppPageProps<{...}>` wrapper
@@ -403,6 +484,8 @@ import { Plus, Edit, Trash2 } from 'lucide-vue-next';
 6. **Types in types/ directory** - Not inline in components
 7. **defineModel for two-way binding** - For form components
 8. **LucideIcon type for icon props** - `import type { LucideIcon } from 'lucide-vue-next'`
+9. **API Resources: `$wrap = null`** - Required for Inertia compatibility
+10. **Paginated Resources: use `->through()`** - `::collection()` loses pagination metadata
 
 ## Quick Reference
 
@@ -415,6 +498,12 @@ resources/js/lib/utils.ts                # cn() and utilities
 resources/js/composables/useLessonProgress.ts  # Composable example
 resources/js/components/ui/button/       # Shadcn component example
 resources/js/layouts/AppLayout.vue       # Main layout
+
+# API Resources (backend)
+app/Http/Resources/LearningPath/         # API Resource examples
+app/Http/Resources/Enrollment/           # Enrollment resources
+app/Http/Resources/Progress/             # Progress resources
+app/Http/Controllers/LearningPathEnrollmentController.php  # Resource usage
 
 # Generate Wayfinder types
 php artisan wayfinder:generate

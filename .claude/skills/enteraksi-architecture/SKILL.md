@@ -1,53 +1,86 @@
 ---
 name: enteraksi-architecture
-description: Domain-Driven Design patterns, service layer, contracts, DTOs, value objects for Enteraksi LMS. Use when creating services, DTOs, value objects, or working with domain layer code.
+description: Domain-Driven Design patterns, service layer, contracts, DTOs, Spatie Data classes for Enteraksi LMS. Use when creating services, Data classes, or working with domain layer code.
 triggers:
   - create service
   - new service
   - domain service
   - create dto
   - data transfer object
-  - value object
-  - create value object
+  - spatie data
   - domain layer
   - bounded context
   - service contract
   - interface
   - DomainServiceProvider
+  - model behavior
+  - rich model
 ---
 
 # Enteraksi DDD Architecture
 
+## ⚠️ ARCHITECTURAL CHANGES (ROUND10 - Jan 2026)
+
+### What Changed
+
+| Before | After |
+|--------|-------|
+| Custom ValueObjects + DTOs | **Spatie Laravel Data** (`app/Data/`) |
+| Services return DTOs | **Services return Models** |
+| `EnrollmentResult`, `PathEnrollmentResult` | **DELETED** - use Model directly |
+| Thin models | **Rich models** with behavior methods |
+
+### New Patterns
+
+1. **Services return Eloquent models** - controllers transform using Spatie Data when needed
+2. **Models own state transitions** - `$enrollment->drop()`, `$enrollment->complete()`
+3. **Spatie Data for API/Inertia** - TypeScript types auto-generated
+4. **Input DTOs still valid** - `CreateEnrollmentDTO` remains for service input
+
+## ⚠️ CRITICAL RULES
+
+1. **Services return Models** - not DTOs or value objects
+2. **Models own behavior** - state transitions, events are in model methods
+3. **Use Spatie Data** for API responses (with `#[TypeScript]` attribute)
+4. **Input DTOs are fine** - `CreateEnrollmentDTO` pattern still valid for service inputs
+5. **NEVER wrap models in DTOs** - controllers use `XxxData::fromModel()` only when needed for API
+
 ## When to Use This Skill
 
 - Creating a new domain service with contract interface
-- Creating Data Transfer Objects (DTOs) for data passing
-- Creating Value Objects for domain concepts (scores, percentages)
+- Adding behavior methods to models (drop, complete, reactivate)
+- Creating Spatie Data classes for API responses
 - Registering services in DomainServiceProvider
-- Understanding the bounded context structure
 
 ## Directory Structure
 
 ```
-app/Domain/
-├── {BoundedContext}/
-│   ├── Contracts/         # Service interfaces
-│   ├── DTOs/              # Data Transfer Objects
-│   ├── Events/            # Domain events
-│   ├── Exceptions/        # Domain-specific exceptions
-│   ├── Listeners/         # Event listeners
-│   ├── Notifications/     # Mail/notification classes
-│   ├── Services/          # Service implementations
-│   ├── States/            # State machine classes
-│   ├── Strategies/        # Strategy pattern implementations
-│   └── ValueObjects/      # Value objects
-└── Shared/                # Cross-cutting concerns
-    ├── Contracts/         # Base contracts (DomainEvent)
-    ├── DTOs/              # Base DTO class
-    ├── Exceptions/        # Shared exceptions
-    ├── Listeners/         # Shared listeners
-    ├── Services/          # Observability, logging
-    └── ValueObjects/      # Shared value objects
+app/
+├── Data/                      # Spatie Data classes (NEW)
+│   ├── Enrollment/
+│   │   └── EnrollmentData.php
+│   ├── Course/
+│   │   └── CourseData.php
+│   ├── LearningPath/
+│   │   ├── PathEnrollmentData.php
+│   │   └── CourseProgressData.php
+│   ├── Progress/
+│   │   └── LessonProgressData.php
+│   └── User/
+│       └── UserData.php
+├── Domain/
+│   └── {BoundedContext}/
+│       ├── Contracts/         # Service interfaces
+│       ├── DTOs/              # Input DTOs only (CreateXxxDTO)
+│       ├── Events/            # Domain events
+│       ├── Exceptions/        # Domain-specific exceptions
+│       ├── Listeners/         # Event listeners
+│       ├── Services/          # Service implementations
+│       ├── States/            # State machine classes
+│       └── Strategies/        # Strategy pattern (when justified)
+├── Models/                    # Rich models with behavior
+└── Providers/
+    └── DomainServiceProvider.php
 ```
 
 ## Bounded Contexts
@@ -63,99 +96,164 @@ app/Domain/
 
 ## Key Patterns
 
-### 1. Service Contract + Implementation
+### 1. Rich Models with Behavior
 
-**Contract (Interface):**
+**Models own their state transitions:**
+
 ```php
-// app/Domain/Enrollment/Contracts/EnrollmentServiceContract.php
-namespace App\Domain\Enrollment\Contracts;
-
-use App\Domain\Enrollment\DTOs\CreateEnrollmentDTO;
-use App\Domain\Enrollment\DTOs\EnrollmentResult;
-use App\Models\Course;
-use App\Models\Enrollment;
-use App\Models\User;
-
-interface EnrollmentServiceContract
+// app/Models/Enrollment.php
+class Enrollment extends Model
 {
-    public function enroll(CreateEnrollmentDTO $dto): EnrollmentResult;
-    public function canEnroll(User $user, Course $course): bool;
-    public function getActiveEnrollment(User $user, Course $course): ?Enrollment;
-    public function drop(Enrollment $enrollment, ?string $reason = null): void;
-    public function complete(Enrollment $enrollment): void;
+    use HasStates;
+
+    /**
+     * Drop this enrollment.
+     *
+     * @throws InvalidStateTransitionException if not currently active
+     */
+    public function drop(?string $reason = null): self
+    {
+        if (! $this->isActive()) {
+            throw new InvalidStateTransitionException(
+                from: (string) $this->status,
+                to: DroppedState::$name,
+                modelType: 'Enrollment',
+                modelId: $this->id,
+                reason: 'Only active enrollments can be dropped'
+            );
+        }
+
+        DB::transaction(function () use ($reason) {
+            $this->update(['status' => DroppedState::$name]);
+            UserDropped::dispatch($this, $reason);
+        });
+
+        return $this;
+    }
+
+    /**
+     * Complete this enrollment.
+     * Idempotent - calling on already completed enrollment is a no-op.
+     */
+    public function complete(): self
+    {
+        if ($this->isCompleted()) {
+            return $this; // Idempotent
+        }
+
+        DB::transaction(function () {
+            $this->update([
+                'status' => CompletedState::$name,
+                'completed_at' => now(),
+            ]);
+            EnrollmentCompleted::dispatch($this);
+        });
+
+        return $this;
+    }
+
+    /**
+     * Reactivate a dropped enrollment.
+     */
+    public function reactivate(bool $preserveProgress = true, ?int $invitedBy = null): self
+    {
+        if (! $this->isDropped()) {
+            throw new InvalidStateTransitionException(/* ... */);
+        }
+
+        DB::transaction(function () use ($preserveProgress, $invitedBy) {
+            $updateData = [
+                'status' => ActiveState::$name,
+                'enrolled_at' => now(),
+                'completed_at' => null,
+            ];
+
+            if (! $preserveProgress) {
+                $updateData['progress_percentage'] = 0;
+                $updateData['started_at'] = null;
+            }
+
+            if ($invitedBy) {
+                $updateData['invited_by'] = $invitedBy;
+            }
+
+            $this->update($updateData);
+            UserReenrolled::dispatch($this, $preserveProgress);
+        });
+
+        return $this;
+    }
 }
 ```
 
-**Implementation:**
+### 2. Services Return Models
+
+**Services orchestrate, return models:**
+
+```php
+// app/Domain/Enrollment/Contracts/EnrollmentServiceContract.php
+interface EnrollmentServiceContract
+{
+    /**
+     * Enroll a user in a course.
+     * Returns the Enrollment model. Controllers transform using Data classes.
+     */
+    public function enroll(CreateEnrollmentDTO $dto): Enrollment;
+
+    public function canEnroll(User $user, Course $course): bool;
+
+    public function getActiveEnrollment(User $user, Course $course): ?Enrollment;
+
+    // Note: drop() and complete() are now on the Enrollment model!
+}
+```
+
 ```php
 // app/Domain/Enrollment/Services/EnrollmentService.php
-namespace App\Domain\Enrollment\Services;
-
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\Enrollment\DTOs\CreateEnrollmentDTO;
-use App\Domain\Enrollment\DTOs\EnrollmentResult;
-use App\Domain\Enrollment\Events\UserEnrolled;
-use Illuminate\Support\Facades\DB;
-
 class EnrollmentService implements EnrollmentServiceContract
 {
-    public function enroll(CreateEnrollmentDTO $dto): EnrollmentResult
+    public function enroll(CreateEnrollmentDTO $dto): Enrollment
     {
+        $user = User::findOrFail($dto->userId);
+        $course = Course::findOrFail($dto->courseId);
+
+        $this->validateEnrollment($user, $course);
+
+        // Check for dropped enrollment (re-enrollment case)
+        $droppedEnrollment = $this->getDroppedEnrollment($user, $course);
+        if ($droppedEnrollment) {
+            // Use model method directly
+            return $droppedEnrollment->reactivate(
+                preserveProgress: true,
+                invitedBy: $dto->invitedBy
+            );
+        }
+
         return DB::transaction(function () use ($dto) {
             $enrollment = Enrollment::create([
                 'user_id' => $dto->userId,
                 'course_id' => $dto->courseId,
                 'status' => ActiveState::$name,
-                // ...
+                'progress_percentage' => 0,
+                'enrolled_at' => $dto->enrolledAt ?? now(),
+                'invited_by' => $dto->invitedBy,
             ]);
 
             UserEnrolled::dispatch($enrollment);
 
-            return new EnrollmentResult(
-                enrollment: $enrollment,
-                isNewEnrollment: true,
-            );
+            return $enrollment;  // Return model directly
         });
     }
 }
 ```
 
-### 2. Data Transfer Object (DTO)
+### 3. Input DTOs (Standalone Readonly Classes)
 
-**Base DTO Class:**
-```php
-// app/Domain/Shared/DTOs/DataTransferObject.php
-namespace App\Domain\Shared\DTOs;
+**For service inputs - no base class needed:**
 
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Http\Request;
-
-abstract class DataTransferObject implements Arrayable
-{
-    abstract public static function fromArray(array $data): static;
-
-    public static function fromRequest(Request $request): static
-    {
-        return static::fromArray($request->validated());
-    }
-
-    public function toArray(): array
-    {
-        return get_object_vars($this);
-    }
-}
-```
-
-**Concrete DTO:**
 ```php
 // app/Domain/Enrollment/DTOs/CreateEnrollmentDTO.php
-namespace App\Domain\Enrollment\DTOs;
-
-use App\Domain\Shared\DTOs\DataTransferObject;
-use DateTimeImmutable;
-use DateTimeInterface;
-
-final class CreateEnrollmentDTO extends DataTransferObject
+final readonly class CreateEnrollmentDTO
 {
     public function __construct(
         public int $userId,
@@ -164,7 +262,15 @@ final class CreateEnrollmentDTO extends DataTransferObject
         public ?DateTimeInterface $enrolledAt = null,
     ) {}
 
-    public static function fromArray(array $data): static
+    /**
+     * @param array{
+     *     user_id: int,
+     *     course_id: int,
+     *     invited_by?: int|null,
+     *     enrolled_at?: string|null
+     * } $data
+     */
+    public static function fromArray(array $data): self
     {
         return new self(
             userId: $data['user_id'],
@@ -178,130 +284,132 @@ final class CreateEnrollmentDTO extends DataTransferObject
 }
 ```
 
-### 3. Result DTO
+### 4. Spatie Data Classes (API Responses)
+
+**See dedicated skill: `enteraksi-spatie-data`**
 
 ```php
-// app/Domain/Enrollment/DTOs/EnrollmentResult.php
-namespace App\Domain\Enrollment\DTOs;
-
-use App\Models\Enrollment;
-
-final readonly class EnrollmentResult
+// app/Data/Enrollment/EnrollmentData.php
+#[TypeScript]
+class EnrollmentData extends Data
 {
     public function __construct(
-        public Enrollment $enrollment,
-        public bool $isNewEnrollment,
-        public ?string $message = null,
+        public int $id,
+        public int $user_id,
+        public int $course_id,
+        public string $status,
+        public int $progress_percentage,
+        // ...
     ) {}
+
+    public static function fromModel(Enrollment $enrollment): self
+    {
+        return new self(
+            id: $enrollment->id,
+            user_id: $enrollment->user_id,
+            // ...
+        );
+    }
 }
 ```
 
-### 4. Value Object
+### 5. Controllers Use Model Methods + Data Classes
 
-**With Validation in Constructor:**
 ```php
-// app/Domain/Shared/ValueObjects/Percentage.php
-namespace App\Domain\Shared\ValueObjects;
-
-use InvalidArgumentException;
-use JsonSerializable;
-use Stringable;
-
-final readonly class Percentage implements JsonSerializable, Stringable
+// app/Http/Controllers/EnrollmentController.php
+class EnrollmentController extends Controller
 {
-    public function __construct(public float $value)
+    public function store(Request $request, Course $course): RedirectResponse
     {
-        if ($value < 0 || $value > 100) {
-            throw new InvalidArgumentException(
-                "Percentage must be between 0 and 100, got: {$value}"
-            );
-        }
+        // Service creates enrollment, returns model
+        $enrollment = $this->enrollmentService->enroll(
+            new CreateEnrollmentDTO(
+                userId: $request->user()->id,
+                courseId: $course->id,
+            )
+        );
+
+        // Redirect (Inertia) - no need for Data class
+        return redirect()
+            ->route('courses.show', $course)
+            ->with('success', 'Berhasil mendaftar ke kursus.');
     }
 
-    public static function fromFraction(float $numerator, float $denominator): self
+    public function destroy(Request $request, Course $course): RedirectResponse
     {
-        if ($denominator === 0.0) {
-            return new self(0);
-        }
-        return new self(round(($numerator / $denominator) * 100, 2));
+        $enrollment = $request->user()->enrollments()
+            ->where('course_id', $course->id)
+            ->firstOrFail();
+
+        // Use model method directly
+        $enrollment->drop();
+
+        return redirect()
+            ->route('learner.dashboard')
+            ->with('success', 'Pendaftaran kursus dibatalkan.');
     }
 
-    public static function zero(): self
+    // For API endpoints that need typed response
+    public function apiShow(Enrollment $enrollment)
     {
-        return new self(0);
-    }
-
-    public static function full(): self
-    {
-        return new self(100);
-    }
-
-    public function isComplete(): bool
-    {
-        return $this->value >= 100;
-    }
-
-    public function toFraction(): float
-    {
-        return $this->value / 100;
-    }
-
-    public function format(int $decimals = 1): string
-    {
-        return number_format($this->value, $decimals) . '%';
-    }
-
-    public function jsonSerialize(): float
-    {
-        return $this->value;
-    }
-
-    public function __toString(): string
-    {
-        return $this->format();
+        return EnrollmentData::fromModel($enrollment);
     }
 }
 ```
 
-### 5. DomainServiceProvider Registration
+### 6. DomainServiceProvider Registration
 
 ```php
 // app/Providers/DomainServiceProvider.php
-namespace App\Providers;
-
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\Enrollment\Services\EnrollmentService;
-use Illuminate\Support\ServiceProvider;
-
 class DomainServiceProvider extends ServiceProvider
 {
-    /**
-     * Contract bindings (interface => implementation).
-     */
     public array $bindings = [
         EnrollmentServiceContract::class => EnrollmentService::class,
+        PathEnrollmentServiceContract::class => PathEnrollmentService::class,
+        ProgressTrackingServiceContract::class => ProgressTrackingService::class,
     ];
-
-    public function register(): void
-    {
-        $this->registerGradingStrategies();
-        $this->registerProgressCalculators();
-    }
-
-    protected function registerGradingStrategies(): void
-    {
-        // Tag strategies for resolver
-        $this->app->tag([
-            MultipleChoiceGradingStrategy::class,
-            TrueFalseGradingStrategy::class,
-        ], 'grading.strategies');
-
-        // Singleton resolver with tagged strategies
-        $this->app->singleton(GradingStrategyResolverContract::class, function ($app) {
-            return new GradingStrategyResolver($app->tagged('grading.strategies'));
-        });
-    }
 }
+```
+
+## ❌ Deprecated Patterns (DON'T USE)
+
+### Old: Result DTOs wrapping models
+
+```php
+// ❌ DEPRECATED - Don't create these anymore
+final readonly class EnrollmentResult {
+    public function __construct(
+        public EnrollmentData $enrollment,  // Value object wrapper
+        public bool $isNewEnrollment,
+    ) {}
+}
+
+// In service:
+return EnrollmentResult::fromEnrollment($enrollment, true);  // ❌ DON'T
+```
+
+### Old: ValueObjects for data extraction
+
+```php
+// ❌ DEPRECATED - Now use Spatie Data
+namespace App\Domain\Enrollment\ValueObjects;
+
+final readonly class EnrollmentData {
+    // This pattern is replaced by app/Data/Enrollment/EnrollmentData.php
+}
+```
+
+### Old: Service methods for state transitions
+
+```php
+// ❌ DEPRECATED - Use model methods
+$enrollmentService->drop($enrollment);     // ❌ DON'T
+$enrollmentService->complete($enrollment); // ❌ DON'T
+
+// ✅ NEW - Model owns behavior
+$enrollment->drop($reason);
+$enrollment->complete();
+$enrollment->reactivate($preserveProgress);
 ```
 
 ## Naming Conventions
@@ -310,28 +418,48 @@ class DomainServiceProvider extends ServiceProvider
 |------|------------|---------|
 | Contract | `{Name}Contract` | `EnrollmentServiceContract` |
 | Service | `{Name}Service` | `EnrollmentService` |
-| DTO | `{Action}{Entity}DTO` or `{Name}Result` | `CreateEnrollmentDTO`, `EnrollmentResult` |
-| Value Object | `{Concept}` | `Percentage`, `Score`, `Duration` |
-| Exception | `{Description}Exception` | `AlreadyEnrolledException` |
+| Input DTO | `{Action}{Entity}DTO` | `CreateEnrollmentDTO` |
+| Spatie Data | `{Entity}Data` | `EnrollmentData` (in `app/Data/`) |
+| Model Behavior | verb method | `drop()`, `complete()`, `reactivate()` |
 
-## Gotchas & Best Practices
+## What Goes Where
 
-1. **Always use DB::transaction()** for operations that dispatch events
-2. **DTOs should be final** - no inheritance, simple data containers
-3. **Value objects should be readonly** - immutable after construction
-4. **Validate in value object constructor** - fail fast
-5. **Return Result DTOs** from service methods, not void when data is needed
-6. **Use static factory methods** - `fromArray()`, `fromRequest()`, `zero()`, `full()`
+| Need | Where |
+|------|-------|
+| Service input validation | Input DTO (`CreateEnrollmentDTO`) |
+| API/Inertia response | Spatie Data (`app/Data/XxxData.php`) |
+| State transitions | Model methods (`$model->drop()`) |
+| Business validation | Service (`validateEnrollment()`) |
+| Events | Model methods dispatch after state change |
+| Query helpers | Service (`getActiveEnrollment()`) |
 
 ## Quick Reference
 
 ```bash
-# Create new bounded context structure
-mkdir -p app/Domain/{Context}/{Contracts,DTOs,Events,Exceptions,Services,States,Strategies}
+# Create Spatie Data class
+# See enteraksi-spatie-data skill
 
-# Files to reference
-app/Providers/DomainServiceProvider.php           # Registration patterns
-app/Domain/Shared/DTOs/DataTransferObject.php     # Base DTO class
-app/Domain/Shared/ValueObjects/Percentage.php     # Value object example
-app/Domain/Enrollment/Services/EnrollmentService.php  # Service example
+# Model behavior methods
+$enrollment->drop(?string $reason = null): self
+$enrollment->complete(): self
+$enrollment->reactivate(bool $preserveProgress = true, ?int $invitedBy = null): self
+
+# Service methods (simplified)
+$enrollmentService->enroll(CreateEnrollmentDTO $dto): Enrollment
+$enrollmentService->canEnroll(User $user, Course $course): bool
+$enrollmentService->getActiveEnrollment(User $user, Course $course): ?Enrollment
+
+# Generate TypeScript types
+php artisan typescript:transform
+```
+
+## Files to Reference
+
+```
+app/Data/Enrollment/EnrollmentData.php           # Spatie Data example
+app/Models/Enrollment.php                         # Rich model with behavior
+app/Domain/Enrollment/Services/EnrollmentService.php  # Simplified service
+app/Domain/Enrollment/DTOs/CreateEnrollmentDTO.php    # Input DTO
+app/Providers/DomainServiceProvider.php           # Bindings
+resources/js/types/generated.d.ts                 # Auto-generated TypeScript
 ```

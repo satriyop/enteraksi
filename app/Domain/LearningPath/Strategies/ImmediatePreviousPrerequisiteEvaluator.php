@@ -5,6 +5,7 @@ namespace App\Domain\LearningPath\Strategies;
 use App\Domain\LearningPath\Contracts\PrerequisiteEvaluatorContract;
 use App\Domain\LearningPath\DTOs\PrerequisiteCheckResult;
 use App\Models\Course;
+use App\Models\LearningPathCourseProgress;
 use App\Models\LearningPathEnrollment;
 
 /**
@@ -20,18 +21,21 @@ class ImmediatePreviousPrerequisiteEvaluator implements PrerequisiteEvaluatorCon
         $path = $enrollment->learningPath;
 
         // Get the course position in the path
+        /** @var Course|null $pathCourse */
         $pathCourse = $path->courses()
             ->where('course_id', $course->id)
             ->first();
 
         if (! $pathCourse) {
             return PrerequisiteCheckResult::notMet(
-                ['Course is not part of this learning path'],
+                [],
                 'Course not found in path'
             );
         }
 
-        $position = $pathCourse->pivot->position;
+        /** @var object{position: int} $pivot */
+        $pivot = $pathCourse->pivot;
+        $position = $pivot->position;
 
         // First course is always available
         if ($position === 1) {
@@ -39,6 +43,7 @@ class ImmediatePreviousPrerequisiteEvaluator implements PrerequisiteEvaluatorCon
         }
 
         // Get the immediately previous course
+        /** @var Course|null $previousCourse */
         $previousCourse = $path->courses()
             ->wherePivot('position', $position - 1)
             ->first();
@@ -48,6 +53,7 @@ class ImmediatePreviousPrerequisiteEvaluator implements PrerequisiteEvaluatorCon
             return PrerequisiteCheckResult::met();
         }
 
+        /** @var LearningPathCourseProgress|null $progress */
         $progress = $enrollment->courseProgress()
             ->where('course_id', $previousCourse->id)
             ->first();
@@ -57,7 +63,7 @@ class ImmediatePreviousPrerequisiteEvaluator implements PrerequisiteEvaluatorCon
         }
 
         return PrerequisiteCheckResult::notMet(
-            [$previousCourse->title],
+            [['id' => $previousCourse->id, 'title' => $previousCourse->title]],
             'Previous course must be completed'
         );
     }

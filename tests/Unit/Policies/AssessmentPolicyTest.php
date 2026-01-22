@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Course;
@@ -101,12 +102,24 @@ class AssessmentPolicyTest extends TestCase
             'course_id' => $this->course->id,
         ]);
 
-        $this->assertTrue($this->policy->viewAny($this->learner, $this->course));
+        $context = new EnrollmentContext(
+            isActivelyEnrolled: true,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: true,
+        );
+
+        $this->assertTrue($this->policy->viewAny($this->learner, $this->course, $context));
     }
 
     public function test_unenrolled_learner_cannot_view_any_assessments(): void
     {
-        $this->assertFalse($this->policy->viewAny($this->learner, $this->course));
+        $context = new EnrollmentContext(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: false,
+        );
+
+        $this->assertFalse($this->policy->viewAny($this->learner, $this->course, $context));
     }
 
     // ========== view ==========
@@ -139,7 +152,13 @@ class AssessmentPolicyTest extends TestCase
             'course_id' => $this->course->id,
         ]);
 
-        $this->assertTrue($this->policy->view($this->learner, $this->publishedAssessment, $this->course));
+        $context = new EnrollmentContext(
+            isActivelyEnrolled: true,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: true,
+        );
+
+        $this->assertTrue($this->policy->view($this->learner, $this->publishedAssessment, $this->course, $context));
     }
 
     public function test_enrolled_learner_cannot_view_draft_assessment(): void
@@ -149,7 +168,13 @@ class AssessmentPolicyTest extends TestCase
             'course_id' => $this->course->id,
         ]);
 
-        $this->assertFalse($this->policy->view($this->learner, $this->draftAssessment, $this->course));
+        $context = new EnrollmentContext(
+            isActivelyEnrolled: true,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: true,
+        );
+
+        $this->assertFalse($this->policy->view($this->learner, $this->draftAssessment, $this->course, $context));
     }
 
     public function test_view_fails_when_assessment_not_in_course(): void

@@ -6,7 +6,9 @@ use App\Domain\Course\States\ArchivedState;
 use App\Domain\Course\States\CourseState;
 use App\Domain\Course\States\DraftState;
 use App\Domain\Course\States\PublishedState;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,11 +17,52 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\ModelStates\HasStates;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $title
+ * @property string|null $slug
+ * @property string|null $short_description
+ * @property string|null $long_description
+ * @property array|null $objectives
+ * @property array|null $prerequisites
+ * @property int|null $category_id
+ * @property string|null $thumbnail_path
+ * @property CourseState $status
+ * @property string $visibility
+ * @property string|null $difficulty_level
+ * @property int|null $estimated_duration_minutes
+ * @property int|null $manual_duration_minutes
+ * @property Carbon|null $published_at
+ * @property int|null $published_by
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read User $user
+ * @property-read User|null $publishedByUser
+ * @property-read Category|null $category
+ * @property-read Collection<int, CourseSection> $sections
+ * @property-read Collection<int, Lesson> $lessons
+ * @property-read Collection<int, Enrollment> $enrollments
+ * @property-read Collection<int, Assessment> $assessments
+ * @property-read Collection<int, LearningPath> $learningPaths
+ * @property-read Collection<int, CourseInvitation> $invitations
+ * @property-read Collection<int, CourseRating> $ratings
+ * @property-read \Illuminate\Database\Eloquent\Relations\Pivot|null $pivot
+ *
+ * @method static Builder|Course published()
+ * @method static Builder|Course draft()
+ * @method static Builder|Course archived()
+ * @method static Builder|Course visible()
+ * @method static Builder|Course public()
+ */
 class Course extends Model
 {
+    use Concerns\RequiresEagerLoading;
     use HasFactory, HasStates, SoftDeletes;
 
     protected $fillable = [
@@ -170,9 +213,15 @@ class Course extends Model
         return $this->manual_duration_minutes ?? $this->estimated_duration_minutes ?? 0;
     }
 
+    /**
+     * Get total lessons count.
+     *
+     * Requires: ->withCount('lessons') in your query.
+     * Throws in dev/testing if not eager loaded.
+     */
     public function getTotalLessonsAttribute(): int
     {
-        return $this->lessons()->count();
+        return $this->getEagerCount('lessons');
     }
 
     public function getIsEditableAttribute(): bool
@@ -189,29 +238,43 @@ class Course extends Model
         return Storage::disk('public')->url($this->thumbnail_path);
     }
 
+    /**
+     * Get average rating.
+     *
+     * Requires: ->withAvg('ratings', 'rating') in your query.
+     * Throws in dev/testing if not eager loaded.
+     */
     public function getAverageRatingAttribute(): ?float
     {
-        $avg = $this->ratings()->avg('rating');
+        $avg = $this->getEagerAvg('ratings', 'rating');
 
         return $avg !== null ? round($avg, 1) : null;
     }
 
+    /**
+     * Get ratings count.
+     *
+     * Requires: ->withCount('ratings') in your query.
+     * Throws in dev/testing if not eager loaded.
+     */
     public function getRatingsCountAttribute(): int
     {
-        return $this->ratings()->count();
+        return $this->getEagerCount('ratings');
     }
 
+    /**
+     * Calculate total estimated duration from all lessons.
+     *
+     * Uses single SQL query instead of N+1 nested loops.
+     */
     public function calculateEstimatedDuration(): int
     {
-        $totalMinutes = 0;
-
-        foreach ($this->sections as $section) {
-            foreach ($section->lessons as $lesson) {
-                $totalMinutes += $lesson->estimated_duration_minutes ?? 0;
-            }
-        }
-
-        return $totalMinutes;
+        return (int) DB::table('lessons')
+            ->join('course_sections', 'lessons.course_section_id', '=', 'course_sections.id')
+            ->where('course_sections.course_id', $this->id)
+            ->whereNull('lessons.deleted_at')
+            ->whereNull('course_sections.deleted_at')
+            ->sum('lessons.estimated_duration_minutes');
     }
 
     public function updateEstimatedDuration(): void

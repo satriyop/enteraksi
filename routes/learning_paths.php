@@ -25,12 +25,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('learning-paths/{learningPath}/enroll', [LearningPathEnrollmentController::class, 'enroll'])
             ->name('learning-paths.enroll');
 
-        // View Progress
-        Route::get('learning-paths/enrollment/{enrollment}/progress', [LearningPathEnrollmentController::class, 'progress'])
+        // View Progress (uses learningPath ID, controller finds enrollment)
+        Route::get('learning-paths/{learningPath}/progress', [LearningPathEnrollmentController::class, 'progress'])
             ->name('learning-paths.progress');
 
-        // Drop from Learning Path
-        Route::delete('learning-paths/enrollment/{enrollment}', [LearningPathEnrollmentController::class, 'drop'])
+        // Drop from Learning Path (uses learningPath ID, controller finds enrollment)
+        Route::delete('learning-paths/{learningPath}/drop', [LearningPathEnrollmentController::class, 'drop'])
             ->name('learning-paths.drop');
     });
 

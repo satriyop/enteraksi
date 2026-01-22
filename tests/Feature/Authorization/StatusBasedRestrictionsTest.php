@@ -405,9 +405,6 @@ describe('Status-Based Restrictions', function () {
         });
 
         it('cannot grade in-progress attempt', function () {
-            // Skip: AssessmentController::grade() method not yet implemented
-            $this->markTestSkipped('Grade method not yet implemented in AssessmentController');
-
             $cm = User::factory()->create(['role' => 'content_manager']);
             $learner = User::factory()->create(['role' => 'learner']);
             $course = Course::factory()->published()->create(['user_id' => $cm->id]);

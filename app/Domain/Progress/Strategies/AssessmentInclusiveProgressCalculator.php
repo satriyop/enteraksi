@@ -3,8 +3,33 @@
 namespace App\Domain\Progress\Strategies;
 
 use App\Domain\Progress\Contracts\ProgressCalculatorContract;
+use App\Models\Assessment;
+use App\Models\AssessmentAttempt;
 use App\Models\Enrollment;
+use Illuminate\Support\Collection;
 
+/**
+ * Progress calculator that includes both lessons and assessments.
+ *
+ * Calculation Formula:
+ * - Total Progress = (Lesson Progress × 70%) + (Assessment Progress × 30%)
+ *
+ * Lesson Progress:
+ * - Completed lessons ÷ Total lessons × 100
+ * - Only counts existing (non-deleted) lessons
+ *
+ * Assessment Progress:
+ * - Passed required assessments ÷ Total required assessments × 100
+ * - Only counts PUBLISHED assessments with is_required=true
+ * - A passed attempt (passed=true) counts the assessment as complete
+ *
+ * Completion Criteria:
+ * - ALL lessons must be completed
+ * - ALL required assessments must have at least one passed attempt
+ * - Optional assessments (is_required=false) do NOT block completion
+ *
+ * @see \Tests\Unit\Domain\Progress\Strategies\AssessmentInclusiveProgressCalculatorTest
+ */
 class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContract
 {
     protected float $lessonWeight = 0.7;
@@ -25,44 +50,86 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
 
     public function isComplete(Enrollment $enrollment): bool
     {
-        // All lessons completed
+        // All lessons completed (only count lessons that still exist)
         $totalLessons = $enrollment->course->lessons()->count();
         $completedLessons = $enrollment->lessonProgress()
             ->where('is_completed', true)
+            ->whereHas('lesson')
             ->count();
 
         if ($totalLessons > 0 && $completedLessons < $totalLessons) {
             return false;
         }
 
-        // All required assessments passed
-        $requiredAssessments = $enrollment->course->assessments()
+        // Get required assessments with their passed attempts in a single query
+        $requiredAssessmentIds = Assessment::query()
+            ->where('course_id', $enrollment->course_id)
             ->published()
             ->where('is_required', true)
-            ->get();
+            ->pluck('id');
 
         // If no required assessments exist, the course is complete if lessons are done
-        if ($requiredAssessments->isEmpty()) {
+        if ($requiredAssessmentIds->isEmpty()) {
             return true;
         }
 
-        foreach ($requiredAssessments as $assessment) {
-            $hasPassed = $assessment->attempts()
-                ->where('user_id', $enrollment->user_id)
-                ->where('passed', true)
-                ->exists();
+        // Batch load all passed attempts for required assessments
+        $passedAssessmentIds = $this->getPassedAssessmentIds(
+            $enrollment->user_id,
+            $requiredAssessmentIds
+        );
 
-            if (! $hasPassed) {
-                return false;
-            }
-        }
-
-        return true;
+        // All required assessments must have at least one passed attempt
+        return $requiredAssessmentIds->diff($passedAssessmentIds)->isEmpty();
     }
 
     public function getName(): string
     {
         return 'assessment_inclusive';
+    }
+
+    /**
+     * Get assessment statistics for progress visibility.
+     *
+     * @return array{total: int, passed: int, pending: int, required_total: int, required_passed: int}
+     */
+    public function getAssessmentStats(Enrollment $enrollment): array
+    {
+        // Get all published assessments in one query
+        $assessments = Assessment::query()
+            ->where('course_id', $enrollment->course_id)
+            ->published()
+            ->select('id', 'is_required')
+            ->get();
+
+        if ($assessments->isEmpty()) {
+            return [
+                'total' => 0,
+                'passed' => 0,
+                'pending' => 0,
+                'required_total' => 0,
+                'required_passed' => 0,
+            ];
+        }
+
+        // Batch load all passed attempts for this user
+        $passedAssessmentIds = $this->getPassedAssessmentIds(
+            $enrollment->user_id,
+            $assessments->pluck('id')
+        );
+
+        $requiredAssessments = $assessments->where('is_required', true);
+        $requiredPassedCount = $requiredAssessments
+            ->whereIn('id', $passedAssessmentIds)
+            ->count();
+
+        return [
+            'total' => $assessments->count(),
+            'passed' => $passedAssessmentIds->count(),
+            'pending' => $assessments->count() - $passedAssessmentIds->count(),
+            'required_total' => $requiredAssessments->count(),
+            'required_passed' => $requiredPassedCount,
+        ];
     }
 
     protected function calculateLessonProgress(Enrollment $enrollment): float
@@ -73,8 +140,10 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
             return 100; // No lessons = 100% lesson progress
         }
 
+        // Only count completions for lessons that still exist
         $completedLessons = $enrollment->lessonProgress()
             ->where('is_completed', true)
+            ->whereHas('lesson')
             ->count();
 
         return ($completedLessons / $totalLessons) * 100;
@@ -82,25 +151,42 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
 
     protected function calculateAssessmentProgress(Enrollment $enrollment): float
     {
-        $assessments = $enrollment->course->assessments()->published()->get();
+        // Only count REQUIRED assessments for progress (consistent with isComplete)
+        $requiredAssessmentIds = Assessment::query()
+            ->where('course_id', $enrollment->course_id)
+            ->published()
+            ->where('is_required', true)
+            ->pluck('id');
 
-        if ($assessments->isEmpty()) {
-            return 100; // No assessments = 100% assessment progress
+        if ($requiredAssessmentIds->isEmpty()) {
+            return 100; // No required assessments = 100% assessment progress
         }
 
-        $passedCount = 0;
+        // Batch load all passed attempts for required assessments
+        $passedCount = $this->getPassedAssessmentIds(
+            $enrollment->user_id,
+            $requiredAssessmentIds
+        )->count();
 
-        foreach ($assessments as $assessment) {
-            $hasPassed = $assessment->attempts()
-                ->where('user_id', $enrollment->user_id)
-                ->where('passed', true)
-                ->exists();
+        return ($passedCount / $requiredAssessmentIds->count()) * 100;
+    }
 
-            if ($hasPassed) {
-                $passedCount++;
-            }
+    /**
+     * Get IDs of assessments that the user has passed.
+     *
+     * Uses a single query instead of N+1 queries per assessment.
+     */
+    protected function getPassedAssessmentIds(int $userId, Collection $assessmentIds): Collection
+    {
+        if ($assessmentIds->isEmpty()) {
+            return collect();
         }
 
-        return ($passedCount / $assessments->count()) * 100;
+        return AssessmentAttempt::query()
+            ->where('user_id', $userId)
+            ->whereIn('assessment_id', $assessmentIds)
+            ->where('passed', true)
+            ->distinct()
+            ->pluck('assessment_id');
     }
 }

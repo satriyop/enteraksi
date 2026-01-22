@@ -1,30 +1,14 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils'
-import { type HTMLAttributes } from 'vue'
+import { SelectRoot, type SelectRootEmits, type SelectRootProps, useForwardPropsEmits } from 'reka-ui'
 
-const props = defineProps<{
-  modelValue?: string
-  defaultValue?: string
-  disabled?: boolean
-  class?: HTMLAttributes['class']
-}>()
+const props = defineProps<SelectRootProps>()
+const emits = defineEmits<SelectRootEmits>()
 
-const emits = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
-
-const modelValue = defineModel<string>()
-
-const handleSelect = (value: string) => {
-  if (!props.disabled) {
-    modelValue.value = value
-    emits('update:modelValue', value)
-  }
-}
+const forwarded = useForwardPropsEmits(props, emits)
 </script>
 
 <template>
-  <div :class="cn('relative', props.class)">
-    <slot :value="modelValue" :on-select="handleSelect" />
-  </div>
+  <SelectRoot v-bind="forwarded">
+    <slot />
+  </SelectRoot>
 </template>

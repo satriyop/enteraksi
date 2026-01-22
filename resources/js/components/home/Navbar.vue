@@ -78,6 +78,12 @@ const toggleTheme = () => {
                             Kursus
                         </Link>
                         <Link
+                            href="/learner/learning-paths/browse"
+                            class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            Learning Path
+                        </Link>
+                        <Link
                             href="/categories"
                             class="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
                         >
@@ -208,6 +214,12 @@ const toggleTheme = () => {
                     class="block rounded-lg px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
                     Kursus
+                </Link>
+                <Link
+                    href="/learner/learning-paths/browse"
+                    class="block rounded-lg px-3 py-2 text-base font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                    Learning Path
                 </Link>
                 <Link
                     href="/categories"

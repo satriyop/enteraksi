@@ -2,21 +2,33 @@
 
 namespace App\Domain\Enrollment\Contracts;
 
-use App\Domain\Enrollment\DTOs\CreateEnrollmentDTO;
-use App\Domain\Enrollment\DTOs\EnrollmentResult;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\User;
+use DateTimeInterface;
 
+/**
+ * Enrollment service contract.
+ *
+ * Note: State transitions (drop, complete, reactivate) are now owned by the
+ * Enrollment model. Call them directly: $enrollment->drop(), $enrollment->complete().
+ */
 interface EnrollmentServiceContract
 {
     /**
      * Enroll a user in a course.
      *
+     * Returns the Enrollment model. Controllers transform using EnrollmentData.
+     *
      * @throws \App\Domain\Enrollment\Exceptions\AlreadyEnrolledException
      * @throws \App\Domain\Enrollment\Exceptions\CourseNotPublishedException
      */
-    public function enroll(CreateEnrollmentDTO $dto): EnrollmentResult;
+    public function enroll(
+        int $userId,
+        int $courseId,
+        ?int $invitedBy = null,
+        ?DateTimeInterface $enrolledAt = null
+    ): Enrollment;
 
     /**
      * Check if a user can enroll in a course.
@@ -29,15 +41,7 @@ interface EnrollmentServiceContract
     public function getActiveEnrollment(User $user, Course $course): ?Enrollment;
 
     /**
-     * Drop a user from a course.
-     *
-     * @throws \App\Domain\Shared\Exceptions\InvalidStateTransitionException
+     * Get a dropped enrollment for user and course.
      */
-    public function drop(Enrollment $enrollment, ?string $reason = null): void;
-
-    /**
-     * Mark enrollment as completed.
-     * Usually called by ProgressTrackingService.
-     */
-    public function complete(Enrollment $enrollment): void;
+    public function getDroppedEnrollment(User $user, Course $course): ?Enrollment;
 }

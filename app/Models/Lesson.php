@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Services\TipTapRenderer;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,6 +14,29 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $course_section_id
+ * @property string $title
+ * @property string|null $description
+ * @property int $order
+ * @property string $content_type
+ * @property array|null $rich_content
+ * @property string|null $youtube_url
+ * @property string|null $conference_url
+ * @property string|null $conference_type
+ * @property int|null $estimated_duration_minutes
+ * @property bool $is_free_preview
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
+ * @property-read string|null $youtube_video_id
+ * @property-read string|null $rich_content_html
+ * @property-read CourseSection $section
+ * @property-read Course|null $course
+ * @property-read Collection<int, LessonProgress> $progress
+ * @property-read Collection<int, Media> $media
+ */
 class Lesson extends Model
 {
     use HasFactory, SoftDeletes;

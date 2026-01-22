@@ -760,7 +760,7 @@ describe('Cross-Role Collaboration', function () {
             $this->actingAs($admin)
                 ->get(route('assessments.grade', [$course, $assessment, $attempt]))
                 ->assertOk();
-        })->skip('Grade method not implemented in AssessmentController');
+        });
 
         it('CM can grade their own assessment attempts', function () {
             $cm = User::factory()->create(['role' => 'content_manager']);
@@ -793,7 +793,7 @@ describe('Cross-Role Collaboration', function () {
             $this->actingAs($cm)
                 ->get(route('assessments.grade', [$course, $assessment, $attempt]))
                 ->assertOk();
-        })->skip('Grade method not implemented in AssessmentController');
+        });
 
         it('CM cannot grade other CMs assessment attempts', function () {
             $cm1 = User::factory()->create(['role' => 'content_manager']);
@@ -821,7 +821,7 @@ describe('Cross-Role Collaboration', function () {
             $this->actingAs($cm1)
                 ->get(route('assessments.grade', [$course, $assessment, $attempt]))
                 ->assertForbidden();
-        })->skip('Grade method not implemented in AssessmentController');
+        });
 
         it('learner cannot access grade page', function () {
             $cm = User::factory()->create(['role' => 'content_manager']);
@@ -848,7 +848,7 @@ describe('Cross-Role Collaboration', function () {
             $this->actingAs($learner)
                 ->get(route('assessments.grade', [$course, $assessment, $attempt]))
                 ->assertForbidden();
-        })->skip('Grade method not implemented in AssessmentController');
+        });
 
     });
 

@@ -5,6 +5,7 @@
 // =============================================================================
 
 import { index, show } from '@/actions/App/Http/Controllers/CourseController';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import CourseInfoForm from '@/components/courses/CourseInfoForm.vue';
@@ -20,7 +21,7 @@ import type {
     DifficultyLevel,
 } from '@/types';
 import { Head, Link } from '@inertiajs/vue3';
-import { ArrowLeft } from 'lucide-vue-next';
+import { AlertTriangle, ArrowLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 // =============================================================================
@@ -66,6 +67,8 @@ interface Props {
     course: EditableCourse;
     categories: Category[];
     tags: Tag[];
+    /** Number of active enrollments for warning display */
+    activeEnrollmentsCount: number;
     can: {
         publish: boolean;
         setStatus: boolean;
@@ -96,7 +99,13 @@ const activeTab = ref<'info' | 'outline'>('outline');
 // Computed
 // =============================================================================
 
-const isEditable = computed(() => props.course.status !== 'published');
+/**
+ * Course is now always editable if user has permission to access this page.
+ * Content managers can edit their own published courses.
+ */
+const isEditable = computed(() => true);
+
+const hasActiveEnrollments = computed(() => props.activeEnrollmentsCount > 0);
 
 const statusLabel = computed(() => {
     switch (props.course.status) {
@@ -132,6 +141,23 @@ const statusLabel = computed(() => {
                     </div>
                 </div>
             </div>
+
+            <!-- Active Enrollments Warning -->
+            <Alert
+                v-if="hasActiveEnrollments && course.status === 'published'"
+                variant="destructive"
+                class="border-yellow-500 bg-yellow-50 dark:bg-yellow-950"
+            >
+                <AlertTriangle class="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <AlertTitle class="text-yellow-800 dark:text-yellow-200">
+                    Perhatian: {{ activeEnrollmentsCount }} Peserta Aktif
+                </AlertTitle>
+                <AlertDescription class="text-yellow-700 dark:text-yellow-300">
+                    Kursus ini memiliki {{ activeEnrollmentsCount }} peserta yang sedang aktif belajar.
+                    Perubahan pada konten akan langsung terlihat oleh mereka.
+                    Hindari menghapus materi yang sedang dipelajari.
+                </AlertDescription>
+            </Alert>
 
             <!-- Tabs -->
             <div class="flex gap-2 border-b">

@@ -97,8 +97,8 @@ class QuestionController extends Controller
 
         foreach ($validated['questions'] as $questionData) {
             if (isset($questionData['id']) && $questionData['id'] > 0) {
-                // Update existing question
-                $question = Question::find($questionData['id']);
+                // Update existing question - must belong to THIS assessment
+                $question = $assessment->questions()->find($questionData['id']);
                 if ($question) {
                     $question->update([
                         'question_text' => $questionData['question_text'],
@@ -191,6 +191,11 @@ class QuestionController extends Controller
     {
         Gate::authorize('update', [$assessment, $course]);
 
+        // Verify question belongs to this assessment
+        if ($question->assessment_id !== $assessment->id) {
+            abort(404);
+        }
+
         $question->delete();
 
         return redirect()
@@ -205,87 +210,20 @@ class QuestionController extends Controller
     {
         Gate::authorize('update', [$assessment, $course]);
 
+        // Validate question IDs belong to THIS assessment
         $validated = $request->validate([
             'question_ids' => 'required|array',
-            'question_ids.*' => 'exists:questions,id',
+            'question_ids.*' => [
+                'integer',
+                Rule::exists('questions', 'id')->where('assessment_id', $assessment->id),
+            ],
         ]);
 
         foreach ($validated['question_ids'] as $index => $questionId) {
-            Question::where('id', $questionId)->update(['order' => $index]);
+            // Use scoped query to ensure we only update this assessment's questions
+            $assessment->questions()->where('id', $questionId)->update(['order' => $index]);
         }
 
         return back()->with('success', 'Urutan pertanyaan berhasil diperbarui.');
-    }
-
-    /**
-     * Show grading interface for manual grading.
-     */
-    public function grade(Request $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): Response
-    {
-        Gate::authorize('grade', [$attempt, $assessment, $course]);
-
-        $attempt->load(['answers.question.options', 'user']);
-        $assessment->load(['questions.options']);
-
-        return Inertia::render('assessments/Grade', [
-            'course' => $course,
-            'assessment' => $assessment,
-            'attempt' => $attempt,
-        ]);
-    }
-
-    /**
-     * Submit grading for an attempt.
-     */
-    public function submitGrade(Request $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): RedirectResponse
-    {
-        Gate::authorize('grade', [$attempt, $assessment, $course]);
-
-        $validated = $request->validate([
-            'answers' => 'required|array',
-            'answers.*.id' => 'required|exists:attempt_answers,id',
-            'answers.*.score' => 'required|integer|min:0',
-            'answers.*.is_correct' => 'required|boolean',
-            'answers.*.feedback' => 'nullable|string',
-            'feedback' => 'nullable|string',
-        ]);
-
-        $totalScore = 0;
-        $maxScore = $assessment->total_points;
-
-        foreach ($validated['answers'] as $answerData) {
-            $answer = $attempt->answers()->find($answerData['id']);
-
-            if ($answer) {
-                $answer->update([
-                    'score' => $answerData['score'],
-                    'is_correct' => $answerData['is_correct'],
-                    'feedback' => $answerData['feedback'] ?? null,
-                    'graded_by' => auth()->id(),
-                    'graded_at' => now(),
-                ]);
-
-                $totalScore += $answerData['score'];
-            }
-        }
-
-        // Update attempt
-        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
-        $passed = $percentage >= $assessment->passing_score;
-
-        $attempt->update([
-            'status' => 'graded',
-            'score' => $totalScore,
-            'max_score' => $maxScore,
-            'percentage' => $percentage,
-            'passed' => $passed,
-            'feedback' => $validated['feedback'] ?? null,
-            'graded_by' => auth()->id(),
-            'graded_at' => now(),
-        ]);
-
-        return redirect()
-            ->route('assessments.attempt', [$course, $assessment, $attempt])
-            ->with('success', 'Penilaian berhasil dinilai.');
     }
 }

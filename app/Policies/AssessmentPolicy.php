@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Policies;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Course;
@@ -10,8 +12,10 @@ class AssessmentPolicy
 {
     /**
      * Determine whether the user can view any assessments for a course.
+     *
+     * Requires EnrollmentContext for learners to avoid hidden queries.
      */
-    public function viewAny(User $user, Course $course): bool
+    public function viewAny(User $user, Course $course, ?EnrollmentContext $context = null): bool
     {
         // LMS Admin can view all assessments
         if ($user->isLmsAdmin()) {
@@ -24,8 +28,8 @@ class AssessmentPolicy
         }
 
         // Learners can view published assessments for courses they're enrolled in
-        if ($user->isLearner() && $user->enrollments()->where('course_id', $course->id)->exists()) {
-            return true;
+        if ($user->isLearner() && $context !== null) {
+            return $context->hasAnyEnrollment;
         }
 
         return false;
@@ -33,8 +37,10 @@ class AssessmentPolicy
 
     /**
      * Determine whether the user can view the assessment.
+     *
+     * Requires EnrollmentContext for learners to avoid hidden queries.
      */
-    public function view(User $user, Assessment $assessment, Course $course): bool
+    public function view(User $user, Assessment $assessment, Course $course, ?EnrollmentContext $context = null): bool
     {
         // Check if assessment belongs to the course
         if ($assessment->course_id !== $course->id) {
@@ -52,8 +58,8 @@ class AssessmentPolicy
         }
 
         // Learners can view published assessments they can attempt
-        if ($user->isLearner() && $assessment->status === 'published') {
-            return $user->enrollments()->where('course_id', $course->id)->exists();
+        if ($user->isLearner() && $assessment->status === 'published' && $context !== null) {
+            return $context->hasAnyEnrollment;
         }
 
         return false;

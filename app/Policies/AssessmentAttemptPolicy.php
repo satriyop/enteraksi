@@ -11,10 +11,14 @@ class AssessmentAttemptPolicy
 {
     /**
      * Determine whether the user can view any models.
+     *
+     * Only admins and content managers should be able to list all attempts
+     * for grading and reporting purposes. Learners can only see their own
+     * attempts (enforced via query scoping, not this policy).
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isLmsAdmin() || $user->isContentManager();
     }
 
     /**
@@ -38,10 +42,16 @@ class AssessmentAttemptPolicy
 
     /**
      * Determine whether the user can create models.
+     *
+     * Note: The actual attempt creation is gated by AssessmentPolicy::attempt()
+     * which calls Assessment::canBeAttemptedBy(). This policy method exists
+     * for completeness but should not be the primary authorization check.
+     *
+     * Only learners can create assessment attempts.
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->isLearner();
     }
 
     /**
@@ -147,6 +157,11 @@ class AssessmentAttemptPolicy
 
         // Check if attempt belongs to the assessment
         if ($attempt->assessment_id !== $assessment->id) {
+            return false;
+        }
+
+        // Cannot grade in-progress attempts - must be submitted first
+        if ($attempt->isInProgress()) {
             return false;
         }
 

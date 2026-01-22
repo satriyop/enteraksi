@@ -17,6 +17,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Lesson Completion Thresholds
+    |--------------------------------------------------------------------------
+    |
+    | Auto-completion thresholds for different content types.
+    | Values are percentages (0-100).
+    |
+    */
+
+    'completion_thresholds' => [
+        // Media content (video, audio) completes at this percentage watched
+        'media' => (int) env('LMS_MEDIA_COMPLETION_THRESHOLD', 90),
+
+        // Page-based content completes when this percentage of pages viewed
+        // 100 = must view all pages, 90 = can skip last 10%
+        'pages' => (int) env('LMS_PAGES_COMPLETION_THRESHOLD', 100),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Grading Settings
     |--------------------------------------------------------------------------
     |

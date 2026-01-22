@@ -125,15 +125,17 @@ describe('Learning Path Enrollment Feature', function () {
         });
     });
 
-    describe('DELETE /learner/learning-paths/enrollment/{enrollment}', function () {
+    describe('DELETE /learner/learning-paths/{learningPath}/drop', function () {
         it('allows user to drop their enrollment', function () {
             $this->actingAs($this->user);
 
+            $path = LearningPath::factory()->published()->create();
             $enrollment = LearningPathEnrollment::factory()->active()->create([
                 'user_id' => $this->user->id,
+                'learning_path_id' => $path->id,
             ]);
 
-            $response = $this->delete(route('learner.learning-paths.drop', $enrollment), [
+            $response = $this->delete(route('learner.learning-paths.drop', $path), [
                 'reason' => 'Lost interest',
             ]);
 
@@ -150,13 +152,17 @@ describe('Learning Path Enrollment Feature', function () {
             $this->actingAs($this->user);
 
             $otherUser = User::factory()->create();
+            $path = LearningPath::factory()->published()->create();
             $enrollment = LearningPathEnrollment::factory()->active()->create([
                 'user_id' => $otherUser->id,
+                'learning_path_id' => $path->id,
             ]);
 
-            $response = $this->delete(route('learner.learning-paths.drop', $enrollment));
+            // When user doesn't have an active enrollment, they get an error redirect
+            $response = $this->delete(route('learner.learning-paths.drop', $path));
 
-            $response->assertForbidden();
+            $response->assertRedirect();
+            $response->assertSessionHas('error');
         });
     });
 

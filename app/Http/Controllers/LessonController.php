@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Progress\Events\LessonDeleted;
 use App\Http\Requests\Lesson\StoreLessonRequest;
 use App\Http\Requests\Lesson\UpdateLessonRequest;
 use App\Models\Course;
 use App\Models\CourseSection;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,7 +41,11 @@ class LessonController extends Controller
 
         // Get user enrollment and lesson progress
         $user = $request->user();
-        $enrollment = $user->enrollments()->where('course_id', $course->id)->first();
+        /** @var Enrollment|null $enrollment */
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
 
         // Get lesson progress for all content types
         $lessonProgress = null;
@@ -161,6 +167,8 @@ class LessonController extends Controller
 
         $section = $lesson->section;
         $course = $section->course;
+        $lessonId = $lesson->id;
+        $lessonTitle = $lesson->title;
 
         $lesson->delete();
 
@@ -172,6 +180,9 @@ class LessonController extends Controller
         // Update section and course duration
         $section->updateEstimatedDuration();
         $course->updateEstimatedDuration();
+
+        // Dispatch event to recalculate progress for active enrollments
+        LessonDeleted::dispatch($lessonId, $course, $lessonTitle, auth()->id());
 
         return redirect()
             ->route('courses.edit', $course)

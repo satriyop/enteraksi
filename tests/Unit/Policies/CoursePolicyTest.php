@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Policies;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\Course;
 use App\Models\CourseInvitation;
 use App\Models\Enrollment;
@@ -62,6 +63,8 @@ class CoursePolicyTest extends TestCase
     }
 
     // ========== view ==========
+    // Note: Policy now requires EnrollmentContext to avoid DB queries in authorization.
+    // Tests create context manually to verify policy logic in isolation.
 
     public function test_lms_admin_can_view_any_course(): void
     {
@@ -69,9 +72,15 @@ class CoursePolicyTest extends TestCase
         $publishedCourse = Course::factory()->published()->create();
         $archivedCourse = Course::factory()->create(['status' => 'archived']);
 
-        $this->assertTrue($this->policy->view($this->lmsAdmin, $draftCourse));
-        $this->assertTrue($this->policy->view($this->lmsAdmin, $publishedCourse));
-        $this->assertTrue($this->policy->view($this->lmsAdmin, $archivedCourse));
+        // Admin bypasses all checks - context doesn't matter
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertTrue($this->policy->view($this->lmsAdmin, $draftCourse, $context));
+        $this->assertTrue($this->policy->view($this->lmsAdmin, $publishedCourse, $context));
+        $this->assertTrue($this->policy->view($this->lmsAdmin, $archivedCourse, $context));
     }
 
     public function test_content_manager_can_view_own_course(): void
@@ -81,7 +90,13 @@ class CoursePolicyTest extends TestCase
             'status' => 'draft',
         ]);
 
-        $this->assertTrue($this->policy->view($this->contentManager, $course));
+        // Owner bypasses enrollment checks
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertTrue($this->policy->view($this->contentManager, $course, $context));
     }
 
     public function test_content_manager_can_view_other_published_public_course(): void
@@ -91,7 +106,13 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertTrue($this->policy->view($this->contentManager, $course));
+        // Content manager can manage courses - bypasses enrollment checks
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertTrue($this->policy->view($this->contentManager, $course, $context));
     }
 
     public function test_enrolled_learner_can_view_draft_course(): void
@@ -106,7 +127,14 @@ class CoursePolicyTest extends TestCase
             'course_id' => $course->id,
         ]);
 
-        $this->assertTrue($this->policy->view($this->learner, $course));
+        // Context indicates user has enrollment
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: true,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: true,
+        );
+
+        $this->assertTrue($this->policy->view($this->learner, $course, $context));
     }
 
     public function test_learner_can_view_published_public_course(): void
@@ -115,7 +143,14 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertTrue($this->policy->view($this->learner, $course));
+        // No enrollment needed for public published courses
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: false,
+        );
+
+        $this->assertTrue($this->policy->view($this->learner, $course, $context));
     }
 
     public function test_learner_cannot_view_draft_course_without_enrollment(): void
@@ -125,7 +160,14 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertFalse($this->policy->view($this->learner, $course));
+        // No enrollment
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: false,
+        );
+
+        $this->assertFalse($this->policy->view($this->learner, $course, $context));
     }
 
     public function test_invited_learner_can_view_restricted_course(): void
@@ -140,7 +182,14 @@ class CoursePolicyTest extends TestCase
             'status' => 'pending',
         ]);
 
-        $this->assertTrue($this->policy->view($this->learner, $course));
+        // Context indicates pending invitation
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: true,
+            hasAnyEnrollment: false,
+        );
+
+        $this->assertTrue($this->policy->view($this->learner, $course, $context));
     }
 
     public function test_uninvited_learner_cannot_view_restricted_course(): void
@@ -149,7 +198,14 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'restricted',
         ]);
 
-        $this->assertFalse($this->policy->view($this->learner, $course));
+        // No invitation, no enrollment
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+            hasAnyEnrollment: false,
+        );
+
+        $this->assertFalse($this->policy->view($this->learner, $course, $context));
     }
 
     // ========== create ==========
@@ -196,6 +252,8 @@ class CoursePolicyTest extends TestCase
             'user_id' => $this->contentManager->id,
         ]);
 
+        // Content managers can only edit their own DRAFT courses
+        // Published courses are "frozen" - must ask admin to unpublish first
         $this->assertFalse($this->policy->update($this->contentManager, $course));
     }
 
@@ -404,6 +462,8 @@ class CoursePolicyTest extends TestCase
     }
 
     // ========== enroll ==========
+    // Note: Policy now requires EnrollmentContext to avoid DB queries in authorization.
+    // Tests create context manually to verify policy logic in isolation.
 
     public function test_learner_can_enroll_in_published_public_course(): void
     {
@@ -411,7 +471,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertTrue($this->policy->enroll($this->learner, $course));
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertTrue($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_learner_cannot_enroll_in_draft_course(): void
@@ -421,7 +486,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_learner_cannot_enroll_in_archived_course(): void
@@ -431,7 +501,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_already_enrolled_learner_cannot_double_enroll(): void
@@ -440,12 +515,13 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        Enrollment::factory()->active()->create([
-            'user_id' => $this->learner->id,
-            'course_id' => $course->id,
-        ]);
+        // Context indicates user is already actively enrolled
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: true,
+            hasPendingInvitation: false,
+        );
 
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_invited_learner_can_enroll_in_restricted_course(): void
@@ -454,13 +530,13 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'restricted',
         ]);
 
-        CourseInvitation::factory()->create([
-            'user_id' => $this->learner->id,
-            'course_id' => $course->id,
-            'status' => 'pending',
-        ]);
+        // Context indicates user has pending invitation
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: true,
+        );
 
-        $this->assertTrue($this->policy->enroll($this->learner, $course));
+        $this->assertTrue($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_uninvited_learner_cannot_enroll_in_restricted_course(): void
@@ -469,7 +545,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'restricted',
         ]);
 
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_learner_cannot_enroll_in_hidden_course(): void
@@ -478,7 +559,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'hidden',
         ]);
 
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
+
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 
     // ========== Edge Cases ==========
@@ -489,14 +575,13 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        // Create completed enrollment
-        Enrollment::factory()->completed()->create([
-            'user_id' => $this->learner->id,
-            'course_id' => $course->id,
-        ]);
+        // Context: not actively enrolled (completed is not active)
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
 
-        // Can re-enroll since previous enrollment is completed
-        $this->assertTrue($this->policy->enroll($this->learner, $course));
+        $this->assertTrue($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_dropped_enrollment_allows_re_enrollment(): void
@@ -505,14 +590,13 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        // Create dropped enrollment
-        Enrollment::factory()->dropped()->create([
-            'user_id' => $this->learner->id,
-            'course_id' => $course->id,
-        ]);
+        // Context: not actively enrolled (dropped is not active)
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
 
-        // Can re-enroll since previous enrollment is dropped
-        $this->assertTrue($this->policy->enroll($this->learner, $course));
+        $this->assertTrue($this->policy->enroll($this->learner, $course, $context));
     }
 
     public function test_accepted_invitation_does_not_allow_enrollment(): void
@@ -521,14 +605,12 @@ class CoursePolicyTest extends TestCase
             'visibility' => 'restricted',
         ]);
 
-        // Create accepted invitation (not pending)
-        CourseInvitation::factory()->create([
-            'user_id' => $this->learner->id,
-            'course_id' => $course->id,
-            'status' => 'accepted',
-        ]);
+        // Context: no pending invitation (accepted is not pending)
+        $context = EnrollmentContext::fromData(
+            isActivelyEnrolled: false,
+            hasPendingInvitation: false,
+        );
 
-        // Cannot enroll because invitation is not pending
-        $this->assertFalse($this->policy->enroll($this->learner, $course));
+        $this->assertFalse($this->policy->enroll($this->learner, $course, $context));
     }
 }

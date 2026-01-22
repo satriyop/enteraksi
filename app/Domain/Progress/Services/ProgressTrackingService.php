@@ -2,24 +2,31 @@
 
 namespace App\Domain\Progress\Services;
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
+use App\Domain\Enrollment\Events\CourseStarted;
 use App\Domain\Progress\Contracts\ProgressCalculatorContract;
 use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Domain\Progress\DTOs\ProgressResult;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
 use App\Domain\Progress\Events\LessonCompleted;
 use App\Domain\Progress\Events\ProgressUpdated;
+use App\Domain\Progress\Strategies\AssessmentInclusiveProgressCalculator;
+use App\Domain\Progress\ValueObjects\AssessmentStats;
 use App\Domain\Shared\ValueObjects\Percentage;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonProgress;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Progress tracking service.
+ *
+ * Note: Enrollment completion is now handled by $enrollment->complete()
+ * instead of through EnrollmentService.
+ */
 class ProgressTrackingService implements ProgressTrackingServiceContract
 {
     public function __construct(
         protected ProgressCalculatorContract $calculator,
-        protected EnrollmentServiceContract $enrollmentService,
     ) {}
 
     public function updateProgress(ProgressUpdateDTO $dto): ProgressResult
@@ -29,6 +36,9 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
         $progress = $this->getOrCreateProgress($enrollment, $lesson);
 
         return DB::transaction(function () use ($dto, $enrollment, $lesson, $progress) {
+            // Track when learner first starts the course
+            $this->markCourseStartedIfNeeded($enrollment);
+
             $wasCompleted = $progress->is_completed;
 
             // Update based on progress type
@@ -53,16 +63,21 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
             $justCompleted = ! $wasCompleted && $progress->is_completed;
 
             if ($justCompleted) {
+                // This may update enrollment->progress_percentage and status
                 $this->handleLessonCompletion($enrollment, $lesson, $progress);
             }
 
-            ProgressUpdated::dispatch($enrollment->fresh(), $progress->fresh());
+            // Refresh enrollment once to get updated progress_percentage and status
+            // (potentially changed by handleLessonCompletion -> recalculateCourseProgress)
+            $enrollment->refresh();
 
-            return new ProgressResult(
-                progress: $progress->fresh(),
-                coursePercentage: new Percentage($enrollment->fresh()->progress_percentage),
+            ProgressUpdated::dispatch($enrollment, $progress);
+
+            return ProgressResult::fromProgress(
+                progress: $progress,
+                coursePercentage: new Percentage($enrollment->progress_percentage),
                 lessonCompleted: $justCompleted,
-                courseCompleted: $enrollment->fresh()->status === 'completed',
+                courseCompleted: $enrollment->status === 'completed',
             );
         });
     }
@@ -73,7 +88,7 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
 
         if ($progress->is_completed) {
             // Already complete - return current state
-            return new ProgressResult(
+            return ProgressResult::fromProgress(
                 progress: $progress,
                 coursePercentage: new Percentage($enrollment->progress_percentage),
                 lessonCompleted: false,
@@ -82,6 +97,9 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
         }
 
         return DB::transaction(function () use ($enrollment, $lesson, $progress) {
+            // Track when learner first starts the course
+            $this->markCourseStartedIfNeeded($enrollment);
+
             $progress->update([
                 'is_completed' => true,
                 'completed_at' => now(),
@@ -90,13 +108,17 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
             // Update last lesson for resume feature
             $enrollment->update(['last_lesson_id' => $lesson->id]);
 
+            // This may update enrollment->progress_percentage and status
             $this->handleLessonCompletion($enrollment, $lesson, $progress);
 
-            return new ProgressResult(
-                progress: $progress->fresh(),
-                coursePercentage: new Percentage($enrollment->fresh()->progress_percentage),
+            // Refresh enrollment once to get updated progress_percentage and status
+            $enrollment->refresh();
+
+            return ProgressResult::fromProgress(
+                progress: $progress,
+                coursePercentage: new Percentage($enrollment->progress_percentage),
                 lessonCompleted: true,
-                courseCompleted: $enrollment->fresh()->status === 'completed',
+                courseCompleted: $enrollment->status === 'completed',
             );
         });
     }
@@ -126,8 +148,8 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
         ]);
 
         // Check if enrollment should be marked complete
-        if ($this->isEnrollmentComplete($enrollment) && $enrollment->status !== 'completed') {
-            $this->enrollmentService->complete($enrollment);
+        if ($this->isEnrollmentComplete($enrollment) && ! $enrollment->isCompleted()) {
+            $enrollment->complete();
         }
 
         return $percentage;
@@ -136,6 +158,25 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
     public function isEnrollmentComplete(Enrollment $enrollment): bool
     {
         return $this->calculator->isComplete($enrollment);
+    }
+
+    /**
+     * Get assessment completion statistics for an enrollment.
+     *
+     * Returns stats about passed/pending assessments to help learners
+     * understand why they may not be at 100% completion.
+     */
+    public function getAssessmentStats(Enrollment $enrollment): AssessmentStats
+    {
+        // Only the AssessmentInclusiveProgressCalculator has this method
+        if ($this->calculator instanceof AssessmentInclusiveProgressCalculator) {
+            return AssessmentStats::fromArray(
+                $this->calculator->getAssessmentStats($enrollment)
+            );
+        }
+
+        // For other calculators, return empty stats
+        return AssessmentStats::empty();
     }
 
     protected function updateMediaProgress(LessonProgress $progress, ProgressUpdateDTO $dto): void
@@ -147,8 +188,9 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
             $percentage = ($dto->mediaPositionSeconds / $dto->mediaDurationSeconds) * 100;
             $progress->media_progress_percentage = min(100, round($percentage, 2));
 
-            // Auto-complete at 90% watched
-            if ($percentage >= 90 && ! $progress->is_completed) {
+            // Auto-complete at configurable threshold (default 90%)
+            $threshold = config('lms.completion_thresholds.media', 90);
+            if ($percentage >= $threshold && ! $progress->is_completed) {
                 $progress->is_completed = true;
                 $progress->completed_at = now();
             }
@@ -172,12 +214,15 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
             $progress->highest_page_reached = $dto->currentPage;
         }
 
-        // Auto-complete when reaching last page
-        if ($progress->total_pages !== null &&
-            $progress->highest_page_reached >= $progress->total_pages &&
-            ! $progress->is_completed) {
-            $progress->is_completed = true;
-            $progress->completed_at = now();
+        // Auto-complete at configurable threshold (default 100%)
+        if ($progress->total_pages !== null && ! $progress->is_completed) {
+            $threshold = config('lms.completion_thresholds.pages', 100);
+            $requiredPages = (int) ceil($progress->total_pages * ($threshold / 100));
+
+            if ($progress->highest_page_reached >= $requiredPages) {
+                $progress->is_completed = true;
+                $progress->completed_at = now();
+            }
         }
     }
 
@@ -188,5 +233,25 @@ class ProgressTrackingService implements ProgressTrackingServiceContract
 
         // Recalculate course progress
         $this->recalculateCourseProgress($enrollment);
+    }
+
+    /**
+     * Mark the course as started if this is the learner's first content access.
+     *
+     * This sets the `started_at` timestamp which is useful for:
+     * - Calculating time-to-completion
+     * - Analytics on learner engagement
+     * - Identifying enrolled-but-never-started users
+     */
+    protected function markCourseStartedIfNeeded(Enrollment $enrollment): void
+    {
+        if ($enrollment->started_at !== null) {
+            return;
+        }
+
+        $enrollment->update(['started_at' => now()]);
+
+        // update() already syncs the model attributes, no fresh() needed
+        CourseStarted::dispatch($enrollment, $enrollment->user_id);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Assessment\Exceptions\MaxAttemptsReachedException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -90,14 +91,32 @@ class Assessment extends Model
         return $query->where('visibility', 'public');
     }
 
+    /**
+     * Get total questions count.
+     * Uses pre-loaded questions_count if available (via withCount()),
+     * otherwise falls back to query.
+     */
     public function getTotalQuestionsAttribute(): int
     {
+        if (array_key_exists('questions_count', $this->attributes)) {
+            return (int) $this->attributes['questions_count'];
+        }
+
         return $this->questions()->count();
     }
 
+    /**
+     * Get total points.
+     * Uses pre-loaded questions_sum_points if available (via withSum()),
+     * otherwise falls back to query.
+     */
     public function getTotalPointsAttribute(): int
     {
-        return $this->questions()->sum('points');
+        if (array_key_exists('questions_sum_points', $this->attributes)) {
+            return (int) ($this->attributes['questions_sum_points'] ?? 0);
+        }
+
+        return (int) $this->questions()->sum('points');
     }
 
     public function getIsEditableAttribute(): bool
@@ -142,5 +161,41 @@ class Assessment extends Model
         return $this->questions()
             ->whereIn('question_type', ['essay', 'file_upload'])
             ->exists();
+    }
+
+    /**
+     * Validate that user can attempt this assessment.
+     * Throws specific exceptions for each failure reason.
+     *
+     * @throws MaxAttemptsReachedException
+     */
+    public function validateAttemptOrFail(User $user): void
+    {
+        if ($this->max_attempts > 0) {
+            $completedAttempts = $this->attempts()
+                ->where('user_id', $user->id)
+                ->whereIn('status', ['submitted', 'graded', 'completed'])
+                ->count();
+
+            if ($completedAttempts >= $this->max_attempts) {
+                throw new MaxAttemptsReachedException(
+                    userId: $user->id,
+                    assessmentId: $this->id,
+                    maxAttempts: $this->max_attempts,
+                    completedAttempts: $completedAttempts
+                );
+            }
+        }
+    }
+
+    /**
+     * Get the number of completed attempts for a user.
+     */
+    public function getCompletedAttemptsCount(User $user): int
+    {
+        return $this->attempts()
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['submitted', 'graded', 'completed'])
+            ->count();
     }
 }

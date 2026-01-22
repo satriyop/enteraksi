@@ -244,4 +244,158 @@ describe('AssessmentInclusiveProgressCalculator', function () {
     it('returns correct name', function () {
         expect($this->calculator->getName())->toBe('assessment_inclusive');
     });
+
+    describe('edge cases', function () {
+        it('returns 0% assessment progress when no attempts exist', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            // Create required assessment but no attempts
+            Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+
+            $progress = $this->calculator->calculate($enrollment);
+
+            // No lessons = 100%, no passed assessments = 0%
+            // (100 * 0.7) + (0 * 0.3) = 70 + 0 = 70
+            expect($progress)->toBe(70.0);
+        });
+
+        it('returns 0% assessment progress when all attempts failed', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            $assessment = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+
+            // Create failed attempts
+            AssessmentAttempt::factory()->failed()->count(3)->create([
+                'assessment_id' => $assessment->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+
+            $progress = $this->calculator->calculate($enrollment);
+
+            // (100 * 0.7) + (0 * 0.3) = 70
+            expect($progress)->toBe(70.0);
+        });
+
+        it('counts assessment as passed with multiple attempts where at least one passed', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            $assessment = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+
+            // Create failed attempts followed by a passed one (retake scenario)
+            AssessmentAttempt::factory()->failed()->count(2)->create([
+                'assessment_id' => $assessment->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+            AssessmentAttempt::factory()->passed()->create([
+                'assessment_id' => $assessment->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+
+            $progress = $this->calculator->calculate($enrollment);
+
+            // (100 * 0.7) + (100 * 0.3) = 100
+            expect($progress)->toBe(100.0);
+        });
+
+        it('ignores optional assessments in progress calculation', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            // Create 1 required and 1 optional assessment
+            $required = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+            Assessment::factory()->published()->optional()->create(['course_id' => $course->id]);
+
+            // Pass only the required assessment
+            AssessmentAttempt::factory()->passed()->create([
+                'assessment_id' => $required->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+
+            $progress = $this->calculator->calculate($enrollment);
+
+            // Only required assessments count: 1/1 passed = 100%
+            // (100 * 0.7) + (100 * 0.3) = 100
+            expect($progress)->toBe(100.0);
+        });
+
+        it('isComplete is false when required assessment has only failed attempts', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            $assessment = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+
+            // Create failed attempts
+            AssessmentAttempt::factory()->failed()->count(2)->create([
+                'assessment_id' => $assessment->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+
+            $isComplete = $this->calculator->isComplete($enrollment);
+
+            expect($isComplete)->toBeFalse();
+        });
+    });
+
+    describe('getAssessmentStats', function () {
+        it('returns zero stats for course with no assessments', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            $stats = $this->calculator->getAssessmentStats($enrollment);
+
+            expect($stats)->toBe([
+                'total' => 0,
+                'passed' => 0,
+                'pending' => 0,
+                'required_total' => 0,
+                'required_passed' => 0,
+            ]);
+        });
+
+        it('returns correct stats with mixed required and optional assessments', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            // 2 required, 1 optional
+            $required1 = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+            $required2 = Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+            $optional = Assessment::factory()->published()->optional()->create(['course_id' => $course->id]);
+
+            // Pass 1 required and the optional
+            AssessmentAttempt::factory()->passed()->create([
+                'assessment_id' => $required1->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+            AssessmentAttempt::factory()->passed()->create([
+                'assessment_id' => $optional->id,
+                'user_id' => $enrollment->user_id,
+            ]);
+
+            $stats = $this->calculator->getAssessmentStats($enrollment);
+
+            expect($stats)->toBe([
+                'total' => 3,
+                'passed' => 2,
+                'pending' => 1,
+                'required_total' => 2,
+                'required_passed' => 1,
+            ]);
+        });
+
+        it('excludes draft assessments from stats', function () {
+            $course = Course::factory()->create();
+            $enrollment = Enrollment::factory()->create(['course_id' => $course->id]);
+
+            Assessment::factory()->published()->required()->create(['course_id' => $course->id]);
+            Assessment::factory()->draft()->required()->create(['course_id' => $course->id]);
+
+            $stats = $this->calculator->getAssessmentStats($enrollment);
+
+            expect($stats['total'])->toBe(1);
+            expect($stats['required_total'])->toBe(1);
+        });
+    });
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
 use App\Models\Course;
+use App\Models\Enrollment;
 use App\Models\Lesson;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -35,9 +36,11 @@ class LessonProgressController extends Controller
 
         // Get user enrollment
         $user = $request->user();
-        $enrollment = $user->enrollments()
+        /** @var Enrollment|null $enrollment */
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
             ->where('course_id', $course->id)
-            ->where('status', 'active')
+            ->active()
             ->first();
 
         if (! $enrollment) {
@@ -72,7 +75,7 @@ class LessonProgressController extends Controller
                 'highest_page_reached' => $result->progress->highest_page_reached,
                 'is_completed' => $result->progress->is_completed,
                 'progress_percentage' => $result->progress->progress_percentage,
-                'time_spent_formatted' => $result->progress->time_spent_formatted,
+                'time_spent_formatted' => $result->progress->getTimeSpentFormatted(),
                 'pagination_metadata' => $result->progress->pagination_metadata,
             ],
             'enrollment' => [
@@ -101,9 +104,11 @@ class LessonProgressController extends Controller
 
         // Get user enrollment
         $user = $request->user();
-        $enrollment = $user->enrollments()
+        /** @var Enrollment|null $enrollment */
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
             ->where('course_id', $course->id)
-            ->where('status', 'active')
+            ->active()
             ->first();
 
         if (! $enrollment) {
@@ -154,9 +159,11 @@ class LessonProgressController extends Controller
 
         // Get user enrollment
         $user = $request->user();
-        $enrollment = $user->enrollments()
+        /** @var Enrollment|null $enrollment */
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
             ->where('course_id', $course->id)
-            ->where('status', 'active')
+            ->active()
             ->first();
 
         if (! $enrollment) {

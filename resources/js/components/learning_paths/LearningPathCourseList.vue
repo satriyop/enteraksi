@@ -4,21 +4,27 @@
 // Draggable list of selected courses with settings
 // =============================================================================
 
+import { computed } from 'vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Draggable from 'vuedraggable';
+import CoursePrerequisiteSelector from './CoursePrerequisiteSelector.vue';
 
 // =============================================================================
 // Types
 // =============================================================================
+
+interface CoursePrerequisites {
+    completed_courses: number[];
+}
 
 interface SelectedCourse {
     id: number;
     title: string;
     is_required: boolean;
     min_completion_percentage: number;
-    prerequisites: string | null;
+    prerequisites: CoursePrerequisites | null;
 }
 
 // =============================================================================
@@ -30,6 +36,31 @@ const courses = defineModel<SelectedCourse[]>({ required: true });
 const emit = defineEmits<{
     remove: [course: SelectedCourse];
 }>();
+
+// =============================================================================
+// Prerequisite Helpers
+// =============================================================================
+
+/**
+ * Get prerequisite IDs for a course
+ */
+function getPrerequisiteIds(course: SelectedCourse): number[] {
+    return course.prerequisites?.completed_courses ?? [];
+}
+
+/**
+ * Update prerequisites for a course
+ */
+function updatePrerequisites(course: SelectedCourse, ids: number[]) {
+    course.prerequisites = ids.length > 0 ? { completed_courses: ids } : null;
+}
+
+/**
+ * Get courses available for selection (for prerequisite selector)
+ */
+const coursesForSelector = computed(() =>
+    courses.value.map(c => ({ id: c.id, title: c.title }))
+);
 </script>
 
 <template>
@@ -71,16 +102,14 @@ const emit = defineEmits<{
                                             max="100"
                                         />
                                     </div>
-                                    <div>
-                                        <Label :for="`prerequisites-${element.id}`">Prasyarat (JSON)</Label>
-                                        <Input
-                                            :id="`prerequisites-${element.id}`"
-                                            v-model="element.prerequisites"
-                                            type="text"
-                                            class="w-full"
-                                            placeholder='{"completed_courses": [1, 2]}'
-                                        />
-                                    </div>
+                                    <!-- Prerequisite Selector -->
+                                    <CoursePrerequisiteSelector
+                                        :course-id="element.id"
+                                        :all-courses="coursesForSelector"
+                                        :current-index="index"
+                                        :model-value="getPrerequisiteIds(element)"
+                                        @update:model-value="updatePrerequisites(element, $event)"
+                                    />
                                 </div>
                             </div>
                             <button

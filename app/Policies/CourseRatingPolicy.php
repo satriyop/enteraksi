@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\Course;
 use App\Models\CourseRating;
 use App\Models\User;
@@ -11,19 +12,22 @@ class CourseRatingPolicy
     /**
      * Determine whether the user can create a rating for a course.
      * User must be enrolled in the course.
+     *
+     * @param  bool  $hasExistingRating  Pre-fetched rating check
      */
-    public function create(User $user, Course $course): bool
-    {
+    public function create(
+        User $user,
+        Course $course,
+        EnrollmentContext $context,
+        bool $hasExistingRating,
+    ): bool {
         // User must be enrolled in the course
-        if (! $user->enrollments()->where('course_id', $course->id)->exists()) {
+        if (! $context->hasAnyEnrollment) {
             return false;
         }
 
         // User cannot rate the same course twice
-        return ! CourseRating::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->exists();
+        return ! $hasExistingRating;
     }
 
     /**

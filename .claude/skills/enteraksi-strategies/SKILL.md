@@ -16,6 +16,52 @@ triggers:
 
 # Enteraksi Strategy Patterns
 
+## ⚠️ YAGNI Warning: When NOT to Use Strategy Pattern
+
+**Strategy pattern adds complexity.** Before creating a new strategy system, ask:
+
+| Question | If No → Don't Use Strategy |
+|----------|----------------------------|
+| Will there be 3+ interchangeable algorithms? | Simple if/switch is fine |
+| Can the algorithm be selected at runtime? | Hardcode or config value |
+| Does business require user/admin to choose? | Just implement one way |
+| Are algorithms genuinely different? | Extract method, not pattern |
+
+### ROUND10 Lesson
+
+We evaluated existing strategies and kept them because:
+- **Progress calculators** - 3 algorithms, config-driven selection, genuinely different
+- **Grading strategies** - 4+ question types, runtime selection by `question_type`
+- **Prerequisite evaluators** - User-configurable per learning path
+
+We **would NOT** create strategy pattern for:
+- Single implementation with "maybe future variations"
+- Config that just enables/disables a feature
+- Simple flag-based behavior (`if ($strict) {...}`)
+
+### Red Flags (Over-Engineering)
+
+```php
+// ❌ YAGNI: Only one implementation, "future-proofing"
+interface NotificationSenderContract { }
+class EmailNotificationSender implements NotificationSenderContract { }
+// No SMS, Push, etc. implementations → Just use a class!
+
+// ❌ YAGNI: Strategy for boolean flag
+interface AuditStrategyContract { }
+class FullAuditStrategy implements AuditStrategyContract { }
+class NoAuditStrategy implements AuditStrategyContract { }
+// Just use: if ($shouldAudit) { audit(); }
+
+// ✅ GOOD: Multiple real algorithms, user-selectable
+interface ProgressCalculatorContract { }
+class LessonBasedProgressCalculator implements ProgressCalculatorContract { }
+class WeightedProgressCalculator implements ProgressCalculatorContract { }
+class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContract { }
+```
+
+---
+
 ## When to Use This Skill
 
 - Implementing pluggable algorithms (grading, progress calculation)
@@ -290,9 +336,7 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
 // app/Domain/Assessment/DTOs/GradingResult.php
 namespace App\Domain\Assessment\DTOs;
 
-use App\Domain\Shared\DTOs\DataTransferObject;
-
-final class GradingResult extends DataTransferObject
+final readonly class GradingResult
 {
     public function __construct(
         public bool $isCorrect,
@@ -452,3 +496,18 @@ app/Domain/Progress/Services/ProgressCalculatorFactory.php
 app/Domain/Progress/Strategies/LessonBasedProgressCalculator.php
 app/Providers/DomainServiceProvider.php
 ```
+
+## Decision Checklist: Strategy vs Simple Code
+
+Before implementing strategy pattern, answer YES to at least 3:
+
+- [ ] **Multiple algorithms exist TODAY** (not "might need later")
+- [ ] **Algorithms are interchangeable** with same interface
+- [ ] **Selection happens at runtime** (not build time)
+- [ ] **Business requires configurability** (admin/user choice)
+- [ ] **Each strategy has different logic** (not just config flags)
+
+If fewer than 3 checked → use simple code:
+- `if/else` or `match` expression
+- Config value with single implementation
+- Method extraction, not pattern

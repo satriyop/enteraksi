@@ -2,12 +2,15 @@
 
 namespace App\Domain\LearningPath\Services;
 
+use App\Data\LearningPath\CourseProgressData;
+use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
 use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
-use App\Domain\LearningPath\DTOs\CourseProgressItem;
 use App\Domain\LearningPath\DTOs\PathProgressResult;
 use App\Domain\LearningPath\DTOs\PrerequisiteCheckResult;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
+use App\Domain\LearningPath\Exceptions\CourseNotInPathException;
+use App\Domain\LearningPath\Exceptions\PrerequisitesNotMetException;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\LearningPath\States\CompletedPathState;
@@ -20,6 +23,7 @@ use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\LearningPathCourseProgress;
 use App\Models\LearningPathEnrollment;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class PathProgressService implements PathProgressServiceContract
@@ -27,12 +31,14 @@ class PathProgressService implements PathProgressServiceContract
     public function __construct(
         protected DomainLogger $logger,
         protected MetricsService $metrics,
-        protected PrerequisiteEvaluatorFactory $evaluatorFactory
+        protected PrerequisiteEvaluatorFactory $evaluatorFactory,
+        protected EnrollmentServiceContract $enrollmentService
     ) {}
 
     public function getProgress(LearningPathEnrollment $enrollment): PathProgressResult
     {
         // Load course progress with related data
+        /** @var \Illuminate\Database\Eloquent\Collection<int, LearningPathCourseProgress> $courseProgresses */
         $courseProgresses = $enrollment->courseProgress()
             ->with(['course', 'courseEnrollment'])
             ->orderBy('position')
@@ -47,10 +53,10 @@ class PathProgressService implements PathProgressServiceContract
                 'prerequisites' => $course->pivot->prerequisites ?? null,
             ]);
 
-        $items = $courseProgresses->map(function ($progress) use ($pivotDataByCourseId) {
+        $items = $courseProgresses->map(function (LearningPathCourseProgress $progress) use ($pivotDataByCourseId) {
             $pivotData = $pivotDataByCourseId->get($progress->course_id, []);
 
-            return CourseProgressItem::fromProgress($progress, $pivotData);
+            return CourseProgressData::fromProgress($progress, $pivotData);
         })->all();
 
         $totalCourses = $courseProgresses->count();
@@ -58,6 +64,28 @@ class PathProgressService implements PathProgressServiceContract
         $inProgressCourses = $courseProgresses->filter(fn ($p) => $p->isInProgress())->count();
         $lockedCourses = $courseProgresses->filter(fn ($p) => $p->isLocked())->count();
         $availableCourses = $courseProgresses->filter(fn ($p) => $p->isAvailable())->count();
+
+        // Calculate required course stats
+        $requiredCourseIds = $pivotDataByCourseId
+            ->filter(fn ($data) => $data['is_required'] === true)
+            ->keys()
+            ->toArray();
+
+        $requiredCourses = count($requiredCourseIds);
+
+        // If no required courses defined, all are considered required
+        if ($requiredCourses === 0) {
+            $requiredCourses = $totalCourses;
+            $requiredCourseIds = $pivotDataByCourseId->keys()->toArray();
+        }
+
+        $completedRequiredCourses = $courseProgresses
+            ->filter(fn ($p) => $p->isCompleted() && in_array($p->course_id, $requiredCourseIds))
+            ->count();
+
+        $requiredPercentage = $requiredCourses > 0
+            ? (int) round(($completedRequiredCourses / $requiredCourses) * 100)
+            : 0;
 
         return new PathProgressResult(
             pathEnrollmentId: $enrollment->id,
@@ -69,22 +97,26 @@ class PathProgressService implements PathProgressServiceContract
             availableCourses: $availableCourses,
             courses: $items,
             isCompleted: $enrollment->state instanceof CompletedPathState,
+            requiredCourses: $requiredCourses,
+            completedRequiredCourses: $completedRequiredCourses,
+            requiredPercentage: $requiredPercentage,
         );
     }
 
+    /**
+     * Calculate progress percentage based on required courses only.
+     *
+     * If no required courses are defined, all courses are considered required.
+     */
     public function calculateProgressPercentage(LearningPathEnrollment $enrollment): int
     {
-        $totalCourses = $enrollment->courseProgress()->count();
+        $stats = $this->getRequiredCourseStats($enrollment);
 
-        if ($totalCourses === 0) {
+        if ($stats['total'] === 0) {
             return 0;
         }
 
-        $completedCourses = $enrollment->courseProgress()
-            ->where('state', CompletedCourseState::$name)
-            ->count();
-
-        return (int) round(($completedCourses / $totalCourses) * 100);
+        return (int) round(($stats['completed'] / $stats['total']) * 100);
     }
 
     public function checkPrerequisites(
@@ -98,6 +130,7 @@ class PathProgressService implements PathProgressServiceContract
 
     public function isCourseUnlocked(LearningPathEnrollment $enrollment, Course $course): bool
     {
+        /** @var LearningPathCourseProgress|null $progress */
         $progress = $enrollment->courseProgress()
             ->where('course_id', $course->id)
             ->first();
@@ -114,6 +147,7 @@ class PathProgressService implements PathProgressServiceContract
         $unlockedCourses = [];
         $evaluator = $this->evaluatorFactory->make($enrollment->learningPath);
 
+        /** @var \Illuminate\Database\Eloquent\Collection<int, LearningPathCourseProgress> $lockedProgresses */
         $lockedProgresses = $enrollment->courseProgress()
             ->where('state', LockedCourseState::$name)
             ->orderBy('position')
@@ -121,6 +155,7 @@ class PathProgressService implements PathProgressServiceContract
             ->get();
 
         foreach ($lockedProgresses as $progress) {
+            /** @var LearningPathCourseProgress $progress */
             $result = $evaluator->evaluate($enrollment, $progress->course);
 
             if ($result->isMet) {
@@ -159,6 +194,7 @@ class PathProgressService implements PathProgressServiceContract
 
         DB::transaction(function () use ($pathEnrollment, $courseEnrollment, $previousPercentage) {
             // Update course progress state to completed
+            /** @var LearningPathCourseProgress|null $courseProgress */
             $courseProgress = $pathEnrollment->courseProgress()
                 ->where('course_id', $courseEnrollment->course_id)
                 ->first();
@@ -198,31 +234,55 @@ class PathProgressService implements PathProgressServiceContract
 
     public function isPathCompleted(LearningPathEnrollment $enrollment): bool
     {
-        $totalRequired = $enrollment->courseProgress()
-            ->whereHas('pathCourse', function ($query) {
-                $query->where('is_required', true);
-            })
-            ->count();
+        $stats = $this->getRequiredCourseStats($enrollment);
 
-        // If no required courses defined, all courses must be completed
-        if ($totalRequired === 0) {
-            $totalRequired = $enrollment->courseProgress()->count();
+        // Zero required courses = vacuously complete
+        if ($stats['total'] === 0) {
+            return true;
         }
 
-        $completedRequired = $enrollment->courseProgress()
-            ->where('state', CompletedCourseState::$name)
-            ->when($totalRequired > 0, function ($query) {
-                $query->whereHas('pathCourse', function ($q) {
-                    $q->where('is_required', true);
-                });
-            })
-            ->count();
+        return $stats['completed'] >= $stats['total'];
+    }
 
-        return $completedRequired >= $totalRequired;
+    /**
+     * Get required course completion statistics for a path enrollment.
+     *
+     * If no courses are explicitly marked as required, all courses are considered required.
+     *
+     * @return array{total: int, completed: int}
+     */
+    protected function getRequiredCourseStats(LearningPathEnrollment $enrollment): array
+    {
+        // Check if any courses are explicitly marked as required
+        $hasExplicitRequired = $enrollment->courseProgress()
+            ->whereHas('pathCourse', fn ($q) => $q->where('is_required', true))
+            ->exists();
+
+        if ($hasExplicitRequired) {
+            // Count only explicitly required courses
+            $total = $enrollment->courseProgress()
+                ->whereHas('pathCourse', fn ($q) => $q->where('is_required', true))
+                ->count();
+
+            $completed = $enrollment->courseProgress()
+                ->where('state', CompletedCourseState::$name)
+                ->whereHas('pathCourse', fn ($q) => $q->where('is_required', true))
+                ->count();
+        } else {
+            // No explicit required courses - all courses are required
+            $total = $enrollment->courseProgress()->count();
+
+            $completed = $enrollment->courseProgress()
+                ->where('state', CompletedCourseState::$name)
+                ->count();
+        }
+
+        return ['total' => $total, 'completed' => $completed];
     }
 
     public function startCourse(LearningPathEnrollment $enrollment, Course $course): void
     {
+        /** @var LearningPathCourseProgress|null $progress */
         $progress = $enrollment->courseProgress()
             ->where('course_id', $course->id)
             ->first();
@@ -246,11 +306,98 @@ class PathProgressService implements PathProgressServiceContract
 
     protected function unlockCourse(LearningPathCourseProgress $progress): void
     {
-        if ($progress->isLocked()) {
-            $progress->update([
-                'state' => AvailableCourseState::$name,
-                'unlocked_at' => now(),
+        if (! $progress->isLocked()) {
+            return;
+        }
+
+        // Get the user from the path enrollment
+        $user = $progress->enrollment->user;
+        $course = $progress->course;
+
+        // Create/reuse course enrollment
+        $courseEnrollment = $this->ensureCourseEnrollment($user, $course);
+
+        $progress->update([
+            'state' => AvailableCourseState::$name,
+            'unlocked_at' => now(),
+            'course_enrollment_id' => $courseEnrollment->id,
+        ]);
+    }
+
+    /**
+     * Ensure user has an active course enrollment.
+     * Reuses existing enrollment or creates new one.
+     */
+    protected function ensureCourseEnrollment(User $user, Course $course): Enrollment
+    {
+        // Check if user already has an active enrollment for this course
+        $existingEnrollment = $this->enrollmentService->getActiveEnrollment($user, $course);
+
+        if ($existingEnrollment) {
+            $this->logger->info('learning_path.course_enrollment.reused_on_unlock', [
+                'user_id' => $user->id,
+                'course_id' => $course->id,
+                'enrollment_id' => $existingEnrollment->id,
             ]);
+
+            return $existingEnrollment;
+        }
+
+        // Create new enrollment - now returns Enrollment model directly
+        $enrollment = $this->enrollmentService->enroll(
+            userId: $user->id,
+            courseId: $course->id,
+        );
+
+        $this->logger->info('learning_path.course_enrollment.created_on_unlock', [
+            'user_id' => $user->id,
+            'course_id' => $course->id,
+            'enrollment_id' => $enrollment->id,
+        ]);
+
+        return $enrollment;
+    }
+
+    /**
+     * Validate that a course belongs to the learning path.
+     * Throws CourseNotInPathException if not.
+     *
+     * @throws CourseNotInPathException
+     */
+    public function validateCourseInPathOrFail(LearningPathEnrollment $enrollment, Course $course): void
+    {
+        $exists = $enrollment->courseProgress()
+            ->where('course_id', $course->id)
+            ->exists();
+
+        if (! $exists) {
+            throw new CourseNotInPathException(
+                courseId: $course->id,
+                learningPathId: $enrollment->learning_path_id
+            );
+        }
+    }
+
+    /**
+     * Validate that prerequisites are met for a course.
+     * Throws PrerequisitesNotMetException if not.
+     *
+     * @throws CourseNotInPathException
+     * @throws PrerequisitesNotMetException
+     */
+    public function validatePrerequisitesOrFail(LearningPathEnrollment $enrollment, Course $course): void
+    {
+        // First ensure course is in the path
+        $this->validateCourseInPathOrFail($enrollment, $course);
+
+        $result = $this->checkPrerequisites($enrollment, $course);
+
+        if (! $result->isMet) {
+            throw new PrerequisitesNotMetException(
+                pathEnrollmentId: $enrollment->id,
+                courseId: $course->id,
+                missingPrerequisites: $result->missingPrerequisites
+            );
         }
     }
 }

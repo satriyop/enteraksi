@@ -38,6 +38,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Enrollments
     Route::post('courses/{course}/enroll', [EnrollmentController::class, 'store'])
         ->name('courses.enroll');
+    Route::post('courses/{course}/reenroll', [EnrollmentController::class, 'reenroll'])
+        ->name('courses.reenroll');
     Route::delete('courses/{course}/unenroll', [EnrollmentController::class, 'destroy'])
         ->name('courses.unenroll');
 

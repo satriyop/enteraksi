@@ -2,10 +2,11 @@
 
 namespace App\Domain\Assessment\DTOs;
 
-use App\Domain\Shared\DTOs\DataTransferObject;
-
-final class GradingResult extends DataTransferObject
+final readonly class GradingResult
 {
+    /**
+     * @param  array<string, mixed>  $metadata
+     */
     public function __construct(
         public bool $isCorrect,
         public float $score,
@@ -14,6 +15,15 @@ final class GradingResult extends DataTransferObject
         public array $metadata = [],
     ) {}
 
+    /**
+     * @param  array{
+     *     is_correct: bool,
+     *     score: float|int,
+     *     max_score: float|int,
+     *     feedback?: string|null,
+     *     metadata?: array<string, mixed>
+     * }  $data
+     */
     public static function fromArray(array $data): static
     {
         return new self(

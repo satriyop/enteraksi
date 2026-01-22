@@ -45,10 +45,20 @@ interface Filters {
     difficulty_level?: string;
 }
 
+/** Enrollment status for a course */
+interface EnrollmentStatus {
+    status: 'active' | 'completed' | 'dropped';
+    progress_percentage: number;
+}
+
+/** Map of course ID to enrollment status */
+type EnrollmentMap = Record<number, EnrollmentStatus>;
+
 interface Props {
     courses: PaginatedCourses;
     categories: Category[];
     filters: Filters;
+    enrollmentMap?: EnrollmentMap;
 }
 
 const props = defineProps<Props>();
@@ -182,6 +192,7 @@ watch(searchQuery, () => {
                     v-for="course in courses.data"
                     :key="course.id"
                     :course="course"
+                    :enrollment="enrollmentMap?.[course.id]"
                 />
             </div>
 

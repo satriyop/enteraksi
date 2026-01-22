@@ -6,8 +6,15 @@ use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
 use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
+use App\Http\Resources\Enrollment\PathEnrollmentBasicResource;
+use App\Http\Resources\Enrollment\PathEnrollmentIndexResource;
+use App\Http\Resources\LearningPath\LearningPathBrowseResource;
+use App\Http\Resources\LearningPath\LearningPathShowResource;
+use App\Http\Resources\Progress\PathProgressResource;
 use App\Models\LearningPath;
 use App\Models\LearningPathEnrollment;
+use App\Support\Helpers\DatabaseHelper;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -31,18 +38,20 @@ class LearningPathEnrollmentController extends Controller
     {
         $user = Auth::user();
 
-        $enrollments = LearningPathEnrollment::query()
+        $enrollmentsQuery = LearningPathEnrollment::query()
             ->forUser($user)
-            ->with(['learningPath.courses', 'courseProgress'])
+            ->with(['learningPath.courses', 'learningPath.creator', 'courseProgress'])
             ->when($request->status, function ($query, $status) {
                 $query->where('state', $status);
             })
-            ->orderByDesc('updated_at')
-            ->paginate(12)
-            ->withQueryString();
+            ->orderByDesc('updated_at');
+
+        $paginatedEnrollments = $enrollmentsQuery->paginate(12)->withQueryString();
 
         return Inertia::render('learner/learning-paths/Index', [
-            'enrollments' => $enrollments,
+            'enrollments' => $paginatedEnrollments->through(
+                fn ($enrollment) => (new PathEnrollmentIndexResource($enrollment))->resolve()
+            ),
             'filters' => $request->only(['status']),
         ]);
     }
@@ -54,20 +63,22 @@ class LearningPathEnrollmentController extends Controller
     {
         $user = Auth::user();
 
-        $learningPaths = LearningPath::query()
+        $learningPathsQuery = LearningPath::query()
             ->published()
             ->with(['courses', 'creator'])
-            ->withCount('courses')
+            ->withCount(['courses', 'learnerEnrollments as enrollments_count'])
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%");
+                });
             })
             ->when($request->difficulty, function ($query, $difficulty) {
                 $query->where('difficulty_level', $difficulty);
             })
-            ->orderByDesc('published_at')
-            ->paginate(12)
-            ->withQueryString();
+            ->orderByDesc('published_at');
+
+        $paginatedPaths = $learningPathsQuery->paginate(12)->withQueryString();
 
         // Mark which paths the user is already enrolled in
         $enrolledPathIds = $this->enrollmentService
@@ -76,7 +87,9 @@ class LearningPathEnrollmentController extends Controller
             ->toArray();
 
         return Inertia::render('learner/learning-paths/Browse', [
-            'learningPaths' => $learningPaths,
+            'learningPaths' => $paginatedPaths->through(
+                fn ($path) => (new LearningPathBrowseResource($path))->resolve()
+            ),
             'enrolledPathIds' => $enrolledPathIds,
             'filters' => $request->only(['search', 'difficulty']),
         ]);
@@ -87,11 +100,15 @@ class LearningPathEnrollmentController extends Controller
      */
     public function show(LearningPath $learningPath): Response
     {
+        $this->authorize('view', $learningPath);
+
         $user = Auth::user();
 
         $learningPath->load(['courses' => function ($query) {
-            $query->orderBy('learning_path_course.position');
+            $query->withCount('lessons')
+                ->orderBy('learning_path_course.position');
         }, 'creator']);
+        $learningPath->loadCount(['courses', 'learnerEnrollments as enrollments_count']);
 
         $enrollment = $this->enrollmentService->getActiveEnrollment($user, $learningPath);
         $progress = null;
@@ -101,9 +118,9 @@ class LearningPathEnrollmentController extends Controller
         }
 
         return Inertia::render('learner/learning-paths/Show', [
-            'learningPath' => $learningPath,
-            'enrollment' => $enrollment,
-            'progress' => $progress?->toResponse(),
+            'learningPath' => new LearningPathShowResource($learningPath),
+            'enrollment' => $enrollment ? new PathEnrollmentBasicResource($enrollment) : null,
+            'progress' => $progress ? new PathProgressResource($progress) : null,
             'canEnroll' => $this->enrollmentService->canEnroll($user, $learningPath),
         ]);
     }
@@ -111,49 +128,91 @@ class LearningPathEnrollmentController extends Controller
     /**
      * Enroll in a learning path.
      */
-    public function enroll(LearningPath $learningPath): RedirectResponse
+    public function enroll(Request $request, LearningPath $learningPath): RedirectResponse
     {
         $user = Auth::user();
+        $preserveProgress = $request->boolean('preserve_progress', false);
 
         try {
-            $result = $this->enrollmentService->enroll($user, $learningPath);
+            $this->enrollmentService->enroll($user, $learningPath, $preserveProgress);
 
             return redirect()
                 ->route('learner.learning-paths.show', $learningPath)
                 ->with('success', 'Anda berhasil mendaftar di learning path ini.');
-        } catch (AlreadyEnrolledInPathException $e) {
+        } catch (AlreadyEnrolledInPathException) {
             return redirect()
                 ->route('learner.learning-paths.show', $learningPath)
                 ->with('warning', 'Anda sudah terdaftar di learning path ini.');
-        } catch (PathNotPublishedException $e) {
+        } catch (PathNotPublishedException) {
             return redirect()
                 ->route('learner.learning-paths.browse')
                 ->with('error', 'Learning path ini tidak tersedia untuk pendaftaran.');
+        } catch (QueryException $e) {
+            // Handle duplicate key violation (race condition fallback)
+            if (DatabaseHelper::isDuplicateKeyException($e)) {
+                return redirect()
+                    ->route('learner.learning-paths.show', $learningPath)
+                    ->with('warning', 'Anda sudah terdaftar di learning path ini.');
+            }
+            throw $e;
         }
     }
 
     /**
-     * Show detailed progress for a learning path enrollment.
+     * Show detailed progress for a learning path.
      */
-    public function progress(LearningPathEnrollment $enrollment): Response
+    public function progress(LearningPath $learningPath): Response|RedirectResponse
     {
+        $user = Auth::user();
+
+        $enrollment = $this->enrollmentService->getActiveEnrollment($user, $learningPath);
+
+        if (! $enrollment) {
+            // Also check for completed/dropped enrollments
+            $enrollment = LearningPathEnrollment::query()
+                ->forUser($user)
+                ->forPath($learningPath)
+                ->latest()
+                ->first();
+        }
+
+        if (! $enrollment) {
+            return redirect()
+                ->route('learner.learning-paths.show', $learningPath)
+                ->with('error', 'Anda belum terdaftar di learning path ini.');
+        }
+
         $this->authorize('view', $enrollment);
 
-        $enrollment->load(['learningPath.courses', 'courseProgress.course']);
+        $enrollment->load([
+            'learningPath.courses' => fn ($query) => $query->withCount('lessons'),
+            'courseProgress.course',
+        ]);
 
         $progress = $this->progressService->getProgress($enrollment);
 
         return Inertia::render('learner/learning-paths/Progress', [
-            'enrollment' => $enrollment,
-            'progress' => $progress->toResponse(),
+            'learningPath' => new LearningPathShowResource($enrollment->learningPath),
+            'enrollment' => new PathEnrollmentBasicResource($enrollment),
+            'progress' => new PathProgressResource($progress),
         ]);
     }
 
     /**
      * Drop from a learning path.
      */
-    public function drop(Request $request, LearningPathEnrollment $enrollment): RedirectResponse
+    public function drop(Request $request, LearningPath $learningPath): RedirectResponse
     {
+        $user = Auth::user();
+
+        $enrollment = $this->enrollmentService->getActiveEnrollment($user, $learningPath);
+
+        if (! $enrollment) {
+            return redirect()
+                ->route('learner.learning-paths.show', $learningPath)
+                ->with('error', 'Anda tidak memiliki pendaftaran aktif di learning path ini.');
+        }
+
         $this->authorize('drop', $enrollment);
 
         $reason = $request->input('reason');

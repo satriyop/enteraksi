@@ -1,14 +1,17 @@
 <?php
+
 namespace App\Providers;
 
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\LearningPath;
 use App\Models\Lesson;
+use App\Models\User;
 use App\Policies\CoursePolicy;
 use App\Policies\CourseSectionPolicy;
 use App\Policies\LearningPathPolicy;
 use App\Policies\LessonPolicy;
+use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -31,5 +34,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(CourseSection::class, CourseSectionPolicy::class);
         Gate::policy(Lesson::class, LessonPolicy::class);
         Gate::policy(LearningPath::class, LearningPathPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
     }
 }

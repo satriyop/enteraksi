@@ -82,10 +82,21 @@ interface CourseRating {
     user: UserSummary;
 }
 
+interface AssessmentStats {
+    total: number;
+    passed: number;
+    pending: number;
+    required_total: number;
+    required_passed: number;
+    required_pending: number;
+    all_required_passed: boolean;
+}
+
 interface Props {
     course: PublicCourse;
     enrollment: UserEnrollment | null;
     isUnderRevision: boolean;
+    assessmentStats: AssessmentStats | null;
     userRating: CourseRating | null;
     ratings: CourseRating[];
     averageRating: number | null;
@@ -269,6 +280,7 @@ const firstLessonId = computed(() => {
                             :can-enroll="can.enroll"
                             :preview-lessons-count="previewLessonsCount"
                             :first-lesson-id="firstLessonId"
+                            :assessment-stats="assessmentStats"
                         />
 
                         <!-- Course Info Card -->

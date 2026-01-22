@@ -17,6 +17,7 @@ use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\Question;
 use App\Models\User;
 
 describe('Admin Capabilities', function () {
@@ -286,9 +287,38 @@ describe('Admin Capabilities', function () {
         });
 
         it('admin can grade any assessment attempt', function () {
-            // Grade page controller method not yet implemented
-            // Route exists but AssessmentController::grade() is missing
-        })->skip('Grading page controller not implemented');
+            $admin = User::factory()->create(['role' => 'lms_admin']);
+            $cm = User::factory()->create(['role' => 'content_manager']);
+            $learner = User::factory()->create(['role' => 'learner']);
+
+            $course = Course::factory()->published()->create(['user_id' => $cm->id]);
+
+            $assessment = Assessment::factory()->published()->create([
+                'course_id' => $course->id,
+                'user_id' => $cm->id,
+            ]);
+
+            Question::factory()->create([
+                'assessment_id' => $assessment->id,
+                'question_type' => 'essay',
+                'points' => 100,
+            ]);
+
+            Enrollment::factory()->active()->create([
+                'user_id' => $learner->id,
+                'course_id' => $course->id,
+            ]);
+
+            $attempt = AssessmentAttempt::factory()->submitted()->create([
+                'assessment_id' => $assessment->id,
+                'user_id' => $learner->id,
+            ]);
+
+            // Admin can view grade page
+            $this->actingAs($admin)
+                ->get(route('assessments.grade', [$course, $assessment, $attempt]))
+                ->assertOk();
+        });
 
     });
 

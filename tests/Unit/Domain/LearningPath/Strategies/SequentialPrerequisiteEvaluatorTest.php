@@ -59,7 +59,9 @@ describe('SequentialPrerequisiteEvaluator', function () {
         $result = $this->evaluator->evaluate($enrollment, $course2);
 
         expect($result->isMet)->toBeFalse();
-        expect($result->missingPrerequisites)->toContain('Course 1');
+        // missingPrerequisites contains arrays with 'id' and 'title' keys
+        $titles = array_column($result->missingPrerequisites, 'title');
+        expect($titles)->toContain('Course 1');
     });
 
     it('returns met when all previous courses completed', function () {
@@ -113,6 +115,8 @@ describe('SequentialPrerequisiteEvaluator', function () {
         $result = $this->evaluator->evaluate($enrollment, $courseNotInPath);
 
         expect($result->isMet)->toBeFalse();
-        expect($result->missingPrerequisites)->toContain('Course is not part of this learning path');
+        // When course is not in path, missingPrerequisites is empty and reason explains why
+        expect($result->missingPrerequisites)->toBeEmpty();
+        expect($result->reason)->toBe('Course not found in path');
     });
 });

@@ -6,13 +6,22 @@ use App\Domain\Shared\Exceptions\DomainException;
 
 class PrerequisitesNotMetException extends DomainException
 {
-    public function __construct(int $courseId, int $pathEnrollmentId, array $missingPrerequisites = [])
-    {
+    /**
+     * @param  array<int, array{id: int, title: string}>  $missingPrerequisites
+     */
+    public function __construct(
+        int $pathEnrollmentId,
+        int $courseId,
+        array $missingPrerequisites = []
+    ) {
+        $prereqIds = array_column($missingPrerequisites, 'id');
+        $prereqList = implode(', ', $prereqIds);
+
         parent::__construct(
-            "Prerequisites not met for course {$courseId} in path enrollment {$pathEnrollmentId}",
+            "Prerequisites not met for course {$courseId} in path enrollment {$pathEnrollmentId}. Unmet: [{$prereqList}]",
             [
-                'course_id' => $courseId,
                 'path_enrollment_id' => $pathEnrollmentId,
+                'course_id' => $courseId,
                 'missing_prerequisites' => $missingPrerequisites,
             ]
         );

@@ -23,10 +23,14 @@ import { ref } from 'vue';
 // Page-Specific Types
 // =============================================================================
 
+interface CoursePrerequisites {
+    completed_courses: number[];
+}
+
 interface CoursePivot {
     is_required: boolean;
     min_completion_percentage: number;
-    prerequisites: string | null;
+    prerequisites: CoursePrerequisites | null;
 }
 
 interface EditableCourse {
@@ -57,7 +61,7 @@ interface SelectedCourse {
     title: string;
     is_required: boolean;
     min_completion_percentage: number;
-    prerequisites: string | null;
+    prerequisites: CoursePrerequisites | null;
 }
 
 interface Props {

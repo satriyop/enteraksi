@@ -10,15 +10,15 @@ class MaxAttemptsReachedException extends DomainException
         int $userId,
         int $assessmentId,
         int $maxAttempts,
-        int $currentAttempts
+        int $completedAttempts
     ) {
         parent::__construct(
-            "User has reached maximum attempts ({$maxAttempts}) for this assessment",
+            "User {$userId} has reached maximum attempts ({$completedAttempts}/{$maxAttempts}) for assessment {$assessmentId}",
             [
                 'user_id' => $userId,
                 'assessment_id' => $assessmentId,
                 'max_attempts' => $maxAttempts,
-                'current_attempts' => $currentAttempts,
+                'completed_attempts' => $completedAttempts,
             ]
         );
     }

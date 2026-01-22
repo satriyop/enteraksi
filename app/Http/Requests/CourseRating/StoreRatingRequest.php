@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\CourseRating;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Models\CourseRating;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
@@ -13,7 +14,18 @@ class StoreRatingRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Gate::allows('create', [CourseRating::class, $this->route('course')]);
+        $user = $this->user();
+        $course = $this->route('course');
+
+        // Pre-fetch context for authorization
+        $context = EnrollmentContext::for($user, $course);
+
+        // Check if user already has a rating for this course
+        $hasExistingRating = $user->courseRatings()
+            ->where('course_id', $course->id)
+            ->exists();
+
+        return Gate::allows('create', [CourseRating::class, $course, $context, $hasExistingRating]);
     }
 
     /**

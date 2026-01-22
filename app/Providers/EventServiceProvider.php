@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Course\Events\CourseArchived;
 use App\Domain\Course\Events\CoursePublished;
 use App\Domain\Course\Events\CourseUnpublished;
+use App\Domain\Enrollment\Events\CourseStarted;
 use App\Domain\Enrollment\Events\EnrollmentCompleted;
 use App\Domain\Enrollment\Events\UserDropped;
 use App\Domain\Enrollment\Events\UserEnrolled;
@@ -18,8 +19,11 @@ use App\Domain\LearningPath\Events\PathProgressUpdated;
 use App\Domain\LearningPath\Listeners\SendPathCompletionCongratulations;
 use App\Domain\LearningPath\Listeners\SendPathEnrollmentWelcome;
 use App\Domain\LearningPath\Listeners\UpdatePathProgressOnCourseCompletion;
+use App\Domain\LearningPath\Listeners\UpdatePathProgressOnCourseDrop;
 use App\Domain\Progress\Events\LessonCompleted;
+use App\Domain\Progress\Events\LessonDeleted;
 use App\Domain\Progress\Events\ProgressUpdated;
+use App\Domain\Progress\Listeners\RecalculateProgressOnLessonDeletion;
 use App\Domain\Shared\Listeners\LogDomainEvent;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -47,6 +51,9 @@ class EventServiceProvider extends ServiceProvider
             LogDomainEvent::class,
             SendWelcomeNotification::class,
         ],
+        CourseStarted::class => [
+            LogDomainEvent::class,
+        ],
         EnrollmentCompleted::class => [
             LogDomainEvent::class,
             SendCompletionCongratulations::class,
@@ -54,11 +61,16 @@ class EventServiceProvider extends ServiceProvider
         ],
         UserDropped::class => [
             LogDomainEvent::class,
+            UpdatePathProgressOnCourseDrop::class,
         ],
 
         // Progress Events
         LessonCompleted::class => [
             LogDomainEvent::class,
+        ],
+        LessonDeleted::class => [
+            LogDomainEvent::class,
+            RecalculateProgressOnLessonDeletion::class,
         ],
         ProgressUpdated::class => [
             // LogDomainEvent::class, // Too noisy - uncomment if needed

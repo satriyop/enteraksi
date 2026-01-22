@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Enrollment\DTOs\EnrollmentContext;
+use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseInvitation;
+use App\Models\Enrollment;
 use App\Models\Tag;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +21,10 @@ use Inertia\Response;
 
 class CourseController extends Controller
 {
+    public function __construct(
+        protected ProgressTrackingServiceContract $progressService
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -29,7 +36,8 @@ class CourseController extends Controller
 
         $query = Course::query()
             ->with(['category', 'user', 'tags'])
-            ->withCount(['sections', 'lessons', 'enrollments']);
+            ->withCount(['sections', 'lessons', 'enrollments', 'ratings'])
+            ->withAvg('ratings', 'rating');
 
         // For learners, show only published public courses
         if ($user->isLearner()) {
@@ -68,10 +76,26 @@ class CourseController extends Controller
         // Use different view for learners
         $viewName = $user->isLearner() ? 'courses/Browse' : 'courses/Index';
 
+        // Get enrollment status map for learners
+        $enrollmentMap = [];
+        if ($user->isLearner()) {
+            $courseIds = $courses->pluck('id')->toArray();
+            $enrollmentMap = Enrollment::query()
+                ->where('user_id', $user->id)
+                ->whereIn('course_id', $courseIds)
+                ->get()
+                ->mapWithKeys(fn (Enrollment $e) => [$e->course_id => [
+                    'status' => $e->status->getValue(),
+                    'progress_percentage' => $e->progress_percentage,
+                ]])
+                ->toArray();
+        }
+
         return Inertia::render($viewName, [
             'courses' => $courses,
             'categories' => Category::orderBy('name')->get(),
             'filters' => $request->only(['search', 'status', 'category_id', 'difficulty_level']),
+            'enrollmentMap' => $enrollmentMap,
         ]);
     }
 
@@ -122,9 +146,24 @@ class CourseController extends Controller
      */
     public function show(Request $request, Course $course): Response
     {
-        Gate::authorize('view', $course);
-
         $user = $request->user();
+
+        // Check enrollment status for the current user (needed for authorization)
+        /** @var Enrollment|null $enrollment */
+        $enrollment = Enrollment::query()
+            ->where('user_id', $user->id)
+            ->where('course_id', $course->id)
+            ->first();
+        $enrollmentContext = EnrollmentContext::fromData(
+            isActivelyEnrolled: $enrollment && $enrollment->status === 'active',
+            hasPendingInvitation: $user->courseInvitations()
+                ->where('course_id', $course->id)
+                ->where('status', 'pending')
+                ->exists(),
+            hasAnyEnrollment: $enrollment !== null,
+        );
+
+        Gate::authorize('view', [$course, $enrollmentContext]);
 
         $course->load([
             'category',
@@ -133,13 +172,17 @@ class CourseController extends Controller
             'sections.lessons',
         ]);
 
-        $course->loadCount(['lessons', 'enrollments']);
-
-        // Check enrollment status for the current user
-        $enrollment = $user->enrollments()->where('course_id', $course->id)->first();
+        $course->loadCount(['lessons', 'enrollments', 'ratings']);
+        $course->loadAvg('ratings', 'rating');
 
         // Check if course is under revision (enrolled user viewing draft course)
         $isUnderRevision = $enrollment && $course->status === 'draft';
+
+        // Get assessment stats for enrolled users
+        $assessmentStats = null;
+        if ($enrollment) {
+            $assessmentStats = $this->progressService->getAssessmentStats($enrollment)->toResponse();
+        }
 
         // Get ratings data
         $userRating = $user->courseRatings()->where('course_id', $course->id)->first();
@@ -157,11 +200,12 @@ class CourseController extends Controller
         // Load invitations for admin view
         $invitations = [];
         if (! $user->isLearner()) {
-            $invitations = $course->invitations()
+            $invitations = CourseInvitation::query()
+                ->where('course_id', $course->id)
                 ->with(['user:id,name,email', 'inviter:id,name'])
                 ->latest()
                 ->get()
-                ->map(fn ($inv) => [
+                ->map(fn (CourseInvitation $inv) => [
                     'id' => $inv->id,
                     'user' => [
                         'id' => $inv->user->id,
@@ -181,6 +225,7 @@ class CourseController extends Controller
             'course' => $course,
             'enrollment' => $enrollment,
             'isUnderRevision' => $isUnderRevision,
+            'assessmentStats' => $assessmentStats,
             'userRating' => $userRating,
             'ratings' => $ratings,
             'averageRating' => $averageRating,
@@ -190,7 +235,7 @@ class CourseController extends Controller
                 'update' => Gate::allows('update', $course),
                 'delete' => Gate::allows('delete', $course),
                 'publish' => Gate::allows('publish', $course),
-                'enroll' => Gate::allows('enroll', $course),
+                'enroll' => Gate::allows('enroll', [$course, $enrollmentContext]),
                 'rate' => $enrollment && ! $userRating,
                 'invite' => Gate::allows('create', [CourseInvitation::class, $course]),
             ],
@@ -210,10 +255,16 @@ class CourseController extends Controller
             'sections.lessons',
         ]);
 
+        // Count active enrollments for warning display
+        $activeEnrollmentsCount = $course->enrollments()
+            ->where('status', 'active')
+            ->count();
+
         return Inertia::render('courses/Edit', [
             'course' => $course,
             'categories' => Category::orderBy('name')->get(),
             'tags' => Tag::orderBy('name')->get(),
+            'activeEnrollmentsCount' => $activeEnrollmentsCount,
             'can' => [
                 'publish' => Gate::allows('publish', $course),
                 'setStatus' => Gate::allows('setStatus', $course),
