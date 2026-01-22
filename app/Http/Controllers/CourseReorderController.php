@@ -20,11 +20,7 @@ class CourseReorderController extends Controller
 
         $validated = $request->validated();
 
-        foreach ($validated['sections'] as $order => $sectionId) {
-            CourseSection::where('id', $sectionId)
-                ->where('course_id', $course->id)
-                ->update(['order' => $order + 1]);
-        }
+        CourseSection::bulkUpdateOrder($course, $validated['sections']);
 
         return response()->json([
             'message' => 'Urutan bagian berhasil diperbarui.',
@@ -40,11 +36,7 @@ class CourseReorderController extends Controller
 
         $validated = $request->validated();
 
-        foreach ($validated['lessons'] as $order => $lessonId) {
-            $section->lessons()
-                ->where('id', $lessonId)
-                ->update(['order' => $order + 1]);
-        }
+        \App\Models\Lesson::bulkUpdateOrder($section, $validated['lessons']);
 
         return response()->json([
             'message' => 'Urutan pelajaran berhasil diperbarui.',

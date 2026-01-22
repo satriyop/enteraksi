@@ -98,4 +98,12 @@ class CourseSection extends Model
             'estimated_duration_minutes' => $this->calculateEstimatedDuration(),
         ]);
     }
+
+    public static function bulkUpdateOrder(Course $course, array $sectionIds): void
+    {
+        foreach ($sectionIds as $order => $id) {
+            self::where('id', $id)->where('course_id', $course->id)
+                ->update(['order' => $order + 1]);
+        }
+    }
 }

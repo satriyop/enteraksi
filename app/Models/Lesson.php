@@ -140,4 +140,12 @@ class Lesson extends Model
             }
         );
     }
+
+    public static function bulkUpdateOrder(CourseSection $section, array $lessonIds): void
+    {
+        foreach ($lessonIds as $order => $id) {
+            self::where('id', $id)->where('course_section_id', $section->id)
+                ->update(['order' => $order + 1]);
+        }
+    }
 }
