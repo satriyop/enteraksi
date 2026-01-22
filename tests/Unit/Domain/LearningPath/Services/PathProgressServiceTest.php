@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Enrollment\Events\UserDropped;
+use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
 use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
@@ -244,7 +245,7 @@ describe('PathProgressService', function () {
             // Required stats only count required courses
             expect($progress->requiredCourses)->toBe(2);
             expect($progress->completedRequiredCourses)->toBe(1);
-            expect(round($progress->requiredPercentage))->toBe(50); // 1/2 = 50%
+            expect(round($progress->requiredPercentage))->toBe(50.0); // 1/2 = 50%
         });
     });
 
