@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Course\UpdateCourseStatusRequest;
+use App\Http\Requests\Course\UpdateCourseVisibilityRequest;
 use App\Models\Course;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\Rule;
 
 class CoursePublishController extends Controller
 {
@@ -65,13 +66,11 @@ class CoursePublishController extends Controller
     /**
      * Update course status (LMS Admin only).
      */
-    public function updateStatus(Request $request, Course $course): RedirectResponse
+    public function updateStatus(UpdateCourseStatusRequest $request, Course $course): RedirectResponse
     {
         Gate::authorize('setStatus', $course);
 
-        $validated = $request->validate([
-            'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
-        ]);
+        $validated = $request->validated();
 
         $updateData = ['status' => $validated['status']];
 
@@ -93,13 +92,11 @@ class CoursePublishController extends Controller
     /**
      * Update course visibility (LMS Admin only).
      */
-    public function updateVisibility(Request $request, Course $course): RedirectResponse
+    public function updateVisibility(UpdateCourseVisibilityRequest $request, Course $course): RedirectResponse
     {
         Gate::authorize('setVisibility', $course);
 
-        $validated = $request->validate([
-            'visibility' => ['required', Rule::in(['public', 'restricted', 'hidden'])],
-        ]);
+        $validated = $request->validated();
 
         $course->update($validated);
 

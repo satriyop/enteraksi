@@ -6,7 +6,9 @@ use App\Domain\Assessment\Contracts\GradingStrategyResolverContract;
 use App\Domain\Assessment\DTOs\GradingResult;
 use App\Domain\Assessment\Exceptions\MaxAttemptsReachedException;
 use App\Domain\Enrollment\DTOs\EnrollmentContext;
+use App\Http\Requests\Assessment\BulkGradeAnswersRequest;
 use App\Http\Requests\Assessment\StoreAssessmentRequest;
+use App\Http\Requests\Assessment\SubmitAssessmentAnswersRequest;
 use App\Http\Requests\Assessment\UpdateAssessmentRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
@@ -294,7 +296,7 @@ class AssessmentController extends Controller
     /**
      * Submit assessment attempt.
      */
-    public function submitAttempt(Request $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): RedirectResponse
+    public function submitAttempt(SubmitAssessmentAnswersRequest $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): RedirectResponse
     {
         Gate::authorize('submitAttempt', [$attempt, $assessment, $course]);
 
@@ -302,19 +304,7 @@ class AssessmentController extends Controller
             return back()->with('error', 'Penilaian ini tidak dapat diserahkan.');
         }
 
-        // Validate answers - question must belong to THIS assessment
-        $validated = $request->validate([
-            'answers' => 'required|array',
-            'answers.*.question_id' => [
-                'required',
-                'integer',
-                Rule::exists('questions', 'id')->where('assessment_id', $assessment->id),
-            ],
-            'answers.*.answer_text' => 'nullable|string',
-            'answers.*.selected_options' => 'nullable|array',  // For multiple choice
-            'answers.*.selected_options.*' => 'integer',
-            'answers.*.file' => 'nullable|file|max:10240', // 10MB max
-        ]);
+        $validated = $request->validated();
 
         // Ensure total_points is loaded efficiently
         $assessment->loadSum('questions', 'points');
@@ -421,7 +411,7 @@ class AssessmentController extends Controller
     /**
      * Submit grading for an assessment attempt.
      */
-    public function submitGrade(Request $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): RedirectResponse
+    public function submitGrade(BulkGradeAnswersRequest $request, Course $course, Assessment $assessment, AssessmentAttempt $attempt): RedirectResponse
     {
         Gate::authorize('grade', [$attempt, $assessment, $course]);
 

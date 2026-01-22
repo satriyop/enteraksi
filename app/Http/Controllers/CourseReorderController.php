@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Section\ReorderCourseSectionsRequest;
+use App\Http\Requests\Section\ReorderSectionLessonsRequest;
 use App\Models\Course;
 use App\Models\CourseSection;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class CourseReorderController extends Controller
@@ -13,16 +14,13 @@ class CourseReorderController extends Controller
     /**
      * Reorder sections within a course.
      */
-    public function sections(Request $request, Course $course): JsonResponse
+    public function sections(ReorderCourseSectionsRequest $request, Course $course): JsonResponse
     {
         Gate::authorize('update', $course);
 
-        $request->validate([
-            'sections' => ['required', 'array'],
-            'sections.*' => ['required', 'integer', 'exists:course_sections,id'],
-        ]);
+        $validated = $request->validated();
 
-        foreach ($request->sections as $order => $sectionId) {
+        foreach ($validated['sections'] as $order => $sectionId) {
             CourseSection::where('id', $sectionId)
                 ->where('course_id', $course->id)
                 ->update(['order' => $order + 1]);
@@ -36,16 +34,13 @@ class CourseReorderController extends Controller
     /**
      * Reorder lessons within a section.
      */
-    public function lessons(Request $request, CourseSection $section): JsonResponse
+    public function lessons(ReorderSectionLessonsRequest $request, CourseSection $section): JsonResponse
     {
         Gate::authorize('update', $section->course);
 
-        $request->validate([
-            'lessons' => ['required', 'array'],
-            'lessons.*' => ['required', 'integer', 'exists:lessons,id'],
-        ]);
+        $validated = $request->validated();
 
-        foreach ($request->lessons as $order => $lessonId) {
+        foreach ($validated['lessons'] as $order => $lessonId) {
             $section->lessons()
                 ->where('id', $lessonId)
                 ->update(['order' => $order + 1]);

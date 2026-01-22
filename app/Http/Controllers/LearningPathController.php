@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LearningPath\ReorderPathCoursesRequest;
 use App\Http\Requests\LearningPath\StoreLearningPathRequest;
 use App\Http\Requests\LearningPath\UpdateLearningPathRequest;
 use App\Models\Course;
@@ -19,8 +21,8 @@ class LearningPathController extends Controller
     {
         $learningPaths = LearningPath::with(['creator', 'courses'])
             ->when($request->search, function ($query, $search) {
-                $query->where('title', 'like', '%' . $search . '%')
-                    ->orWhere('description', 'like', '%' . $search . '%');
+                $query->where('title', 'like', '%'.$search.'%')
+                    ->orWhere('description', 'like', '%'.$search.'%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(10)
@@ -28,7 +30,7 @@ class LearningPathController extends Controller
 
         return Inertia::render('learning_paths/Index', [
             'learningPaths' => $learningPaths,
-            'filters'       => $request->only(['search']),
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -43,14 +45,14 @@ class LearningPathController extends Controller
 
     public function store(StoreLearningPathRequest $request): RedirectResponse
     {
-        $validated               = $request->validated();
+        $validated = $request->validated();
         $validated['created_by'] = Auth::id();
         $validated['updated_by'] = Auth::id();
-        $validated['slug']       = Str::slug($validated['title']) . '-' . Str::random(6);
+        $validated['slug'] = Str::slug($validated['title']).'-'.Str::random(6);
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
-            $thumbnailPath              = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
+            $thumbnailPath = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
             $validated['thumbnail_url'] = $thumbnailPath;
         }
 
@@ -60,9 +62,9 @@ class LearningPathController extends Controller
         if ($request->has('courses')) {
             foreach ($request->courses as $index => $courseData) {
                 $learningPath->courses()->attach($courseData['id'], [
-                    'position'                  => $index,
-                    'is_required'               => $courseData['is_required'] ?? true,
-                    'prerequisites'             => $courseData['prerequisites'] ?? null,
+                    'position' => $index,
+                    'is_required' => $courseData['is_required'] ?? true,
+                    'prerequisites' => $courseData['prerequisites'] ?? null,
                     'min_completion_percentage' => $courseData['min_completion_percentage'] ?? null,
                 ]);
             }
@@ -96,7 +98,7 @@ class LearningPathController extends Controller
         $availableCourses = Course::published()->orderBy('title')->get();
 
         return Inertia::render('learning_paths/Edit', [
-            'learningPath'     => $learning_path,
+            'learningPath' => $learning_path,
             'availableCourses' => $availableCourses,
         ]);
     }
@@ -106,18 +108,18 @@ class LearningPathController extends Controller
         \Log::info('Update request data:', $request->all());
         \Log::info('Validated data:', $request->validated());
 
-        $validated               = $request->validated();
+        $validated = $request->validated();
         $validated['updated_by'] = Auth::id();
 
         // Handle thumbnail upload
         if ($request->hasFile('thumbnail')) {
-            $thumbnailPath              = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
+            $thumbnailPath = $request->file('thumbnail')->store('learning_paths/thumbnails', 'public');
             $validated['thumbnail_url'] = $thumbnailPath;
         }
 
         // Auto-generate slug from title if title changed
         if ($request->title !== $learning_path->title) {
-            $validated['slug'] = Str::slug($request->title) . '-' . Str::random(6);
+            $validated['slug'] = Str::slug($request->title).'-'.Str::random(6);
         }
 
         $learning_path->update($validated);
@@ -127,9 +129,9 @@ class LearningPathController extends Controller
             $syncData = [];
             foreach ($request->courses as $index => $courseData) {
                 $syncData[$courseData['id']] = [
-                    'position'                  => $index,
-                    'is_required'               => $courseData['is_required'] ?? true,
-                    'prerequisites'             => $courseData['prerequisites'] ?? null,
+                    'position' => $index,
+                    'is_required' => $courseData['is_required'] ?? true,
+                    'prerequisites' => $courseData['prerequisites'] ?? null,
                     'min_completion_percentage' => $courseData['min_completion_percentage'] ?? null,
                 ];
             }
@@ -157,7 +159,7 @@ class LearningPathController extends Controller
         $learning_path->update([
             'is_published' => true,
             'published_at' => now(),
-            'updated_by'   => Auth::id(),
+            'updated_by' => Auth::id(),
         ]);
 
         return redirect()->route('learning-paths.show', $learning_path)
@@ -171,24 +173,20 @@ class LearningPathController extends Controller
         $learning_path->update([
             'is_published' => false,
             'published_at' => null,
-            'updated_by'   => Auth::id(),
+            'updated_by' => Auth::id(),
         ]);
 
         return redirect()->route('learning-paths.show', $learning_path)
             ->with('success', 'Learning path unpublished successfully.');
     }
 
-    public function reorder(Request $request, LearningPath $learning_path): RedirectResponse
+    public function reorder(ReorderPathCoursesRequest $request, LearningPath $learning_path): RedirectResponse
     {
         Gate::authorize('reorder', $learning_path);
 
-        $request->validate([
-            'course_order'            => 'required|array',
-            'course_order.*.id'       => 'required|exists:courses,id',
-            'course_order.*.position' => 'required|integer|min:0',
-        ]);
+        $validated = $request->validated();
 
-        foreach ($request->course_order as $item) {
+        foreach ($validated['course_order'] as $item) {
             $learning_path->courses()->updateExistingPivot($item['id'], [
                 'position' => $item['position'],
             ]);

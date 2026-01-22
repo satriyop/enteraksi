@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Question\ReorderQuestionsRequest;
 use App\Models\Assessment;
 use App\Models\Course;
 use App\Models\Question;
@@ -206,21 +207,13 @@ class QuestionController extends Controller
     /**
      * Reorder questions.
      */
-    public function reorder(Request $request, Course $course, Assessment $assessment): RedirectResponse
+    public function reorder(ReorderQuestionsRequest $request, Course $course, Assessment $assessment): RedirectResponse
     {
         Gate::authorize('update', [$assessment, $course]);
 
-        // Validate question IDs belong to THIS assessment
-        $validated = $request->validate([
-            'question_ids' => 'required|array',
-            'question_ids.*' => [
-                'integer',
-                Rule::exists('questions', 'id')->where('assessment_id', $assessment->id),
-            ],
-        ]);
+        $validated = $request->validated();
 
         foreach ($validated['question_ids'] as $index => $questionId) {
-            // Use scoped query to ensure we only update this assessment's questions
             $assessment->questions()->where('id', $questionId)->update(['order' => $index]);
         }
 
