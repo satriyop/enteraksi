@@ -278,6 +278,7 @@ class PathEnrollmentService implements PathEnrollmentServiceContract
 
         foreach ($courses as $index => $course) {
             /** @var Course $course */
+            /** @var object{position: int, is_required: bool} $pivot */
             $pivot = $course->pivot;
             $isRequired = $pivot->is_required ?? true;
             $isFirstCourse = $index === 0;
