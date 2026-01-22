@@ -409,6 +409,44 @@ describe('Boundary Values', function () {
 
         $response->assertOk();
     });
+
+    it('optional courses are not auto-enrolled when enrolling in path', function () {
+        $path = LearningPath::factory()->published()->create([
+            'prerequisite_mode' => 'none',  // All courses available
+        ]);
+        $courses = Course::factory()->published()->count(3)->create();
+
+        foreach ($courses as $i => $course) {
+            $path->courses()->attach($course->id, [
+                'position' => $i + 1,
+                'is_required' => $i === 0,  // Only first course is required
+            ]);
+        }
+
+        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollment = $enrollmentService->enroll($this->learner, $path);
+
+        $courseProgress = $enrollment->courseProgress()->orderBy('position')->get();
+
+        // First course (required + available) → has enrollment
+        expect($courseProgress[0]->course_enrollment_id)->not->toBeNull();
+
+        // Second course (optional + available) → NO enrollment
+        expect($courseProgress[1]->course_enrollment_id)->toBeNull();
+
+        // Third course (optional + available) → NO enrollment
+        expect($courseProgress[2]->course_enrollment_id)->toBeNull();
+
+        // All courses have progress records (for tracking)
+        expect($enrollment->courseProgress()->count())->toBe(3);
+
+        // Progress shows 0 required completed (only 1 required, not done yet)
+        $progressService = app(PathProgressServiceContract::class);
+        $progress = $progressService->getProgress($enrollment);
+        expect($progress->requiredCourses)->toBe(1);
+        expect($progress->completedRequiredCourses)->toBe(0);
+        expect($progress->overallPercentage->value)->toBe(0.0);
+    });
 });
 
 describe('Error Handling', function () {

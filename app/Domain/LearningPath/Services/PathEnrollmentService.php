@@ -278,28 +278,25 @@ class PathEnrollmentService implements PathEnrollmentServiceContract
 
         foreach ($courses as $index => $course) {
             /** @var Course $course */
-            // First course is always available
-            // If prerequisite_mode is 'none', ALL courses are available
+            $pivot = $course->pivot;
+            $isRequired = $pivot->is_required ?? true;
             $isFirstCourse = $index === 0;
             $isAvailable = $isFirstCourse || $noPrerequisites;
             $state = $isAvailable ? AvailableCourseState::$name : LockedCourseState::$name;
 
-            // For available courses, create/link course enrollment
+            // Only create course enrollment for REQUIRED + AVAILABLE courses
+            // Optional courses are tracked in progress but not auto-enrolled
             $courseEnrollmentId = null;
-            if ($isAvailable) {
+            if ($isAvailable && $isRequired) {
                 $courseEnrollment = $this->ensureCourseEnrollment($user, $course);
                 $courseEnrollmentId = $courseEnrollment->id;
             }
-
-            /** @var object{position: int} $pivot */
-            $pivot = $course->pivot;
-            $position = $pivot->position;
 
             $enrollment->courseProgress()->create([
                 'course_id' => $course->id,
                 'course_enrollment_id' => $courseEnrollmentId,
                 'state' => $state,
-                'position' => $position,
+                'position' => $pivot->position,
                 'unlocked_at' => $isAvailable ? now() : null,
             ]);
         }
