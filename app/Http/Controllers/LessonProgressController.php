@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
+use App\Http\Requests\LessonProgress\UpdateMediaProgressRequest;
+use App\Http\Requests\LessonProgress\UpdatePaginationProgressRequest;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
@@ -19,14 +21,9 @@ class LessonProgressController extends Controller
     /**
      * Update lesson progress for an enrolled user.
      */
-    public function update(Request $request, Course $course, Lesson $lesson): JsonResponse
+    public function update(UpdatePaginationProgressRequest $request, Course $course, Lesson $lesson): JsonResponse
     {
-        $validated = $request->validate([
-            'current_page' => ['required', 'integer', 'min:1'],
-            'total_pages' => ['nullable', 'integer', 'min:1'],
-            'pagination_metadata' => ['nullable', 'array'],
-            'time_spent_seconds' => ['nullable', 'numeric', 'min:0'],
-        ]);
+        $validated = $request->validated();
 
         // Verify the lesson belongs to this course
         $lessonCourse = $lesson->section->course;
@@ -81,12 +78,9 @@ class LessonProgressController extends Controller
     /**
      * Update media (video/youtube/audio) progress.
      */
-    public function updateMedia(Request $request, Course $course, Lesson $lesson): JsonResponse
+    public function updateMedia(UpdateMediaProgressRequest $request, Course $course, Lesson $lesson): JsonResponse
     {
-        $validated = $request->validate([
-            'position_seconds' => ['required', 'integer', 'min:0'],
-            'duration_seconds' => ['required', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         // Verify the lesson belongs to this course
         $lessonCourse = $lesson->section->course;

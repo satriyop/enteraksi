@@ -17,6 +17,7 @@ class UpdatePaginationProgressRequest extends FormRequest
             'current_page' => ['required', 'integer', 'min:1'],
             'total_pages' => ['nullable', 'integer', 'min:1'],
             'pagination_metadata' => ['nullable', 'array'],
+            'time_spent_seconds' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 
@@ -29,6 +30,8 @@ class UpdatePaginationProgressRequest extends FormRequest
             'total_pages.integer' => 'Total halaman harus berupa angka.',
             'total_pages.min' => 'Total halaman harus minimal 1.',
             'pagination_metadata.array' => 'Metadata pagination harus berupa array.',
+            'time_spent_seconds.numeric' => 'Waktu harus berupa angka.',
+            'time_spent_seconds.min' => 'Waktu tidak boleh negatif.',
         ];
     }
 }
