@@ -388,11 +388,11 @@ describe('Boundary Values', function () {
 
         // Fetch model to access relationships
 
-        // When all optional, all are considered required (fallback behavior)
+        // When all courses are optional, none are required (optional courses don't count toward completion)
         $progressService = app(PathProgressServiceContract::class);
         $progress = $progressService->getProgress($enrollment);
 
-        expect($progress->requiredCourses)->toBe(3);
+        expect($progress->requiredCourses)->toBe(0);  // No required courses when all are optional
     });
 
     it('handles learning path with very long title', function () {
