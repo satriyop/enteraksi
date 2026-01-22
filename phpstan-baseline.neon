@@ -1,0 +1,1219 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Data/Course/CourseData.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Data/Enrollment/EnrollmentData.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Data/Enrollment/EnrollmentData.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$progress_percentage\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Data/LearningPath/CourseProgressData.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Data/LearningPath/CourseProgressData.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>progress_percentage" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Data/LearningPath/CourseProgressData.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Data/LearningPath/PathEnrollmentData.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Data/LearningPath/PathEnrollmentData.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Data/Progress/LessonProgressData.php
+
+		-
+			message: '#^Parameter \$media_progress_percentage of class App\\Data\\Progress\\LessonProgressData constructor expects int\|null, float given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Data/Progress/LessonProgressData.php
+
+		-
+			message: '#^Parameter \$pagination_metadata of class App\\Data\\Progress\\LessonProgressData constructor expects array\<string, mixed\>\|null, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Data/Progress/LessonProgressData.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$avatar\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Data/User/UserData.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$bio\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Data/User/UserData.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$option_text\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Assessment/Strategies/TrueFalseGradingStrategy.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:completed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Course/Events/CourseArchived.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Course/Events/CourseUnpublished.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Enrollment/Events/CourseStarted.php
+
+		-
+			message: '#^Cannot call method diffInHours\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domain/Enrollment/Events/CourseStarted.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Domain/Enrollment/Events/CourseStarted.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Enrollment/Events/CourseStarted.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Enrollment/Events/EnrollmentCompleted.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Enrollment/Events/EnrollmentCompleted.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Domain/Enrollment/Events/EnrollmentCompleted.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Domain/Enrollment/Events/EnrollmentCompleted.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Enrollment/Events/UserEnrolled.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Enrollment/Events/UserReenrolled.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Enrollment/Listeners/SendCompletionCongratulations.php
+
+		-
+			message: '#^Parameter \#1 \$course of class App\\Domain\\Enrollment\\Notifications\\CourseCompletedMail constructor expects App\\Models\\Course, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Enrollment/Listeners/SendCompletionCongratulations.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Enrollment/Listeners/SendWelcomeNotification.php
+
+		-
+			message: '#^Parameter \#1 \$course of class App\\Domain\\Enrollment\\Notifications\\WelcomeToCourseMail constructor expects App\\Models\\Course, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/Enrollment/Listeners/SendWelcomeNotification.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Events/PathCompleted.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Domain/LearningPath/Events/PathCompleted.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Events/PathDropped.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Events/PathEnrollmentCreated.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:courses\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Events/PathEnrollmentCreated.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/SendPathCompletionCongratulations.php
+
+		-
+			message: '#^Parameter \#1 \$path of class App\\Domain\\LearningPath\\Notifications\\PathCompletedMail constructor expects App\\Models\\LearningPath, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Listeners/SendPathCompletionCongratulations.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:notify\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/SendPathEnrollmentWelcome.php
+
+		-
+			message: '#^Parameter \#1 \$path of class App\\Domain\\LearningPath\\Notifications\\PathEnrollmentWelcomeMail constructor expects App\\Models\\LearningPath, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Listeners/SendPathEnrollmentWelcome.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isActive\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseCompletion.php
+
+		-
+			message: '#^Parameter \#1 \$pathEnrollment of method App\\Domain\\LearningPath\\Contracts\\PathProgressServiceContract\:\:onCourseCompleted\(\) expects App\\Models\\LearningPathEnrollment, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseCompletion.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$progress_percentage\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isCompleted\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isDropped\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Parameter \#1 \$enrollment of event class App\\Domain\\LearningPath\\Events\\PathProgressUpdated constructor expects App\\Models\\LearningPathEnrollment in App\\Domain\\LearningPath\\Events\\PathProgressUpdated\:\:dispatch\(\), Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Parameter \#1 \$enrollment of method App\\Domain\\LearningPath\\Contracts\\PathProgressServiceContract\:\:calculateProgressPercentage\(\) expects App\\Models\\LearningPathEnrollment, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Listeners/UpdatePathProgressOnCourseDrop.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$courseEnrollment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course_enrollment_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isLocked\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Domain\\LearningPath\\Services\\PathEnrollmentService\:\:ensureCourseEnrollment\(\) expects App\\Models\\User, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Parameter \#2 \$course of method App\\Domain\\LearningPath\\Services\\PathEnrollmentService\:\:ensureCourseEnrollment\(\) expects App\\Models\\Course, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Parameter \#2 \$path of method App\\Domain\\LearningPath\\Services\\PathEnrollmentService\:\:initializeCourseProgress\(\) expects App\\Models\\LearningPath, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Services/PathEnrollmentService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$courses\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$position\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isAvailable\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isCompleted\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Parameter \#1 \$path of method App\\Domain\\LearningPath\\Services\\PrerequisiteEvaluatorFactory\:\:make\(\) expects App\\Models\\LearningPath, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Parameter \#1 \$progress of method App\\Domain\\LearningPath\\Services\\PathProgressService\:\:unlockCourse\(\) expects App\\Models\\LearningPathCourseProgress, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Parameter \#2 \$course of method App\\Domain\\LearningPath\\Services\\PathProgressService\:\:ensureCourseEnrollment\(\) expects App\\Models\\Course, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Domain/LearningPath/Services/PathProgressService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:courses\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domain/LearningPath/Strategies/ImmediatePreviousPrerequisiteEvaluator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isCompleted\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Strategies/ImmediatePreviousPrerequisiteEvaluator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:courses\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domain/LearningPath/Strategies/SequentialPrerequisiteEvaluator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isCompleted\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/LearningPath/Strategies/SequentialPrerequisiteEvaluator.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Domain/Progress/Events/LessonCompleted.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Progress/Events/LessonDeleted.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:active\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Progress/Listeners/RecalculateProgressOnLessonDeletion.php
+
+		-
+			message: '#^Property App\\Models\\LessonProgress\:\:\$pagination_metadata \(string\|null\) does not accept array\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Domain/Progress/Services/ProgressTrackingService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:assessments\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Domain/Progress/Strategies/AssessmentInclusiveProgressCalculator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:lessons\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domain/Progress/Strategies/AssessmentInclusiveProgressCalculator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:lessons\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Domain/Progress/Strategies/LessonBasedProgressCalculator.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:lessons\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Domain/Progress/Strategies/WeightedProgressCalculator.php
+
+		-
+			message: '#^Offset ''function'' on array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: ''\-\>''\|''\:\:'', args\?\: list\<mixed\>, object\?\: object\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Domain/Shared/Services/DomainLogger.php
+
+		-
+			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getCourseTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Shared/Services/EventTimelineService.php
+
+		-
+			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getEnrollmentTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Shared/Services/EventTimelineService.php
+
+		-
+			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getRecentEvents\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{id\: mixed, event_id\: mixed, aggregate_type\: mixed, aggregate_id\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Shared/Services/EventTimelineService.php
+
+		-
+			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getTimelineForAggregate\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{id\: mixed, event_id\: mixed, event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Shared/Services/EventTimelineService.php
+
+		-
+			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getUserTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, aggregate_type\: mixed, aggregate_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Domain/Shared/Services/EventTimelineService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$expires_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$inviter\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$progress_percentage\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$responded_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:mapWithKeys\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Parameter \#1 \$enrollment of method App\\Domain\\Progress\\Contracts\\ProgressTrackingServiceContract\:\:getAssessmentStats\(\) expects App\\Models\\Enrollment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/CourseController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:sections\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/CourseSectionController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:updateEstimatedDuration\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/CourseSectionController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$invited_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/EnrollmentController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:drop\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/EnrollmentController.php
+
+		-
+			message: '#^Dead catch \- Illuminate\\Database\\QueryException is already caught above\.$#'
+			identifier: catch.alreadyCaught
+			count: 1
+			path: app/Http/Controllers/EnrollmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/HomeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/HomeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/HomeController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$lessons\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$order\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getProgressForLesson\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:lessonProgress\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:lessons\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:updateEstimatedDuration\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: app/Http/Controllers/LessonController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/LessonPreviewController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/LessonProgressController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/LessonProgressController.php
+
+		-
+			message: '#^Parameter \#1 \$enrollment of method App\\Domain\\Progress\\Contracts\\ProgressTrackingServiceContract\:\:completeLesson\(\) expects App\\Models\\Enrollment, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/LessonProgressController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$duration_formatted\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$duration_seconds\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$file_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$human_readable_size\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_audio\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_document\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_image\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_video\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$mime_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$size\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MediaController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/QuestionController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/QuestionController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>\|Illuminate\\Database\\Eloquent\\Model\:\:options\(\)\.$#'
+			identifier: method.notFound
+			count: 4
+			path: app/Http/Controllers/QuestionController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:options\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/QuestionController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Resources/Dashboard/DashboardCourseResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$difficulty_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$duration\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$lessons_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$short_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$thumbnail_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Cannot call method toDateTimeString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardEnrollmentResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$difficulty_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$duration\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$lessons_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$short_description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$thumbnail_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Cannot call method toISOString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Resources/Dashboard/DashboardInvitationResource.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Http/Resources/Enrollment/PathEnrollmentBasicResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Enrollment/PathEnrollmentBasicResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$courses\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/Enrollment/PathEnrollmentIndexResource.php
+
+		-
+			message: '#^Cannot call method toIso8601String\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Resources/Enrollment/PathEnrollmentIndexResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Enrollment/PathEnrollmentIndexResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/LearningPath/LearningPathBrowseResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/LearningPath/LearningPathBrowseResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/LearningPath/LearningPathShowResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/LearningPath/LearningPathShowResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>estimated_duration_minutes" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Progress/PathProgressResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>lessons_count" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Progress/PathProgressResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>manual_duration_minutes" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Progress/PathProgressResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>slug" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/Progress/PathProgressResource.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:canAccessContent\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Assessment.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$passing_score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/AssessmentAttempt.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$total_points\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/AssessmentAttempt.php
+
+		-
+			message: '#^Cannot call method canEdit\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Cannot call method canEnroll\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Offset ''function'' on array\{function\: string, line\?\: int, file\?\: string, class\?\: class\-string, type\?\: string, args\?\: list\<mixed\>, object\?\: object\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/CourseInvitation.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:onlyTrashed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/CourseSection.php
+
+		-
+			message: '#^Cannot call method canAccessContent\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Enrollment.php
+
+		-
+			message: '#^Cannot call method canTrackProgress\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/Enrollment.php
+
+		-
+			message: '#^Method App\\Models\\Enrollment\:\:getProgressForLesson\(\) should return App\\Models\\LessonProgress\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Enrollment.php
+
+		-
+			message: '#^Cannot call method blocksNext\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LearningPathCourseProgress.php
+
+		-
+			message: '#^Cannot call method canStart\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LearningPathCourseProgress.php
+
+		-
+			message: '#^Cannot call method canAccessContent\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LearningPathEnrollment.php
+
+		-
+			message: '#^Cannot call method canTrackProgress\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LearningPathEnrollment.php
+
+		-
+			message: '#^Cannot call method canUnlockCourses\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/LearningPathEnrollment.php
+
+		-
+			message: '#^Parameter \#1 \$json of method App\\Services\\TipTapRenderer\:\:render\(\) expects array\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Models/Lesson.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$content_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/LessonProgress.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Policies/AssessmentAttemptPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Policies/CourseInvitationPolicy.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\User\:\:hasRole\(\)\.$#'
+			identifier: method.notFound
+			count: 5
+			path: app/Policies/LearningPathEnrollmentPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Policies/LessonPolicy.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:canAccessContent\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Policies/LessonPolicy.php
+
+		-
+			message: '#^PHPDoc type string of property Database\\Factories\\LearningPathFactory\:\:\$model is not covariant with PHPDoc type class\-string\<App\\Models\\LearningPath\> of overridden property Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\LearningPath\>\:\:\$model\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: database/factories/LearningPathFactory.php
+
+		-
+			message: '#^Parameter \#1 \$lessonId of method App\\Services\\MediaSeederHelper\:\:copyAudio\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Parameter \#1 \$lessonId of method App\\Services\\MediaSeederHelper\:\:copyVideo\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Parameter \#2 \$lessonId of method App\\Services\\MediaSeederHelper\:\:copyPdf\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Parameter \#2 \$lessonId of method App\\Services\\MediaSeederHelper\:\:downloadAudio\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Parameter \#2 \$lessonId of method App\\Services\\MediaSeederHelper\:\:downloadVideo\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Parameter \#3 \$lessonId of method App\\Services\\MediaSeederHelper\:\:generatePdf\(\) expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: database/seeders/CourseSeeder.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\LearningPathEnrollment\:\:\$enrollment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: database/seeders/LearningPathSeeder.php

@@ -1,0 +1,33 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app/
+        - database/
+
+    # Start at level 5, increase progressively
+    # Level 5: Checks argument types, return types, and basic type inference
+    level: 5
+
+    # Exclude generated files and vendor
+    excludePaths:
+        - app/Http/Middleware/HandleAppearance.php
+        - app/Http/Middleware/HandleInertiaRequests.php
+
+    # Report unmatched ignored errors
+    reportUnmatchedIgnoredErrors: false
+
+    # Ignore specific errors (add as needed during cleanup)
+    ignoreErrors:
+        # Spatie model-states magic methods
+        - '#Call to an undefined method .+::transitionTo\(\)#'
+
+        # Allow mixed in some contexts during migration
+        -
+            message: '#Parameter .+ has no type specified#'
+            path: database/seeders/*
+
+    # Helpful for understanding complex return types
+    treatPhpDocTypesAsCertain: false
