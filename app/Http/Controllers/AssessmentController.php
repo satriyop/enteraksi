@@ -2,8 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Assessment\Contracts\GradingStrategyResolverContract;
-use App\Domain\Assessment\DTOs\GradingResult;
 use App\Domain\Assessment\Exceptions\MaxAttemptsReachedException;
 use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Http\Requests\Assessment\BulkGradeAnswersRequest;
@@ -13,19 +11,18 @@ use App\Http\Requests\Assessment\UpdateAssessmentRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Course;
-use App\Models\Question;
+use App\Services\AssessmentSubmissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AssessmentController extends Controller
 {
     public function __construct(
-        protected GradingStrategyResolverContract $gradingResolver
+        protected AssessmentSubmissionService $submissionService
     ) {}
 
     /**
@@ -35,7 +32,6 @@ class AssessmentController extends Controller
     {
         $user = $request->user();
 
-        // Pre-fetch enrollment context for authorization
         $context = $user->isLearner()
             ? EnrollmentContext::for($user, $course)
             : null;
@@ -47,12 +43,10 @@ class AssessmentController extends Controller
             ->with(['user', 'publishedBy'])
             ->withCount(['questions', 'attempts']);
 
-        // Status filter
         if ($status = $request->input('status')) {
             $query->where('status', $status);
         }
 
-        // Search filter
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -105,7 +99,6 @@ class AssessmentController extends Controller
     {
         $user = $request->user();
 
-        // Pre-fetch enrollment context for authorization
         $context = $user->isLearner()
             ? EnrollmentContext::for($user, $course)
             : null;
@@ -241,12 +234,10 @@ class AssessmentController extends Controller
 
         $user = $request->user();
 
-        // Check if user can attempt this assessment
         if (! $assessment->canBeAttemptedBy($user)) {
             return back()->with('error', 'Anda tidak dapat mengikuti penilaian ini.');
         }
 
-        // Validate attempt limits - throws MaxAttemptsReachedException if exceeded
         try {
             $assessment->validateAttemptOrFail($user);
         } catch (MaxAttemptsReachedException $e) {
@@ -257,10 +248,8 @@ class AssessmentController extends Controller
             ));
         }
 
-        // Get the next attempt number
         $nextAttemptNumber = $assessment->attempts()->where('user_id', $user->id)->max('attempt_number') + 1;
 
-        // Create new attempt
         $attempt = $assessment->attempts()->create([
             'user_id' => $user->id,
             'attempt_number' => $nextAttemptNumber,
@@ -306,66 +295,7 @@ class AssessmentController extends Controller
 
         $validated = $request->validated();
 
-        // Ensure total_points is loaded efficiently
-        $assessment->loadSum('questions', 'points');
-
-        // Process answers
-        $totalScore = 0;
-        $maxScore = $assessment->total_points;
-
-        foreach ($validated['answers'] as $answerData) {
-            // Use scoped query to ensure question belongs to this assessment
-            /** @var Question|null $question */
-            $question = $assessment->questions()->find($answerData['question_id']);
-
-            if (! $question instanceof Question) {
-                continue;
-            }
-
-            // Handle file upload
-            $filePath = null;
-            if (isset($answerData['file'])) {
-                $filePath = $answerData['file']->store('assessment_answers', 'public');
-            }
-
-            // Determine answer value based on question type
-            $answerValue = $this->extractAnswerValue($question, $answerData);
-            $answerTextForStorage = $this->getAnswerTextForStorage($question, $answerData);
-
-            // Create answer record
-            $answer = $attempt->answers()->create([
-                'question_id' => $question->id,
-                'answer_text' => $answerTextForStorage,
-                'file_path' => $filePath,
-            ]);
-
-            // Auto-grade using domain strategies (if not manual grading required)
-            if (! $question->requiresManualGrading()) {
-                $result = $this->gradeQuestion($question, $answerValue);
-
-                $answer->update([
-                    'is_correct' => $result->isCorrect,
-                    'score' => $result->score,
-                    'feedback' => $result->feedback,
-                ]);
-
-                $totalScore += $result->score;
-            }
-        }
-
-        // Update attempt status
-        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
-        $passed = $percentage >= $assessment->passing_score;
-        $status = $assessment->requiresManualGrading() ? 'submitted' : 'graded';
-
-        $attempt->update([
-            'status' => $status,
-            'score' => $totalScore,
-            'max_score' => $maxScore,
-            'percentage' => $percentage,
-            'passed' => $passed,
-            'submitted_at' => now(),
-        ]);
+        $result = $this->submissionService->submitAttempt($attempt, $validated['answers'], $assessment);
 
         return redirect()
             ->route('assessments.attempt.complete', [$course, $assessment, $attempt])
@@ -415,105 +345,12 @@ class AssessmentController extends Controller
     {
         Gate::authorize('grade', [$attempt, $assessment, $course]);
 
-        $validated = $request->validate([
-            'grades' => 'required|array',
-            'grades.*.answer_id' => [
-                'required',
-                'integer',
-                Rule::exists('attempt_answers', 'id')->where('attempt_id', $attempt->id),
-            ],
-            'grades.*.score' => 'required|numeric|min:0',
-            'grades.*.feedback' => 'nullable|string|max:1000',
-        ]);
+        $validated = $request->validated();
 
-        $totalScore = 0;
-
-        foreach ($validated['grades'] as $gradeData) {
-            // Scoped query (validation already ensures ownership)
-            $answer = $attempt->answers()->find($gradeData['answer_id']);
-
-            if ($answer) {
-                $answer->update([
-                    'score' => $gradeData['score'],
-                    'feedback' => $gradeData['feedback'] ?? null,
-                    'graded_by' => auth()->id(),
-                    'graded_at' => now(),
-                ]);
-                $totalScore += $gradeData['score'];
-            }
-        }
-
-        // Ensure total_points is loaded efficiently
-        $assessment->loadSum('questions', 'points');
-
-        // Update attempt with final score
-        $maxScore = $assessment->total_points;
-        $percentage = $maxScore > 0 ? round(($totalScore / $maxScore) * 100, 2) : 0;
-        $passed = $percentage >= $assessment->passing_score;
-
-        $attempt->update([
-            'status' => 'graded',
-            'score' => $totalScore,
-            'max_score' => $maxScore,
-            'percentage' => $percentage,
-            'passed' => $passed,
-            'graded_at' => now(),
-            'graded_by' => auth()->id(),
-        ]);
+        $result = $this->submissionService->submitBulkGrades($attempt, $validated['grades'], $assessment);
 
         return redirect()
             ->route('assessments.grade', [$course, $assessment, $attempt])
             ->with('success', 'Penilaian berhasil disimpan.');
-    }
-
-    /**
-     * Grade a question using the appropriate domain strategy.
-     */
-    protected function gradeQuestion(Question $question, mixed $answer): GradingResult
-    {
-        $strategy = $this->gradingResolver->resolve($question);
-
-        if ($strategy === null) {
-            // No strategy found - return zero score, needs manual grading
-            return GradingResult::partial(
-                score: 0,
-                maxScore: $question->points,
-                feedback: 'Tipe soal tidak didukung untuk penilaian otomatis.',
-                metadata: ['requires_manual_grading' => true]
-            );
-        }
-
-        return $strategy->grade($question, $answer);
-    }
-
-    /**
-     * Extract the appropriate answer value based on question type.
-     *
-     * @param  array{question_id: int, answer_text?: string|null, selected_options?: array<int>|null, file?: mixed}  $answerData
-     */
-    protected function extractAnswerValue(Question $question, array $answerData): mixed
-    {
-        // For multiple choice, use selected options (array of option IDs)
-        if ($question->isMultipleChoice()) {
-            return $answerData['selected_options'] ?? [];
-        }
-
-        // For all other types, use answer_text
-        return $answerData['answer_text'] ?? '';
-    }
-
-    /**
-     * Get the answer text to store in database.
-     * For multiple choice, store selected option IDs as JSON.
-     *
-     * @param  array{question_id: int, answer_text?: string|null, selected_options?: array<int>|null, file?: mixed}  $answerData
-     */
-    protected function getAnswerTextForStorage(Question $question, array $answerData): ?string
-    {
-        if ($question->isMultipleChoice() && ! empty($answerData['selected_options'])) {
-            return json_encode($answerData['selected_options']);
-        }
-
-        return $answerData['answer_text'] ?? null;
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -46,12 +47,12 @@ class Question extends Model
     {
         return match ($this->question_type) {
             'multiple_choice' => 'Pilihan Ganda',
-            'true_false'      => 'Benar/Salah',
-            'matching'        => 'Pencocokan',
-            'short_answer'    => 'Jawaban Singkat',
-            'essay'           => 'Esai',
-            'file_upload'     => 'Unggah Berkas',
-            default           => 'Tidak Diketahui',
+            'true_false' => 'Benar/Salah',
+            'matching' => 'Pencocokan',
+            'short_answer' => 'Jawaban Singkat',
+            'essay' => 'Esai',
+            'file_upload' => 'Unggah Berkas',
+            default => 'Tidak Diketahui',
         };
     }
 
@@ -93,5 +94,23 @@ class Question extends Model
     public function requiresManualGrading(): bool
     {
         return $this->isEssay() || $this->isFileUpload();
+    }
+
+    public function extractAnswerValue(array $answerData): mixed
+    {
+        if ($this->isMultipleChoice()) {
+            return $answerData['selected_options'] ?? [];
+        }
+
+        return $answerData['answer_text'] ?? '';
+    }
+
+    public function formatAnswerForStorage(array $answerData): ?string
+    {
+        if ($this->isMultipleChoice() && ! empty($answerData['selected_options'])) {
+            return json_encode($answerData['selected_options']);
+        }
+
+        return $answerData['answer_text'] ?? null;
     }
 }
