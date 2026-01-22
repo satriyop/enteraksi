@@ -251,4 +251,18 @@ class Enrollment extends Model
     {
         return $this->isActive();
     }
+
+    public function scopeForUserAndCourse(Builder $query, User $user, Course $course): Builder
+    {
+        return $query->where('user_id', $user->id)
+            ->where('course_id', $course->id);
+    }
+
+    public static function getActiveForUserAndCourse(User $user, Course $course): ?self
+    {
+        return self::query()
+            ->forUserAndCourse($user, $course)
+            ->active()
+            ->first();
+    }
 }

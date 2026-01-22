@@ -25,25 +25,14 @@ class LessonProgressController extends Controller
     {
         $validated = $request->validated();
 
-        // Verify the lesson belongs to this course
-        $lessonCourse = $lesson->section->course;
-        if ($lessonCourse->id !== $course->id) {
-            abort(404);
+        $enrollment = $this->getActiveEnrollment($request, $course);
+        if (! $enrollment) {
+            return $this->enrollmentNotFoundResponse();
         }
 
-        // Get user enrollment
-        $user = $request->user();
-        /** @var Enrollment|null $enrollment */
-        $enrollment = Enrollment::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->active()
-            ->first();
-
-        if (! $enrollment) {
-            return response()->json([
-                'message' => 'Anda tidak terdaftar di kursus ini.',
-            ], 403);
+        // Validate lesson belongs to course
+        if ($lesson->section->course->id !== $course->id) {
+            abort(404);
         }
 
         // Validate page number against total if provided
@@ -82,25 +71,14 @@ class LessonProgressController extends Controller
     {
         $validated = $request->validated();
 
-        // Verify the lesson belongs to this course
-        $lessonCourse = $lesson->section->course;
-        if ($lessonCourse->id !== $course->id) {
-            abort(404);
+        $enrollment = $this->getActiveEnrollment($request, $course);
+        if (! $enrollment) {
+            return $this->enrollmentNotFoundResponse();
         }
 
-        // Get user enrollment
-        $user = $request->user();
-        /** @var Enrollment|null $enrollment */
-        $enrollment = Enrollment::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->active()
-            ->first();
-
-        if (! $enrollment) {
-            return response()->json([
-                'message' => 'Anda tidak terdaftar di kursus ini.',
-            ], 403);
+        // Validate lesson belongs to course
+        if ($lesson->section->course->id !== $course->id) {
+            abort(404);
         }
 
         // Validate position doesn't exceed duration
@@ -132,25 +110,14 @@ class LessonProgressController extends Controller
      */
     public function complete(Request $request, Course $course, Lesson $lesson): JsonResponse
     {
-        // Verify the lesson belongs to this course
-        $lessonCourse = $lesson->section->course;
-        if ($lessonCourse->id !== $course->id) {
-            abort(404);
+        $enrollment = $this->getActiveEnrollment($request, $course);
+        if (! $enrollment) {
+            return $this->enrollmentNotFoundResponse();
         }
 
-        // Get user enrollment
-        $user = $request->user();
-        /** @var Enrollment|null $enrollment */
-        $enrollment = Enrollment::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
-            ->active()
-            ->first();
-
-        if (! $enrollment) {
-            return response()->json([
-                'message' => 'Anda tidak terdaftar di kursus ini.',
-            ], 403);
+        // Validate lesson belongs to course
+        if ($lesson->section->course->id !== $course->id) {
+            abort(404);
         }
 
         // Use service to complete lesson
@@ -166,5 +133,23 @@ class LessonProgressController extends Controller
             'lesson_completed' => $result->lessonCompleted,
             'course_completed' => $result->courseCompleted,
         ]);
+    }
+
+    /**
+     * Get active enrollment for user and course.
+     */
+    protected function getActiveEnrollment(Request $request, Course $course): ?Enrollment
+    {
+        return Enrollment::getActiveForUserAndCourse($request->user(), $course);
+    }
+
+    /**
+     * Return JSON response for when enrollment is not found.
+     */
+    protected function enrollmentNotFoundResponse(): JsonResponse
+    {
+        return response()->json([
+            'message' => 'Anda tidak terdaftar di kursus ini.',
+        ], 403);
     }
 }
