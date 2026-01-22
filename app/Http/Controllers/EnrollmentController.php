@@ -119,12 +119,10 @@ class EnrollmentController extends Controller
 
         /** @var Enrollment $enrollment */
         $enrollment = Enrollment::query()
-            ->where('user_id', $user->id)
-            ->where('course_id', $course->id)
+            ->forUserAndCourse($user, $course)
             ->firstOrFail();
 
         try {
-            // Use model method directly
             $enrollment->drop();
 
             return redirect()
