@@ -2,16 +2,11 @@
 
 namespace App\Domain\Progress\DTOs;
 
-use App\Data\Progress\LessonProgressData;
 use App\Domain\Progress\ValueObjects\AssessmentStats;
 use App\Domain\Shared\ValueObjects\Percentage;
 use App\Models\LessonProgress;
 
 /**
- * Result of a progress tracking operation.
- *
- * Contains lesson progress data, course completion percentage, and assessment stats.
- *
  * @phpstan-type ProgressDataArray array{
  *     id: int,
  *     enrollment_id: int,
@@ -39,7 +34,7 @@ use App\Models\LessonProgress;
 final readonly class ProgressResult
 {
     public function __construct(
-        public LessonProgressData $progress,
+        public array $progress,
         public Percentage $coursePercentage,
         public bool $lessonCompleted,
         public bool $courseCompleted,
@@ -59,8 +54,25 @@ final readonly class ProgressResult
         bool $courseCompleted,
         ?AssessmentStats $assessmentStats = null
     ): self {
+        $progressArray = [
+            'id' => $progress->id,
+            'enrollment_id' => $progress->enrollment_id,
+            'lesson_id' => $progress->lesson_id,
+            'is_completed' => $progress->is_completed,
+            'progress_percentage' => $progress->progress_percentage ?? 0,
+            'time_spent_seconds' => $progress->time_spent_seconds ?? 0,
+            'current_page' => $progress->current_page,
+            'total_pages' => $progress->total_pages,
+            'highest_page_reached' => $progress->highest_page_reached,
+            'media_position_seconds' => $progress->media_position_seconds,
+            'media_duration_seconds' => $progress->media_duration_seconds,
+            'media_progress_percentage' => $progress->media_progress_percentage !== null ? (int) $progress->media_progress_percentage : null,
+            'completed_at' => $progress->completed_at?->toIso8601String(),
+            'pagination_metadata' => $progress->pagination_metadata,
+        ];
+
         return new self(
-            progress: LessonProgressData::fromModel($progress),
+            progress: $progressArray,
             coursePercentage: $coursePercentage,
             lessonCompleted: $lessonCompleted,
             courseCompleted: $courseCompleted,
@@ -80,8 +92,8 @@ final readonly class ProgressResult
     public static function fromArray(array $data): static
     {
         return new self(
-            progress: LessonProgressData::from($data['progress']),
-            coursePercentage: new Percentage($data['course_percentage']),
+            progress: $data['progress'],
+            coursePercentage: new Percentage((float) $data['course_percentage']),
             lessonCompleted: $data['lesson_completed'],
             courseCompleted: $data['course_completed'],
             assessmentStats: isset($data['assessment_stats'])
@@ -93,8 +105,8 @@ final readonly class ProgressResult
     public function toResponse(): array
     {
         $response = [
-            'progress' => $this->progress->toArray(),
-            'course_percentage' => $this->coursePercentage->value,
+            'progress' => $this->progress,
+            'course_percentage' => $this->coursePercentage,
             'lesson_completed' => $this->lessonCompleted,
             'course_completed' => $this->courseCompleted,
         ];

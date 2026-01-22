@@ -69,15 +69,7 @@ class LessonProgressController extends Controller
 
         return response()->json([
             'message' => 'Progress berhasil disimpan.',
-            'progress' => [
-                'current_page' => $result->progress->current_page,
-                'total_pages' => $result->progress->total_pages,
-                'highest_page_reached' => $result->progress->highest_page_reached,
-                'is_completed' => $result->progress->is_completed,
-                'progress_percentage' => $result->progress->progress_percentage,
-                'time_spent_formatted' => $result->progress->getTimeSpentFormatted(),
-                'pagination_metadata' => $result->progress->pagination_metadata,
-            ],
+            'progress' => $result->progress,
             'enrollment' => [
                 'progress_percentage' => $result->coursePercentage->value,
             ],
@@ -132,12 +124,7 @@ class LessonProgressController extends Controller
 
         return response()->json([
             'message' => 'Progress media berhasil disimpan.',
-            'progress' => [
-                'media_position_seconds' => $result->progress->media_position_seconds,
-                'media_duration_seconds' => $result->progress->media_duration_seconds,
-                'media_progress_percentage' => $result->progress->media_progress_percentage,
-                'is_completed' => $result->progress->is_completed,
-            ],
+            'progress' => $result->progress,
             'enrollment' => [
                 'progress_percentage' => $result->coursePercentage->value,
             ],
@@ -177,10 +164,7 @@ class LessonProgressController extends Controller
 
         return response()->json([
             'message' => 'Pelajaran selesai.',
-            'progress' => [
-                'is_completed' => $result->progress->is_completed,
-                'completed_at' => $result->progress->completed_at,
-            ],
+            'progress' => $result->progress,
             'enrollment' => [
                 'progress_percentage' => $result->coursePercentage->value,
                 'status' => $result->courseCompleted ? 'completed' : 'active',

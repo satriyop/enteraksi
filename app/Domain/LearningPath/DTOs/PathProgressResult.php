@@ -2,13 +2,12 @@
 
 namespace App\Domain\LearningPath\DTOs;
 
-use App\Data\LearningPath\CourseProgressData;
 use App\Domain\Shared\ValueObjects\Percentage;
 
 final readonly class PathProgressResult
 {
     /**
-     * @param  CourseProgressData[]  $courses
+     * @param  array[]  $courses
      */
     public function __construct(
         public int $pathEnrollmentId,
@@ -22,7 +21,7 @@ final readonly class PathProgressResult
         public bool $isCompleted,
         public int $requiredCourses = 0,
         public int $completedRequiredCourses = 0,
-        public ?int $requiredPercentage = null,
+        public ?float $requiredPercentage = null,
     ) {}
 
     public static function fromArray(array $data): static
@@ -53,7 +52,7 @@ final readonly class PathProgressResult
             'in_progress_courses' => $this->inProgressCourses,
             'locked_courses' => $this->lockedCourses,
             'available_courses' => $this->availableCourses,
-            'courses' => array_map(fn ($c) => $c->toArray(), $this->courses),
+            'courses' => $this->courses,
             'is_completed' => $this->isCompleted,
             'required_courses' => $this->requiredCourses,
             'completed_required_courses' => $this->completedRequiredCourses,
@@ -64,16 +63,16 @@ final readonly class PathProgressResult
     /**
      * Get the next course to work on (first in-progress or available).
      */
-    public function getNextCourse(): ?CourseProgressData
+    public function getNextCourse(): ?array
     {
         foreach ($this->courses as $course) {
-            if ($course->status === 'in_progress') {
+            if ($course['status'] === 'in_progress') {
                 return $course;
             }
         }
 
         foreach ($this->courses as $course) {
-            if ($course->status === 'available') {
+            if ($course['status'] === 'available') {
                 return $course;
             }
         }

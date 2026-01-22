@@ -1,7 +1,6 @@
 <?php
 
 use App\Domain\Enrollment\Events\UserDropped;
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
 use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
@@ -19,7 +18,7 @@ use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
     $this->progressService = app(PathProgressServiceContract::class);
-    $this->enrollmentService = app(PathEnrollmentServiceContract::class);
+    $this->pathEnrollmentService = app(PathEnrollmentServiceContract::class);
 });
 
 describe('PathProgressService', function () {
@@ -41,7 +40,7 @@ describe('PathProgressService', function () {
             }
 
             // Enroll user in path
-            $pathEnrollment = $this->enrollmentService->enroll($user, $path);
+            $pathEnrollment = $this->pathEnrollmentService->enroll($user, $path);
 
             // Get course progress records
             $courseProgress = $pathEnrollment->courseProgress()->orderBy('position')->get();
@@ -115,7 +114,7 @@ describe('PathProgressService', function () {
             }
 
             // Enroll user in path
-            $pathEnrollment = $this->enrollmentService->enroll($user, $path);
+            $pathEnrollment = $this->pathEnrollmentService->enroll($user, $path);
 
             // Complete first course
             $courseProgress = $pathEnrollment->courseProgress()->orderBy('position')->get();
@@ -245,7 +244,7 @@ describe('PathProgressService', function () {
             // Required stats only count required courses
             expect($progress->requiredCourses)->toBe(2);
             expect($progress->completedRequiredCourses)->toBe(1);
-            expect($progress->requiredPercentage)->toBe(50); // 1/2 = 50%
+            expect(round($progress->requiredPercentage))->toBe(50); // 1/2 = 50%
         });
     });
 
@@ -328,7 +327,7 @@ describe('PathProgressService', function () {
             }
 
             // Enroll in path
-            $pathEnrollment = $this->enrollmentService->enroll($user, $path);
+            $pathEnrollment = $this->pathEnrollmentService->enroll($user, $path);
 
             // Get course progress and enrollment
             $courseProgress = $pathEnrollment->courseProgress()->orderBy('position')->first();

@@ -2,7 +2,6 @@
 
 namespace App\Domain\LearningPath\Services;
 
-use App\Data\LearningPath\CourseProgressData;
 use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
 use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\DTOs\PathProgressResult;
@@ -13,7 +12,6 @@ use App\Domain\LearningPath\Exceptions\CourseNotInPathException;
 use App\Domain\LearningPath\Exceptions\PrerequisitesNotMetException;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
-use App\Domain\LearningPath\States\CompletedPathState;
 use App\Domain\LearningPath\States\InProgressCourseState;
 use App\Domain\LearningPath\States\LockedCourseState;
 use App\Domain\Shared\Services\DomainLogger;
@@ -56,14 +54,28 @@ class PathProgressService implements PathProgressServiceContract
         $items = $courseProgresses->map(function (LearningPathCourseProgress $progress) use ($pivotDataByCourseId) {
             $pivotData = $pivotDataByCourseId->get($progress->course_id, []);
 
-            return CourseProgressData::fromProgress($progress, $pivotData);
+            return [
+                'course_id' => $progress->course_id,
+                'course_title' => $progress->course->title ?? 'Unknown',
+                'status' => (string) $progress->state,
+                'position' => $progress->position,
+                'is_required' => $pivotData['is_required'] ?? true,
+                'completion_percentage' => $progress->courseEnrollment->progress_percentage ?? 0,
+                'min_required_percentage' => $pivotData['min_required_percentage'] ?? null,
+                'prerequisites' => $pivotData['prerequisites'] ?? null,
+                'lock_reason' => null,
+                'unlocked_at' => $progress->unlocked_at?->toIso8601String(),
+                'started_at' => $progress->started_at?->toIso8601String(),
+                'completed_at' => $progress->completed_at?->toIso8601String(),
+                'enrollment_id' => $progress->learning_path_enrollment_id,
+            ];
         })->all();
 
         $totalCourses = $courseProgresses->count();
-        $completedCourses = $courseProgresses->filter(fn ($p) => $p->isCompleted())->count();
-        $inProgressCourses = $courseProgresses->filter(fn ($p) => $p->isInProgress())->count();
-        $lockedCourses = $courseProgresses->filter(fn ($p) => $p->isLocked())->count();
-        $availableCourses = $courseProgresses->filter(fn ($p) => $p->isAvailable())->count();
+        $completedCourses = $courseProgresses->filter(fn ($p) => $p->isCompleted());
+        $inProgressCourses = $courseProgresses->filter(fn ($p) => $p->isInProgress());
+        $lockedCourses = $courseProgresses->filter(fn ($p) => $p->isLocked());
+        $availableCourses = $courseProgresses->filter(fn ($p) => $p->isAvailable());
 
         // Calculate required course stats
         $requiredCourseIds = $pivotDataByCourseId
@@ -71,35 +83,22 @@ class PathProgressService implements PathProgressServiceContract
             ->keys()
             ->toArray();
 
-        $requiredCourses = count($requiredCourseIds);
-
-        // If no required courses defined, all are considered required
-        if ($requiredCourses === 0) {
-            $requiredCourses = $totalCourses;
-            $requiredCourseIds = $pivotDataByCourseId->keys()->toArray();
-        }
-
-        $completedRequiredCourses = $courseProgresses
-            ->filter(fn ($p) => $p->isCompleted() && in_array($p->course_id, $requiredCourseIds))
-            ->count();
-
-        $requiredPercentage = $requiredCourses > 0
-            ? (int) round(($completedRequiredCourses / $requiredCourses) * 100)
-            : 0;
+        $requiredCourses = array_filter($items, fn ($c) => in_array($c['course_id'], $requiredCourseIds));
+        $completedRequiredCourses = array_filter($requiredCourses, fn ($c) => $c['status'] === 'completed');
 
         return new PathProgressResult(
             pathEnrollmentId: $enrollment->id,
-            overallPercentage: Percentage::fromFraction($completedCourses, $totalCourses),
+            overallPercentage: Percentage::fromFraction(count($completedCourses), $totalCourses),
             totalCourses: $totalCourses,
-            completedCourses: $completedCourses,
-            inProgressCourses: $inProgressCourses,
-            lockedCourses: $lockedCourses,
-            availableCourses: $availableCourses,
+            completedCourses: count($completedCourses),
+            inProgressCourses: count($inProgressCourses),
+            lockedCourses: count($lockedCourses),
+            availableCourses: count($availableCourses),
             courses: $items,
-            isCompleted: $enrollment->state instanceof CompletedPathState,
-            requiredCourses: $requiredCourses,
-            completedRequiredCourses: $completedRequiredCourses,
-            requiredPercentage: $requiredPercentage,
+            isCompleted: count($completedCourses) === $totalCourses && count($completedRequiredCourses) === count($requiredCourseIds),
+            requiredCourses: count($requiredCourseIds),
+            completedRequiredCourses: count($completedRequiredCourses),
+            requiredPercentage: count($requiredCourseIds) > 0 ? (float) (count($completedRequiredCourses) / count($requiredCourseIds)) * 100 : null,
         );
     }
 
