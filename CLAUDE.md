@@ -1,3 +1,203 @@
+# Enteraksi LMS - Project Guidelines
+
+> ⚠️ **NOT A PRODUCTION APPLICATION** — This is a development/learning project. No need to consider backward compatibility when refactoring. Feel free to make breaking changes.
+
+---
+
+## 🛑 STOP - READ THIS BEFORE EVERY REFACTORING/ARCHITECTURE DECISION
+
+**This codebase is OVER-ENGINEERED. Do NOT make it worse.**
+
+### Mandatory Questions Before Adding Abstraction
+
+1. **Does Laravel already solve this?**
+   - Response transformation? → Use `JsonResource`, NOT value objects + DTOs
+   - Data validation? → Use `FormRequest`, NOT input DTOs
+   - Query optimization? → Use `Resource::collection()` with eager loading, NOT custom transformers
+
+2. **Am I following a pattern just because it exists here?**
+   - Existing patterns may be WRONG. Question them.
+   - "Consistency" with a bad pattern = more bad code
+   - Ask: "If I started fresh, would I build it this way?"
+
+3. **Is this solving a REAL problem or a HYPOTHETICAL one?**
+   - Strategy pattern for 1 implementation = over-engineering
+   - Value objects to "prevent models in responses" = Laravel Resources do this already
+   - Contracts for services with 1 implementation = unnecessary ceremony
+
+### What To Do Instead
+
+| Don't | Do |
+|-------|-----|
+| Create ValueObject + DTO layers | Use `JsonResource` for API responses |
+| Make thin models + fat services | Put behavior IN the model, services orchestrate |
+| Add Strategy pattern for flexibility | Build the simple thing, refactor IF needed later |
+| Create contracts for every service | Only abstract what you'll actually swap |
+| Extend existing over-engineering | SIMPLIFY - delete code, merge layers |
+
+### The ROUND9 Lesson (January 2026)
+
+Claude proposed refactoring DTOs to use value objects. This made the codebase MORE complex when Laravel Resources would have solved the same problem in 10 lines. **Pattern consistency is not a virtue when the pattern is wrong.**
+
+**When in doubt: Can we DELETE code instead of adding it?**
+
+---
+
+## Quick Reference: Skills Directory
+
+This project has detailed architectural patterns documented in `.claude/skills/`:
+
+| Skill | Use When |
+|-------|----------|
+| `enteraksi-architecture` | Creating services, DTOs, value objects, DomainServiceProvider bindings |
+| `enteraksi-state-machines` | Working with CourseState, EnrollmentState, status transitions |
+| `enteraksi-events` | Domain events, listeners, audit logging |
+| `enteraksi-strategies` | Grading strategies, progress calculators, strategy pattern |
+| `enteraksi-testing` | Pest tests, factory states, policy tests, global helpers |
+| `enteraksi-frontend` | Vue 3 + Inertia pages, composables, TypeScript types |
+| `enteraksi-crud` | CRUD pages, controllers, FormRequests, PageHeader/FormSection |
+| `enteraksi-component-architecture` | Extracting Vue components, refactoring large pages |
+| `enteraksi-learning-path` | Learning path enrollment, cross-domain sync, progress tracking |
+| `enteraksi-n1-prevention` | N+1 queries, accessor traps, RequiresEagerLoading trait, controller transformation |
+| `enteraksi-batch-loading` | Batch loading, DB aggregation, replacing loop queries |
+| `enteraksi-eloquent-gotchas` | fresh() vs refresh(), transaction patterns, stale data |
+| `enteraksi-concurrency` | Race conditions, pessimistic locking, concurrent enrollment handling |
+| `enteraksi-resource-scoping` | Nested route authorization, scoped validation rules, ownership verification |
+| `enteraksi-policy-context` | Policy authorization with required context DTOs, FormRequest authorize, testing policies |
+| `enteraksi-db-indexing` | Slow queries, composite indexes, query optimization |
+| `enteraksi-phpstan-shapes` | PHPDoc array shapes, static analysis, fromArray type hints |
+
+**Always check relevant skills before implementing features.**
+
+---
+
+## Enteraksi Architecture Overview
+
+```
+app/
+├── Domain/                      # Bounded Contexts (DDD)
+│   ├── Assessment/              # Grading, strategies, attempts
+│   ├── Course/                  # Course states, content
+│   ├── Enrollment/              # Enrollment lifecycle, events
+│   ├── LearningPath/            # Path enrollment, prerequisites
+│   ├── Progress/                # Progress tracking, calculators
+│   └── Shared/                  # Base DTOs, contracts, value objects
+├── Http/Controllers/            # Thin controllers (delegate to services)
+├── Models/                      # Eloquent models with state casts
+├── Policies/                    # Authorization (role × state × ownership)
+└── Providers/
+    ├── DomainServiceProvider    # Service bindings, strategy tags
+    └── EventServiceProvider     # Domain event → listener mappings
+```
+
+### Key Patterns Used
+- **State Machines**: `spatie/laravel-model-states` for Course, Enrollment status
+- **Strategy Pattern**: Grading strategies, progress calculators (tagged services)
+- **Domain Events**: `UserEnrolled`, `CoursePublished`, etc. with audit logging
+- **Service Layer**: Contracts → Implementations, injected via DomainServiceProvider
+- **DTOs & Value Objects**: Immutable data transfer, validated value objects
+
+---
+
+## Static Analysis with Larastan
+
+This project uses **Larastan** (PHPStan for Laravel) for static type analysis. It catches bugs before runtime.
+
+### Running PHPStan
+
+```bash
+# Run analysis (uses phpstan.neon config)
+./vendor/bin/phpstan analyse
+
+# Generate baseline for new errors to fix later
+./vendor/bin/phpstan analyse --generate-baseline
+```
+
+### Benefits
+
+| What It Catches | Example |
+|-----------------|---------|
+| Typos in array keys | `$data['progrss']` instead of `$data['progress']` |
+| Type mismatches | Passing `string` to `DateTimeInterface` parameter |
+| Missing properties | Accessing `$model->tittle` (typo) |
+| Null safety issues | Calling method on possibly-null value |
+| Wrong argument types | `notify(Course $course)` receiving `Model|null` |
+
+### Array Shapes for DTOs
+
+**Always add PHPDoc array shapes** to `fromArray()` methods in DTOs. This enables:
+- IDE autocomplete for array keys
+- Static analysis catches missing/wrong keys
+- Self-documenting code
+
+```php
+/**
+ * @param  array{
+ *     user_id: int,
+ *     course_id: int,
+ *     invited_by?: int|null,
+ *     enrolled_at?: string|null
+ * }  $data
+ */
+public static function fromArray(array $data): static
+```
+
+For complex nested structures, use `@phpstan-type` aliases:
+
+```php
+/**
+ * @phpstan-type ProgressDataArray array{
+ *     id: int,
+ *     enrollment_id: int,
+ *     lesson_id: int,
+ *     is_completed: bool,
+ *     progress_percentage?: int
+ * }
+ */
+final class ProgressResult extends DataTransferObject
+{
+    /**
+     * @param  array{
+     *     progress: ProgressDataArray,
+     *     course_percentage: float
+     * }  $data
+     */
+    public static function fromArray(array $data): static
+```
+
+### Baseline Strategy
+
+The project uses a **baseline** (`phpstan-baseline.neon`) for existing errors:
+- New code must pass PHPStan (no new errors)
+- Existing errors are tracked and fixed incrementally
+- Run `--generate-baseline` after fixing batches of errors
+
+### Configuration
+
+See `phpstan.neon` for:
+- Analysis level (currently 5)
+- Excluded paths
+- Ignored error patterns
+
+---
+
+## Database Query Strategy (Enteraksi-Specific)
+
+Use the right tool for the job - NOT a blanket "avoid DB::" rule:
+
+| Scenario | Use | Why |
+|----------|-----|-----|
+| CRUD operations | Eloquent Models | Events, observers, casts needed |
+| Single record fetch | `Model::find()` | Simple, triggers model events |
+| Dashboards/Reports (100+ rows) | `DB::table()` | Avoids hydration overhead |
+| Aggregations (SUM, AVG, COUNT) | `DB::table()` | Let database do math |
+| Bulk inserts (seeding, imports) | `DB::table()->insert()` | Much faster |
+| Complex joins for read-only display | `DB::table()` or `->toBase()` | Lightweight stdClass |
+
+**Rule of thumb**: If you don't need model events/casts/relations, use `DB::table()` for better performance.
+
+---
+
 <laravel-boost-guidelines>
 === foundation rules ===
 
@@ -14,6 +214,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - laravel/wayfinder (WAYFINDER) - v0
+- larastan/larastan (LARASTAN) - v3
 - laravel/mcp (MCP) - v0
 - laravel/pint (PINT) - v1
 - laravel/sail (SAIL) - v1
@@ -30,7 +231,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
-- Always remember to follow the pattern and architecture, clean testable code, solid principle, strategy pattern when applied,state machine, event driven , observability MUST be put into consideration before generating the code. the implementation plan is just a guidance, DONT FOLLOW BLINDLY.
 
 ## Verification Scripts
 - Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.
@@ -589,3 +789,36 @@ Fortify is a headless authentication backend that provides authentication routes
 - `Features::updatePasswords()` to let users change their passwords.
 - `Features::resetPasswords()` for password reset via email.
 </laravel-boost-guidelines>
+
+---
+
+## Quick File Reference
+
+| Need to... | Look at |
+|------------|---------|
+| Add a service binding | `app/Providers/DomainServiceProvider.php` |
+| Register event listeners | `app/Providers/EventServiceProvider.php` |
+| Add middleware | `bootstrap/app.php` |
+| See factory states | `database/factories/{Model}Factory.php` |
+| Add global test helpers | `tests/Pest.php` |
+| See page component patterns | `resources/js/pages/courses/` |
+| See CRUD components | `resources/js/components/crud/` |
+| Add TypeScript types | `resources/js/types/models/` |
+| See composable patterns | `resources/js/composables/` |
+| Configure static analysis | `phpstan.neon`, `phpstan-baseline.neon` |
+| See DTO array shape examples | `app/Domain/Progress/DTOs/ProgressResult.php` |
+
+## Common Gotchas
+
+1. **Vite build required** - After changing frontend code, run `npm run build` for production or ensure `npm run dev` is running
+2. **Wayfinder regenerate** - After adding routes, run `php artisan wayfinder:generate` (or restart Vite dev server)
+3. **Policy not found** - Check `AuthServiceProvider` or use `Gate::policy()` in provider
+4. **State mutation bug** - NEVER use `$model->state = SomeState::$name; $model->save();` — corrupts state! Use `$model->update(['state' => SomeState::class])` or `->transitionTo()`
+5. **Race conditions** - Wrap enrollment + invitation updates in single `DB::transaction()` with `lockForUpdate()`. Catch `QueryException` (code 1062) as fallback
+6. **Test factories** - Use states like `->published()`, `->draft()` instead of manually setting attributes
+7. **FormRequest authorize** - Return `Gate::allows('action', $model)`, not just `true`
+8. **Indonesian messages** - All validation messages should be in Bahasa Indonesia
+9. **PHPStan errors** - New code must pass `./vendor/bin/phpstan analyse`. Add array shapes to DTOs' `fromArray()` methods
+10. **Nested route scoping** - Route model binding doesn't auto-scope children to parents. Always verify ownership (`$child->parent_id === $parent->id`) or use `Rule::exists()->where()` for submitted IDs
+11. **RequiresEagerLoading throws in tests** - Models using `RequiresEagerLoading` trait throw when accessing counts/averages without eager loading. Reload with `Course::withCount('lessons')->find($id)` in tests
+12. **Value object results in tests** - Result DTOs contain value objects, not models. Use camelCase (`$result->enrollment->userId`), fetch model for relationships (`LearningPathEnrollment::find($result->enrollment->id)`)
