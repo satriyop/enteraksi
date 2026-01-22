@@ -18,11 +18,7 @@ class CoursePublishController extends Controller
     {
         Gate::authorize('publish', $course);
 
-        $course->update([
-            'status' => 'published',
-            'published_at' => now(),
-            'published_by' => $request->user()->id,
-        ]);
+        $course->publish($request->user());
 
         return redirect()
             ->route('courses.edit', $course)
@@ -36,11 +32,7 @@ class CoursePublishController extends Controller
     {
         Gate::authorize('unpublish', $course);
 
-        $course->update([
-            'status' => 'draft',
-            'published_at' => null,
-            'published_by' => null,
-        ]);
+        $course->unpublish();
 
         return redirect()
             ->route('courses.edit', $course)
@@ -54,9 +46,7 @@ class CoursePublishController extends Controller
     {
         Gate::authorize('archive', $course);
 
-        $course->update([
-            'status' => 'archived',
-        ]);
+        $course->archive();
 
         return redirect()
             ->route('courses.edit', $course)
@@ -70,19 +60,7 @@ class CoursePublishController extends Controller
     {
         Gate::authorize('setStatus', $course);
 
-        $validated = $request->validated();
-
-        $updateData = ['status' => $validated['status']];
-
-        if ($validated['status'] === 'published' && $course->status !== 'published') {
-            $updateData['published_at'] = now();
-            $updateData['published_by'] = $request->user()->id;
-        } elseif ($validated['status'] !== 'published') {
-            $updateData['published_at'] = null;
-            $updateData['published_by'] = null;
-        }
-
-        $course->update($updateData);
+        $course->updateStatus($request->validated('status'), $request->user());
 
         return redirect()
             ->route('courses.edit', $course)

@@ -283,4 +283,46 @@ class Course extends Model
             'estimated_duration_minutes' => $this->calculateEstimatedDuration(),
         ]);
     }
+
+    public function publish(User $user): void
+    {
+        $this->update([
+            'status' => PublishedState::class,
+            'published_at' => now(),
+            'published_by' => $user->id,
+        ]);
+    }
+
+    public function unpublish(): void
+    {
+        $this->update([
+            'status' => DraftState::class,
+            'published_at' => null,
+            'published_by' => null,
+        ]);
+    }
+
+    public function archive(): void
+    {
+        $this->update([
+            'status' => ArchivedState::class,
+        ]);
+    }
+
+    public function updateStatus(string $status, User $admin): array
+    {
+        $updateData = ['status' => $status];
+
+        if ($status === 'published' && $this->status instanceof DraftState) {
+            $updateData['published_at'] = now();
+            $updateData['published_by'] = $admin->id;
+        } elseif ($status !== 'published') {
+            $updateData['published_at'] = null;
+            $updateData['published_by'] = null;
+        }
+
+        $this->update($updateData);
+
+        return $updateData;
+    }
 }
