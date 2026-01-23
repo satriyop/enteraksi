@@ -11,6 +11,8 @@ class WeightedProgressCalculator implements ProgressCalculatorContract
 {
     public function calculateCourseProgress(Enrollment $enrollment): float
     {
+        /** @var \App\Models\Course $course */
+        $course = $enrollment->course;
         $courseId = $enrollment->course_id;
 
         // Get total weighted duration (using lessons through course_sections)
@@ -62,6 +64,7 @@ class WeightedProgressCalculator implements ProgressCalculatorContract
         $completedWeight = 0;
 
         foreach ($requiredCourses as $course) {
+            /** @var \App\Models\Course $course */
             // Calculate course's total weight
             $courseWeight = DB::table('lessons')
                 ->join('course_sections', 'lessons.course_section_id', '=', 'course_sections.id')

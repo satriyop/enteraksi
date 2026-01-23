@@ -10,7 +10,9 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
 {
     public function calculateCourseProgress(Enrollment $enrollment): float
     {
-        $totalLessons = $enrollment->course->lessons()->count();
+        /** @var \App\Models\Course $course */
+        $course = $enrollment->course;
+        $totalLessons = $course->lessons()->count();
 
         if ($totalLessons === 0) {
             return 0;
@@ -27,7 +29,9 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
 
     public function isCourseComplete(Enrollment $enrollment): bool
     {
-        $totalLessons = $enrollment->course->lessons()->count();
+        /** @var \App\Models\Course $course */
+        $course = $enrollment->course;
+        $totalLessons = $course->lessons()->count();
 
         if ($totalLessons === 0) {
             return false;
@@ -59,6 +63,7 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
         $completedRequiredCourses = 0;
 
         foreach ($requiredCourses as $course) {
+            /** @var \App\Models\Course $course */
             // Check if user has completed this course
             $courseEnrollment = Enrollment::query()
                 ->where('user_id', $enrollment->user_id)
@@ -88,6 +93,7 @@ class LessonBasedProgressCalculator implements ProgressCalculatorContract
         }
 
         foreach ($requiredCourses as $course) {
+            /** @var \App\Models\Course $course */
             // Check if user has completed this course
             $courseEnrollment = Enrollment::query()
                 ->where('user_id', $enrollment->user_id)

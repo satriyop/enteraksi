@@ -193,6 +193,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
 
     public function calculatePathProgress(LearningPathEnrollment $enrollment): float
     {
+        /** @var \App\Models\LearningPath $learningPath */
         $learningPath = $enrollment->learningPath;
 
         // Get only required courses
@@ -209,6 +210,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
         $courseCount = $requiredCourses->count();
 
         foreach ($requiredCourses as $course) {
+            /** @var \App\Models\Course $course */
             // Get course enrollment for this user
             $courseEnrollment = Enrollment::query()
                 ->where('user_id', $enrollment->user_id)
@@ -233,6 +235,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
 
     public function isPathComplete(LearningPathEnrollment $enrollment): bool
     {
+        /** @var \App\Models\LearningPath $learningPath */
         $learningPath = $enrollment->learningPath;
 
         // Get only required courses
@@ -241,6 +244,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
             ->get();
 
         foreach ($requiredCourses as $course) {
+            /** @var \App\Models\Course $course */
             // Get course enrollment for this user
             $courseEnrollment = Enrollment::query()
                 ->where('user_id', $enrollment->user_id)

@@ -75,6 +75,7 @@ class LessonController extends Controller
         $maxOrder = $section->lessons()->max('order') ?? 0;
         $validated['order'] = $maxOrder + 1;
 
+        /** @var Lesson $lesson */
         $lesson = $section->lessons()->create($validated);
         $lesson->updateDurations();
 

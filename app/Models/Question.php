@@ -129,6 +129,9 @@ class Question extends Model
         return $answerData['answer_text'] ?? null;
     }
 
+    /**
+     * @param  array<int, array{id?: int|null, option_text: string, is_correct: bool, feedback?: string|null, order?: int}>  $optionsData
+     */
     public function syncOptions(array $optionsData): void
     {
         $existingOptionIds = $this->options()->pluck('id')->toArray();
@@ -136,6 +139,7 @@ class Question extends Model
 
         foreach ($optionsData as $optionData) {
             if (isset($optionData['id']) && $optionData['id'] > 0) {
+                /** @var QuestionOption|null $option */
                 $option = $this->options()->find($optionData['id']);
                 if ($option) {
                     $option->update([
@@ -147,6 +151,7 @@ class Question extends Model
                     $submittedOptionIds[] = $option->id;
                 }
             } else {
+                /** @var QuestionOption $option */
                 $option = $this->options()->create([
                     'option_text' => $optionData['option_text'],
                     'is_correct' => $optionData['is_correct'] ?? false,
@@ -163,10 +168,14 @@ class Question extends Model
         }
     }
 
+    /**
+     * @param  array<int, array{option_text: string, is_correct: bool, feedback?: string|null, order?: int}>  $optionsData
+     */
     public function createOptions(array $optionsData): void
     {
         foreach ($optionsData as $optionData) {
-            $this->options()->create([
+            /** @var QuestionOption $option */
+            $option = $this->options()->create([
                 'option_text' => $optionData['option_text'],
                 'is_correct' => $optionData['is_correct'] ?? false,
                 'feedback' => $optionData['feedback'] ?? null,

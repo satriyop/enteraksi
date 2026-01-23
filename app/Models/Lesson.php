@@ -179,6 +179,9 @@ class Lesson extends Model
         });
     }
 
+    /**
+     * Update estimated durations for section and course.
+     */
     public function updateDurations(): void
     {
         $this->section->updateEstimatedDuration();
