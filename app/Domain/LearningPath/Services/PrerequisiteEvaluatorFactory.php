@@ -5,6 +5,7 @@ namespace App\Domain\LearningPath\Services;
 use App\Domain\LearningPath\Contracts\PrerequisiteEvaluatorContract;
 use App\Domain\LearningPath\Strategies\ImmediatePreviousPrerequisiteEvaluator;
 use App\Domain\LearningPath\Strategies\NoPrerequisiteEvaluator;
+use App\Domain\LearningPath\Strategies\PricingAwarePrerequisiteEvaluator;
 use App\Domain\LearningPath\Strategies\SequentialPrerequisiteEvaluator;
 use App\Models\LearningPath;
 use InvalidArgumentException;
@@ -18,6 +19,7 @@ class PrerequisiteEvaluatorFactory
         'sequential' => SequentialPrerequisiteEvaluator::class,
         'immediate_previous' => ImmediatePreviousPrerequisiteEvaluator::class,
         'none' => NoPrerequisiteEvaluator::class,
+        'pricing_aware' => PricingAwarePrerequisiteEvaluator::class,
     ];
 
     /**
@@ -53,6 +55,7 @@ class PrerequisiteEvaluatorFactory
             'sequential' => 'Berurutan (Semua sebelumnya harus selesai)',
             'immediate_previous' => 'Hanya kursus sebelumnya',
             'none' => 'Tanpa prasyarat',
+            'pricing_aware' => 'Dengan pertimbangan harga (Mode komersial)',
         ];
     }
 

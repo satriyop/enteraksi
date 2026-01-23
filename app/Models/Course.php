@@ -37,6 +37,12 @@ use Spatie\ModelStates\HasStates;
  * @property string|null $difficulty_level
  * @property int|null $estimated_duration_minutes
  * @property int|null $manual_duration_minutes
+ * @property float|null $price
+ * @property string $currency
+ * @property bool $is_paid
+ * @property string|null $payment_gateway
+ * @property array|null $pricing_tiers
+ * @property Carbon|null $price_valid_until
  * @property Carbon|null $published_at
  * @property int|null $published_by
  * @property Carbon|null $created_at
@@ -82,6 +88,12 @@ class Course extends Model
         'manual_duration_minutes',
         'published_at',
         'published_by',
+        'price',
+        'currency',
+        'is_paid',
+        'payment_gateway',
+        'pricing_tiers',
+        'price_valid_until',
     ];
 
     protected function casts(): array
@@ -90,6 +102,8 @@ class Course extends Model
             'status' => CourseState::class,
             'objectives' => 'array',
             'prerequisites' => 'array',
+            'pricing_tiers' => 'array',
+            'price_valid_until' => 'datetime',
             'published_at' => 'datetime',
         ];
     }
@@ -344,5 +358,65 @@ class Course extends Model
         $this->update($updateData);
 
         return $updateData;
+    }
+
+    // =========================================================================
+    // Pricing Methods
+    // =========================================================================
+
+    /**
+     * Check if this course is paid in the current LMS mode.
+     */
+    public function isPaid(): bool
+    {
+        return config('lms.mode') === 'commercial' && $this->is_paid;
+    }
+
+    /**
+     * Get the course price, considering LMS mode.
+     */
+    public function getPrice(): ?float
+    {
+        return $this->isPaid() ? $this->price : null;
+    }
+
+    /**
+     * Get the course price formatted with currency.
+     */
+    public function getFormattedPrice(): ?string
+    {
+        if (! $this->isPaid()) {
+            return null;
+        }
+
+        return number_format($this->price, 0, ',', '.').' '.$this->currency;
+    }
+
+    /**
+     * Check if the course price is still valid.
+     */
+    public function isPriceValid(): bool
+    {
+        if (! $this->isPaid()) {
+            return true;
+        }
+
+        return $this->price_valid_until === null || $this->price_valid_until->isFuture();
+    }
+
+    /**
+     * Get pricing tiers if available.
+     */
+    public function getPricingTiers(): ?array
+    {
+        return $this->pricing_tiers;
+    }
+
+    /**
+     * Set pricing tiers.
+     */
+    public function setPricingTiers(?array $tiers): void
+    {
+        $this->attributes['pricing_tiers'] = $tiers ? json_encode($tiers) : null;
     }
 }

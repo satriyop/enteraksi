@@ -104,4 +104,51 @@ return [
         'default_time_limit' => null,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | LMS Mode
+    |--------------------------------------------------------------------------
+    |
+    | The LMS can operate in two modes:
+    | - 'internal': All courses are free, no payments
+    | - 'commercial': Courses can be paid, payment system enabled
+    |
+    */
+
+    'mode' => env('LMS_MODE', 'internal'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Supported Currencies
+    |--------------------------------------------------------------------------
+    |
+    | List of currencies supported by the LMS for course pricing.
+    | Uses ISO 4217 currency codes.
+    |
+    */
+
+    'supported_currencies' => [
+        'IDR' => 'Indonesian Rupiah',
+        'USD' => 'US Dollar',
+        'EUR' => 'Euro',
+        'SGD' => 'Singapore Dollar',
+    ],
+
+    'default_currency' => env('LMS_DEFAULT_CURRENCY', 'IDR'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Payment Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for payment processing in commercial mode.
+    |
+    */
+
+    'payment' => [
+        'enabled' => env('LMS_PAYMENT_ENABLED', false),
+        'gateway' => env('LMS_PAYMENT_GATEWAY', 'midtrans'), // midtrans, stripe, etc.
+        'sandbox' => env('LMS_PAYMENT_SANDBOX', true),
+    ],
+
 ];

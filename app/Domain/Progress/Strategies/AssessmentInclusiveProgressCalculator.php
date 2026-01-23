@@ -6,6 +6,7 @@ use App\Domain\Progress\Contracts\ProgressCalculatorContract;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Enrollment;
+use App\Models\LearningPathEnrollment;
 use Illuminate\Support\Collection;
 
 /**
@@ -36,7 +37,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
 
     protected float $assessmentWeight = 0.3;
 
-    public function calculate(Enrollment $enrollment): float
+    public function calculateCourseProgress(Enrollment $enrollment): float
     {
         $lessonProgress = $this->calculateLessonProgress($enrollment);
         $assessmentProgress = $this->calculateAssessmentProgress($enrollment);
@@ -48,7 +49,7 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
         );
     }
 
-    public function isComplete(Enrollment $enrollment): bool
+    public function isCourseComplete(Enrollment $enrollment): bool
     {
         // All lessons completed (only count lessons that still exist)
         $totalLessons = $enrollment->course->lessons()->count();
@@ -188,5 +189,80 @@ class AssessmentInclusiveProgressCalculator implements ProgressCalculatorContrac
             ->where('passed', true)
             ->distinct()
             ->pluck('assessment_id');
+    }
+
+    public function calculatePathProgress(LearningPathEnrollment $enrollment): float
+    {
+        $learningPath = $enrollment->learningPath;
+
+        // Get only required courses
+        $requiredCourses = $learningPath->courses()
+            ->wherePivot('is_required', true)
+            ->get();
+
+        if ($requiredCourses->isEmpty()) {
+            return 0;
+        }
+
+        $totalLessonProgress = 0;
+        $totalAssessmentProgress = 0;
+        $courseCount = $requiredCourses->count();
+
+        foreach ($requiredCourses as $course) {
+            // Get course enrollment for this user
+            $courseEnrollment = Enrollment::query()
+                ->where('user_id', $enrollment->user_id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if ($courseEnrollment) {
+                $totalLessonProgress += $this->calculateLessonProgress($courseEnrollment);
+                $totalAssessmentProgress += $this->calculateAssessmentProgress($courseEnrollment);
+            }
+        }
+
+        $avgLessonProgress = $courseCount > 0 ? $totalLessonProgress / $courseCount : 0;
+        $avgAssessmentProgress = $courseCount > 0 ? $totalAssessmentProgress / $courseCount : 0;
+
+        return round(
+            ($avgLessonProgress * $this->lessonWeight) +
+            ($avgAssessmentProgress * $this->assessmentWeight),
+            1
+        );
+    }
+
+    public function isPathComplete(LearningPathEnrollment $enrollment): bool
+    {
+        $learningPath = $enrollment->learningPath;
+
+        // Get only required courses
+        $requiredCourses = $learningPath->courses()
+            ->wherePivot('is_required', true)
+            ->get();
+
+        foreach ($requiredCourses as $course) {
+            // Get course enrollment for this user
+            $courseEnrollment = Enrollment::query()
+                ->where('user_id', $enrollment->user_id)
+                ->where('course_id', $course->id)
+                ->first();
+
+            if (! $courseEnrollment || ! $this->isCourseComplete($courseEnrollment)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Legacy methods for backward compatibility
+    public function calculate(Enrollment $enrollment): float
+    {
+        return $this->calculateCourseProgress($enrollment);
+    }
+
+    public function isComplete(Enrollment $enrollment): bool
+    {
+        return $this->isCourseComplete($enrollment);
     }
 }
