@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Assessment\Exceptions\MaxAttemptsReachedException;
+use App\Domain\Assessment\Services\AssessmentSubmissionService;
 use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Http\Requests\Assessment\BulkGradeAnswersRequest;
 use App\Http\Requests\Assessment\StoreAssessmentRequest;
@@ -11,7 +12,6 @@ use App\Http\Requests\Assessment\UpdateAssessmentRequest;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Course;
-use App\Services\AssessmentSubmissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;

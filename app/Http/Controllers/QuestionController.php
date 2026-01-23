@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Assessment\Services\QuestionManagementService;
 use App\Http\Requests\Question\BulkUpdateQuestionsRequest;
 use App\Http\Requests\Question\ReorderQuestionsRequest;
 use App\Models\Assessment;
 use App\Models\Course;
 use App\Models\Question;
-use App\Services\QuestionManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;

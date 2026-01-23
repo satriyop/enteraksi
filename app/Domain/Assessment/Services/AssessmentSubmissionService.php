@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Assessment\Services;
 
 use App\Domain\Assessment\Contracts\GradingStrategyResolverContract;
 use App\Models\Assessment;

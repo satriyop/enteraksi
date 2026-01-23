@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Course\Services;
 
 use App\Domain\Course\Contracts\CourseInvitationServiceContract;
 use App\Models\Course;

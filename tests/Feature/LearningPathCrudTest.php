@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature;
 
 use App\Models\Course;
@@ -13,17 +14,20 @@ class LearningPathCrudTest extends TestCase
     use RefreshDatabase;
 
     protected User $admin;
+
     protected User $contentManager;
+
     protected User $learner;
+
     protected array $courses;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->admin          = User::factory()->create(['role' => 'lms_admin']);
+        $this->admin = User::factory()->create(['role' => 'lms_admin']);
         $this->contentManager = User::factory()->create(['role' => 'content_manager']);
-        $this->learner        = User::factory()->create(['role' => 'learner']);
+        $this->learner = User::factory()->create(['role' => 'learner']);
 
         $this->courses = Course::factory()->count(3)->create(['status' => 'published'])->all();
     }
@@ -32,13 +36,13 @@ class LearningPathCrudTest extends TestCase
     {
         $response = $this->actingAs($this->admin)
             ->post(route('learning-paths.store'), [
-                'title'              => 'Test Learning Path',
-                'description'        => 'Test description',
-                'objectives'         => ['Objective 1', 'Objective 2'],
+                'title' => 'Test Learning Path',
+                'description' => 'Test description',
+                'objectives' => ['Objective 1', 'Objective 2'],
                 'estimated_duration' => 120,
-                'difficulty_level'   => 'beginner',
-                'thumbnail'          => UploadedFile::fake()->image('thumbnail.jpg'),
-                'courses'            => [
+                'difficulty_level' => 'beginner',
+                'thumbnail' => UploadedFile::fake()->image('thumbnail.jpg'),
+                'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true, 'min_completion_percentage' => 80],
                     ['id' => $this->courses[1]->id, 'is_required' => false, 'min_completion_percentage' => 70],
                 ],
@@ -59,9 +63,9 @@ class LearningPathCrudTest extends TestCase
     {
         $response = $this->actingAs($this->contentManager)
             ->post(route('learning-paths.store'), [
-                'title'       => 'Content Manager Learning Path',
+                'title' => 'Content Manager Learning Path',
                 'description' => 'Test description',
-                'courses'     => [
+                'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
             ]);
@@ -74,10 +78,10 @@ class LearningPathCrudTest extends TestCase
     {
         $response = $this->actingAs($this->admin)
             ->post(route('learning-paths.store'), [
-                'title'       => 'Test Learning Path',
+                'title' => 'Test Learning Path',
                 'description' => 'Test description',
-                'thumbnail'   => UploadedFile::fake()->create('test.pdf', 1000), // Invalid file type
-                'courses'     => [
+                'thumbnail' => UploadedFile::fake()->create('test.pdf', 1000), // Invalid file type
+                'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
             ]);
@@ -90,9 +94,9 @@ class LearningPathCrudTest extends TestCase
     {
         $response = $this->actingAs($this->admin)
             ->post(route('learning-paths.store'), [
-                'title'       => 'Test Learning Path Without Thumbnail',
+                'title' => 'Test Learning Path Without Thumbnail',
                 'description' => 'Test description',
-                'courses'     => [
+                'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
             ]);
@@ -107,7 +111,7 @@ class LearningPathCrudTest extends TestCase
     {
         $response = $this->actingAs($this->learner)
             ->post(route('learning-paths.store'), [
-                'title'   => 'Unauthorized Learning Path',
+                'title' => 'Unauthorized Learning Path',
                 'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
@@ -119,14 +123,17 @@ class LearningPathCrudTest extends TestCase
 
     public function test_admin_can_view_learning_path()
     {
-        $learningPath = LearningPath::factory()->create(['created_by' => $this->admin->id]);
+        $learningPath = LearningPath::factory()->create([
+            'created_by' => $this->admin->id,
+            'title' => 'Test Learning Path Title',
+        ]);
         $learningPath->courses()->attach($this->courses[0]->id, ['position' => 0, 'is_required' => true]);
 
         $response = $this->actingAs($this->admin)
             ->get(route('learning-paths.show', $learningPath));
 
         $response->assertOk();
-        $response->assertSee($learningPath->title);
+        $response->assertSee('Test Learning Path Title');
     }
 
     public function test_content_manager_can_view_own_learning_path()
@@ -142,7 +149,7 @@ class LearningPathCrudTest extends TestCase
     public function test_content_manager_cannot_view_other_learning_path()
     {
         $otherContentManager = User::factory()->create(['role' => 'content_manager']);
-        $learningPath        = LearningPath::factory()->create(['created_by' => $otherContentManager->id, 'is_published' => false]);
+        $learningPath = LearningPath::factory()->create(['created_by' => $otherContentManager->id, 'is_published' => false]);
 
         $response = $this->actingAs($this->contentManager)
             ->get(route('learning-paths.show', $learningPath));
@@ -178,9 +185,9 @@ class LearningPathCrudTest extends TestCase
 
         $response = $this->actingAs($this->admin)
             ->put(route('learning-paths.update', $learningPath), [
-                'title'       => 'Updated Learning Path',
+                'title' => 'Updated Learning Path',
                 'description' => 'Updated description',
-                'courses'     => [
+                'courses' => [
                     ['id' => $this->courses[1]->id, 'is_required' => true],
                     ['id' => $this->courses[2]->id, 'is_required' => false],
                 ],
@@ -200,7 +207,7 @@ class LearningPathCrudTest extends TestCase
 
         $response = $this->actingAs($this->contentManager)
             ->put(route('learning-paths.update', $learningPath), [
-                'title'   => 'Updated Content Manager Learning Path',
+                'title' => 'Updated Content Manager Learning Path',
                 'courses' => [
                     ['id' => $this->courses[1]->id, 'is_required' => true],
                 ],
@@ -213,11 +220,11 @@ class LearningPathCrudTest extends TestCase
     public function test_content_manager_cannot_update_other_learning_path()
     {
         $otherContentManager = User::factory()->create(['role' => 'content_manager']);
-        $learningPath        = LearningPath::factory()->create(['created_by' => $otherContentManager->id]);
+        $learningPath = LearningPath::factory()->create(['created_by' => $otherContentManager->id]);
 
         $response = $this->actingAs($this->contentManager)
             ->put(route('learning-paths.update', $learningPath), [
-                'title'   => 'Should Not Update',
+                'title' => 'Should Not Update',
                 'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
@@ -233,7 +240,7 @@ class LearningPathCrudTest extends TestCase
 
         $response = $this->actingAs($this->learner)
             ->put(route('learning-paths.update', $learningPath), [
-                'title'   => 'Should Not Update',
+                'title' => 'Should Not Update',
                 'courses' => [
                     ['id' => $this->courses[0]->id, 'is_required' => true],
                 ],
@@ -267,7 +274,7 @@ class LearningPathCrudTest extends TestCase
     public function test_content_manager_cannot_delete_other_learning_path()
     {
         $otherContentManager = User::factory()->create(['role' => 'content_manager']);
-        $learningPath        = LearningPath::factory()->create(['created_by' => $otherContentManager->id]);
+        $learningPath = LearningPath::factory()->create(['created_by' => $otherContentManager->id]);
 
         $response = $this->actingAs($this->contentManager)
             ->delete(route('learning-paths.destroy', $learningPath));
@@ -311,7 +318,7 @@ class LearningPathCrudTest extends TestCase
     public function test_content_manager_cannot_publish_other_learning_path()
     {
         $otherContentManager = User::factory()->create(['role' => 'content_manager']);
-        $learningPath        = LearningPath::factory()->create(['created_by' => $otherContentManager->id, 'is_published' => false]);
+        $learningPath = LearningPath::factory()->create(['created_by' => $otherContentManager->id, 'is_published' => false]);
 
         $response = $this->actingAs($this->contentManager)
             ->put(route('learning-paths.publish', $learningPath));
@@ -355,8 +362,8 @@ class LearningPathCrudTest extends TestCase
     public function test_learning_path_index_shows_only_authorized_learning_paths()
     {
         // Create learning paths with different visibility
-        $publishedPath      = LearningPath::factory()->create(['is_published' => true, 'created_by' => $this->admin->id]);
-        $draftPath          = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->admin->id]);
+        $publishedPath = LearningPath::factory()->create(['is_published' => true, 'created_by' => $this->admin->id]);
+        $draftPath = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->admin->id]);
         $contentManagerPath = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->contentManager->id]);
 
         // Admin should see all
