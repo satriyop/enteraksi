@@ -9,6 +9,7 @@ use App\Domain\Assessment\Strategies\ManualGradingStrategy;
 use App\Domain\Assessment\Strategies\MultipleChoiceGradingStrategy;
 use App\Domain\Assessment\Strategies\ShortAnswerGradingStrategy;
 use App\Domain\Assessment\Strategies\TrueFalseGradingStrategy;
+use App\Domain\Course\Contracts\CourseInvitationServiceContract;
 use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
 use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
@@ -26,12 +27,13 @@ use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Domain\Progress\Strategies\AssessmentInclusiveProgressCalculator;
 use App\Domain\Progress\Strategies\LessonBasedProgressCalculator;
 use App\Domain\Progress\Strategies\WeightedProgressCalculator;
-// Observability Services
 use App\Domain\Shared\Services\DomainLogger;
+// Observability Services
 use App\Domain\Shared\Services\EventTimelineService;
 use App\Domain\Shared\Services\HealthCheckService;
 use App\Domain\Shared\Services\LogContext;
 use App\Domain\Shared\Services\MetricsService;
+use App\Services\CourseInvitationService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 
@@ -43,6 +45,9 @@ class DomainServiceProvider extends ServiceProvider
     public array $bindings = [
         // Enrollment
         EnrollmentServiceContract::class => EnrollmentService::class,
+
+        // Course Invitation
+        CourseInvitationServiceContract::class => CourseInvitationService::class,
 
         // Progress
         ProgressTrackingServiceContract::class => ProgressTrackingService::class,

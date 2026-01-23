@@ -8,6 +8,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @property int $id
+ * @property int $assessment_id
+ * @property string $question_text
+ * @property string $question_type
+ * @property int $points
+ * @property string|null $feedback
+ * @property int $order
+ * @property \Carbon\Carbon|null $created_at
+ * @property \Carbon\Carbon|null $updated_at
+ * @property \Carbon\Carbon|null $deleted_at
+ * @property-read Assessment $assessment
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, QuestionOption> $options
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, AttemptAnswer> $answers
+ */
 class Question extends Model
 {
     use HasFactory, SoftDeletes;
@@ -112,5 +127,51 @@ class Question extends Model
         }
 
         return $answerData['answer_text'] ?? null;
+    }
+
+    public function syncOptions(array $optionsData): void
+    {
+        $existingOptionIds = $this->options()->pluck('id')->toArray();
+        $submittedOptionIds = [];
+
+        foreach ($optionsData as $optionData) {
+            if (isset($optionData['id']) && $optionData['id'] > 0) {
+                $option = $this->options()->find($optionData['id']);
+                if ($option) {
+                    $option->update([
+                        'option_text' => $optionData['option_text'],
+                        'is_correct' => $optionData['is_correct'] ?? false,
+                        'feedback' => $optionData['feedback'] ?? null,
+                        'order' => $optionData['order'] ?? 0,
+                    ]);
+                    $submittedOptionIds[] = $option->id;
+                }
+            } else {
+                $option = $this->options()->create([
+                    'option_text' => $optionData['option_text'],
+                    'is_correct' => $optionData['is_correct'] ?? false,
+                    'feedback' => $optionData['feedback'] ?? null,
+                    'order' => $optionData['order'] ?? 0,
+                ]);
+                $submittedOptionIds[] = $option->id;
+            }
+        }
+
+        $optionsToDelete = array_diff($existingOptionIds, $submittedOptionIds);
+        if (! empty($optionsToDelete)) {
+            $this->options()->whereIn('id', $optionsToDelete)->delete();
+        }
+    }
+
+    public function createOptions(array $optionsData): void
+    {
+        foreach ($optionsData as $optionData) {
+            $this->options()->create([
+                'option_text' => $optionData['option_text'],
+                'is_correct' => $optionData['is_correct'] ?? false,
+                'feedback' => $optionData['feedback'] ?? null,
+                'order' => $optionData['order'] ?? 0,
+            ]);
+        }
     }
 }

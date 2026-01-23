@@ -1,6 +1,6 @@
 # Enteraksi LMS - Project Guidelines
 
-> ⚠️ **NOT A PRODUCTION APPLICATION** — This is a development/learning project. No need to consider backward compatibility when refactoring. Feel free to make breaking changes.
+> ⚠️ **NOT A PRODUCTION APPLICATION YET** — This is still development project. No need to consider backward compatibility when refactoring. Feel free to make breaking changes.
 
 ---
 

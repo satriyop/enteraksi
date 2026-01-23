@@ -239,6 +239,26 @@ class Course extends Model
     }
 
     /**
+     * Get user IDs that should be excluded from invitations.
+     *
+     * @return array<int>
+     */
+    public function getExcludedUserIdsForInvitation(): array
+    {
+        $enrolledUserIds = $this->enrollments()
+            ->where('status', 'active')
+            ->pluck('user_id')
+            ->toArray();
+
+        $pendingInvitationUserIds = CourseInvitation::where('course_id', $this->id)
+            ->where('status', 'pending')
+            ->pluck('user_id')
+            ->toArray();
+
+        return array_merge($enrolledUserIds, $pendingInvitationUserIds);
+    }
+
+    /**
      * Get average rating.
      *
      * Requires: ->withAvg('ratings', 'rating') in your query.
