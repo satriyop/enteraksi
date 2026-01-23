@@ -148,4 +148,40 @@ class Lesson extends Model
                 ->update(['order' => $order + 1]);
         }
     }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::deleted(function (self $lesson): void {
+            $section = $lesson->section;
+            if ($section) {
+                $course = $section->course;
+                $lessonId = $lesson->id;
+                $lessonTitle = $lesson->title;
+
+                $section->lessons()
+                    ->where('order', '>', $lesson->order)
+                    ->decrement('order');
+
+                $section->updateEstimatedDuration();
+                if ($course instanceof Course) {
+                    $course->updateEstimatedDuration();
+
+                    \App\Domain\Progress\Events\LessonDeleted::dispatch(
+                        $lessonId,
+                        $course,
+                        $lessonTitle,
+                        auth()->id()
+                    );
+                }
+            }
+        });
+    }
+
+    public function updateDurations(): void
+    {
+        $this->section->updateEstimatedDuration();
+        $this->section->course->updateEstimatedDuration();
+    }
 }

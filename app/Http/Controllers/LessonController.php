@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Progress\Events\LessonDeleted;
 use App\Http\Requests\Lesson\StoreLessonRequest;
 use App\Http\Requests\Lesson\UpdateLessonRequest;
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Services\LessonViewPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -17,78 +17,38 @@ use Inertia\Response;
 
 class LessonController extends Controller
 {
+    public function __construct(
+        protected LessonViewPresenter $presenter
+    ) {}
+
     /**
      * Display the specified lesson for enrolled learners.
      */
     public function show(Request $request, Course $course, Lesson $lesson): Response
     {
-        // Verify the lesson belongs to this course
         $lessonCourse = $lesson->section->course;
         if ($lessonCourse->id !== $course->id) {
             abort(404);
         }
 
-        // Check if user can view this lesson (enrolled or course manager)
         Gate::authorize('view', $lesson);
 
-        $course->load([
-            'category',
-            'user',
-            'sections.lessons',
-        ]);
-
+        $course->load(['category', 'user', 'sections.lessons']);
         $lesson->load(['section', 'media']);
 
-        // Get user enrollment and lesson progress
         $user = $request->user();
-        /** @var Enrollment|null $enrollment */
         $enrollment = Enrollment::query()
             ->where('user_id', $user->id)
             ->where('course_id', $course->id)
             ->first();
 
-        // Get lesson progress for all content types
-        $lessonProgress = null;
-        if ($enrollment) {
-            $lessonProgress = $enrollment->getProgressForLesson($lesson);
-        }
-
-        // Get all lesson progress for this enrollment (for sidebar checkmarks)
-        $lessonProgressMap = [];
-        if ($enrollment) {
-            $lessonProgressMap = $enrollment->lessonProgress()
-                ->where('is_completed', true)
-                ->pluck('is_completed', 'lesson_id')
-                ->toArray();
-        }
-
-        // Get all lessons for navigation with completion status
-        $allLessons = collect();
-        foreach ($course->sections as $section) {
-            foreach ($section->lessons as $l) {
-                $allLessons->push([
-                    'id' => $l->id,
-                    'title' => $l->title,
-                    'section_title' => $section->title,
-                    'order' => $section->order * 1000 + $l->order,
-                    'is_completed' => isset($lessonProgressMap[$l->id]),
-                ]);
-            }
-        }
-        $allLessons = $allLessons->sortBy('order')->values();
-
-        $currentIndex = $allLessons->search(fn ($l) => $l['id'] === $lesson->id);
-        $prevLesson = $currentIndex > 0 ? $allLessons[$currentIndex - 1] : null;
-        $nextLesson = $currentIndex < $allLessons->count() - 1 ? $allLessons[$currentIndex + 1] : null;
+        $navigationData = $this->presenter->getLessonViewData($course, $lesson, $enrollment);
 
         return Inertia::render('lessons/Show', [
             'course' => $course,
             'lesson' => $lesson,
             'enrollment' => $enrollment,
-            'lessonProgress' => $lessonProgress,
-            'prevLesson' => $prevLesson,
-            'nextLesson' => $nextLesson,
-            'allLessons' => $allLessons,
+            ...$navigationData,
         ]);
     }
 
@@ -112,15 +72,11 @@ class LessonController extends Controller
     {
         $validated = $request->validated();
 
-        // Get the next order number
         $maxOrder = $section->lessons()->max('order') ?? 0;
         $validated['order'] = $maxOrder + 1;
 
         $lesson = $section->lessons()->create($validated);
-
-        // Update section and course duration
-        $section->updateEstimatedDuration();
-        $section->course->updateEstimatedDuration();
+        $lesson->updateDurations();
 
         return redirect()
             ->route('lessons.edit', $lesson)
@@ -148,10 +104,7 @@ class LessonController extends Controller
     public function update(UpdateLessonRequest $request, Lesson $lesson): RedirectResponse
     {
         $lesson->update($request->validated());
-
-        // Update section and course duration
-        $lesson->section->updateEstimatedDuration();
-        $lesson->section->course->updateEstimatedDuration();
+        $lesson->updateDurations();
 
         return redirect()
             ->route('lessons.edit', $lesson)
@@ -165,24 +118,11 @@ class LessonController extends Controller
     {
         Gate::authorize('delete', $lesson);
 
-        $section = $lesson->section;
-        $course = $section->course;
+        $course = $lesson->section->course;
         $lessonId = $lesson->id;
         $lessonTitle = $lesson->title;
 
         $lesson->delete();
-
-        // Reorder remaining lessons
-        $section->lessons()
-            ->where('order', '>', $lesson->order)
-            ->decrement('order');
-
-        // Update section and course duration
-        $section->updateEstimatedDuration();
-        $course->updateEstimatedDuration();
-
-        // Dispatch event to recalculate progress for active enrollments
-        LessonDeleted::dispatch($lessonId, $course, $lessonTitle, auth()->id());
 
         return redirect()
             ->route('courses.edit', $course)
