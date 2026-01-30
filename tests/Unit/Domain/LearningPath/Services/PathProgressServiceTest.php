@@ -1,11 +1,11 @@
 <?php
 
 use App\Domain\Enrollment\Events\UserDropped;
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
 use App\Domain\LearningPath\Listeners\UpdatePathProgressOnCourseDrop;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\LearningPath\States\LockedCourseState;
@@ -18,8 +18,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->progressService = app(PathProgressServiceContract::class);
-    $this->pathEnrollmentService = app(PathEnrollmentServiceContract::class);
+    $this->progressService = app(PathProgressService::class);
+    $this->pathEnrollmentService = app(PathEnrollmentService::class);
 });
 
 describe('PathProgressService', function () {

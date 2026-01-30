@@ -6,6 +6,7 @@ use App\Domain\Enrollment\DTOs\EnrollmentContext;
 use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
+use App\Http\Resources\CourseInvitationResource;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseInvitation;
@@ -291,26 +292,13 @@ class CourseController extends Controller
      */
     protected function getInvitationsForCourse(Course $course): array
     {
-        return CourseInvitation::query()
+        $invitations = CourseInvitation::query()
             ->where('course_id', $course->id)
             ->with(['user:id,name,email', 'inviter:id,name'])
             ->latest()
-            ->get()
-            ->map(fn (CourseInvitation $inv) => [
-                'id' => $inv->id,
-                'user' => [
-                    'id' => $inv->user->id,
-                    'name' => $inv->user->name,
-                    'email' => $inv->user->email,
-                ],
-                'status' => $inv->status,
-                'message' => $inv->message,
-                'invited_by' => $inv->inviter->name,
-                'invited_at' => $inv->created_at->toISOString(),
-                'expires_at' => $inv->expires_at?->toISOString(),
-                'responded_at' => $inv->responded_at?->toISOString(),
-            ])
-            ->toArray();
+            ->get();
+
+        return CourseInvitationResource::collection($invitations)->resolve();
     }
 
     /**

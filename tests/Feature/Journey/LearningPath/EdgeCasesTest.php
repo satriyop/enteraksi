@@ -9,10 +9,10 @@
  * From the test plan: plans/tests/journey/learning-path/07-edge-cases.md
  */
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
+use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\Shared\Exceptions\InvalidStateTransitionException;
@@ -34,7 +34,7 @@ describe('Path Structure Changes Mid-Progress', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll learner
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Admin unpublishes path
@@ -66,7 +66,7 @@ describe('Path Structure Changes Mid-Progress', function () {
         }
 
         // Enroll learner
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -95,7 +95,7 @@ describe('Path Structure Changes Mid-Progress', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll learner
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -108,7 +108,7 @@ describe('Path Structure Changes Mid-Progress', function () {
         expect($enrollment->courseProgress()->count())->toBe(1);
 
         // Progress service should handle this
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progress = $progressService->getProgress($enrollment);
 
         // Note: Tests actual behavior - may show only original course
@@ -122,7 +122,7 @@ describe('Path Structure Changes Mid-Progress', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll learner
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         // Course unpublished
@@ -144,7 +144,7 @@ describe('State Machine Edge Cases', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll and complete
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -175,7 +175,7 @@ describe('State Machine Edge Cases', function () {
             'learning_path_id' => $path->id,
         ]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         expect(fn () => $enrollmentService->drop($enrollment))
             ->toThrow(InvalidStateTransitionException::class);
@@ -189,7 +189,7 @@ describe('State Machine Edge Cases', function () {
             'learning_path_id' => $path->id,
         ]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         expect(fn () => $enrollmentService->drop($enrollment))
             ->toThrow(InvalidStateTransitionException::class);
@@ -203,7 +203,7 @@ describe('Concurrent Operations', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         // First enrollment
         $enrollmentService->enroll($this->learner, $path);
@@ -232,7 +232,7 @@ describe('Concurrent Operations', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -246,7 +246,7 @@ describe('Concurrent Operations', function () {
         }
 
         // Check path completion
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
 
         expect($progressService->isPathCompleted($enrollment))->toBeTrue();
     });
@@ -271,7 +271,7 @@ describe('Data Integrity', function () {
         ]);
 
         // Progress service should handle this
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progress = $progressService->getProgress($enrollment);
 
         expect($progress->totalCourses)->toBe(0);
@@ -284,7 +284,7 @@ describe('Data Integrity', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -313,7 +313,7 @@ describe('Data Integrity', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Foreign key constraint should prevent creating orphan progress
@@ -332,7 +332,7 @@ describe('Boundary Values', function () {
 
         // No courses attached
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Progress should be 0/0 = 0%
@@ -341,7 +341,7 @@ describe('Boundary Values', function () {
         // Fetch model to check completion
 
         // Path should complete immediately (vacuously true)
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         expect($progressService->isPathCompleted($enrollment))->toBeTrue();
     });
 
@@ -365,7 +365,7 @@ describe('Boundary Values', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -383,13 +383,13 @@ describe('Boundary Values', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
 
         // When all courses are optional, none are required (optional courses don't count toward completion)
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progress = $progressService->getProgress($enrollment);
 
         expect($progress->requiredCourses)->toBe(0);  // No required courses when all are optional
@@ -423,7 +423,7 @@ describe('Boundary Values', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         $courseProgress = $enrollment->courseProgress()->orderBy('position')->get();
@@ -441,7 +441,7 @@ describe('Boundary Values', function () {
         expect($enrollment->courseProgress()->count())->toBe(3);
 
         // Progress shows 0 required completed (only 1 required, not done yet)
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progress = $progressService->getProgress($enrollment);
         expect($progress->requiredCourses)->toBe(1);
         expect($progress->completedRequiredCourses)->toBe(0);
@@ -457,13 +457,13 @@ describe('Error Handling', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Mock enrollment service to fail
-        $this->mock(EnrollmentServiceContract::class)
+        $this->mock(EnrollmentService::class)
             ->shouldReceive('getActiveEnrollment')
             ->andReturn(null)
             ->shouldReceive('enroll')
             ->andThrow(new \RuntimeException('Database error'));
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         try {
             $enrollmentService->enroll($this->learner, $path);
@@ -487,7 +487,7 @@ describe('Error Handling', function () {
             'learning_path_id' => $path->id,
         ]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         try {
             $enrollmentService->drop($enrollment);
@@ -509,7 +509,7 @@ describe('Authorization Edge Cases', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Learner 1 enrolls
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         // Learner 2 tries to access (not enrolled)
@@ -629,7 +629,7 @@ describe('Soft Delete Scenarios', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Enrollment should exist (using camelCase property)
@@ -650,7 +650,7 @@ describe('Soft Delete Scenarios', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll before archiving
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         // Archive the course (if is_archived exists)

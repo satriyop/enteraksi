@@ -1,11 +1,11 @@
 <?php
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
 use App\Domain\LearningPath\Events\PathCompleted;
 use App\Domain\LearningPath\Events\PathDropped;
 use App\Domain\LearningPath\Events\PathEnrollmentCreated;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
 use App\Domain\Shared\Exceptions\InvalidStateTransitionException;
 use App\Models\Course;
 use App\Models\LearningPath;
@@ -14,7 +14,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->service = app(PathEnrollmentServiceContract::class);
+    $this->service = app(PathEnrollmentService::class);
     Event::fake();
 });
 
