@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
 use App\Http\Resources\Enrollment\PathEnrollmentBasicResource;
@@ -27,8 +27,8 @@ class LearningPathEnrollmentController extends Controller
     use AuthorizesRequests;
 
     public function __construct(
-        protected PathEnrollmentServiceContract $enrollmentService,
-        protected PathProgressServiceContract $progressService
+        protected PathEnrollmentService $enrollmentService,
+        protected PathProgressService $progressService
     ) {}
 
     /**

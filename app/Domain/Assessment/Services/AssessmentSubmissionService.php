@@ -2,7 +2,7 @@
 
 namespace App\Domain\Assessment\Services;
 
-use App\Domain\Assessment\Contracts\GradingStrategyResolverContract;
+use App\Domain\Assessment\Services\GradingStrategyResolver;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Question;
@@ -10,7 +10,7 @@ use App\Models\Question;
 class AssessmentSubmissionService
 {
     public function __construct(
-        protected GradingStrategyResolverContract $gradingResolver
+        protected GradingStrategyResolver $gradingResolver
     ) {}
 
     public function submitAttempt(AssessmentAttempt $attempt, array $answers, Assessment $assessment): array

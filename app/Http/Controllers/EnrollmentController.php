@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Gate;
 class EnrollmentController extends Controller
 {
     public function __construct(
-        protected \App\Domain\Enrollment\Contracts\EnrollmentServiceContract $enrollmentService,
+        protected \App\Domain\Enrollment\Services\EnrollmentService $enrollmentService,
         protected \App\Domain\Course\Services\InvitationAcceptanceService $invitationAcceptanceService
     ) {}
 

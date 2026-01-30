@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
 use App\Http\Requests\LessonProgress\UpdateMediaProgressRequest;
 use App\Http\Requests\LessonProgress\UpdatePaginationProgressRequest;
@@ -15,7 +15,7 @@ use Illuminate\Http\Request;
 class LessonProgressController extends Controller
 {
     public function __construct(
-        protected ProgressTrackingServiceContract $progressService
+        protected ProgressTrackingService $progressService
     ) {}
 
     /**

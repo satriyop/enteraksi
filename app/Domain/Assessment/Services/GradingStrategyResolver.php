@@ -3,11 +3,11 @@
 namespace App\Domain\Assessment\Services;
 
 use App\Domain\Assessment\Contracts\GradingStrategyContract;
-use App\Domain\Assessment\Contracts\GradingStrategyResolverContract;
+
 use App\Models\Question;
 use Illuminate\Support\Collection;
 
-class GradingStrategyResolver implements GradingStrategyResolverContract
+class GradingStrategyResolver
 {
     /** @var Collection<int, GradingStrategyContract> */
     protected Collection $strategies;

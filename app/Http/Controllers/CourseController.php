@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Enrollment\DTOs\EnrollmentContext;
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
 use App\Models\Category;
@@ -22,7 +22,7 @@ use Inertia\Response;
 class CourseController extends Controller
 {
     public function __construct(
-        protected ProgressTrackingServiceContract $progressService
+        protected ProgressTrackingService $progressService
     ) {}
 
     /**

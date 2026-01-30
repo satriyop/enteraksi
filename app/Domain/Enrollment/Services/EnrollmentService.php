@@ -2,7 +2,7 @@
 
 namespace App\Domain\Enrollment\Services;
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
+
 use App\Domain\Enrollment\Events\UserEnrolled;
 use App\Domain\Enrollment\Exceptions\AlreadyEnrolledException;
 use App\Domain\Enrollment\Exceptions\CourseNotPublishedException;
@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * Handles enrollment creation/validation. State transitions (drop, complete, reactivate)
  * are now owned by the Enrollment model itself.
  */
-class EnrollmentService implements EnrollmentServiceContract
+class EnrollmentService
 {
     /**
      * Enroll a user in a course.

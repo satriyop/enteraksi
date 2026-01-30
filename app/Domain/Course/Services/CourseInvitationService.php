@@ -2,12 +2,12 @@
 
 namespace App\Domain\Course\Services;
 
-use App\Domain\Course\Contracts\CourseInvitationServiceContract;
+
 use App\Models\Course;
 use App\Models\CourseInvitation;
 use App\Models\User;
 
-class CourseInvitationService implements CourseInvitationServiceContract
+class CourseInvitationService
 {
     /**
      * Get user IDs that should be excluded from invitations.

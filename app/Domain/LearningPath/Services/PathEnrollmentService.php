@@ -2,8 +2,7 @@
 
 namespace App\Domain\LearningPath\Services;
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
+use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Domain\LearningPath\Events\PathEnrollmentCreated;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
@@ -21,13 +20,13 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class PathEnrollmentService implements PathEnrollmentServiceContract
+class PathEnrollmentService
 {
     public function __construct(
         protected DomainLogger $logger,
         protected MetricsService $metrics,
         protected PrerequisiteEvaluatorFactory $evaluatorFactory,
-        protected EnrollmentServiceContract $enrollmentService
+        protected EnrollmentService $enrollmentService
     ) {}
 
     public function enroll(User $user, LearningPath $path, bool $preserveProgress = true): LearningPathEnrollment

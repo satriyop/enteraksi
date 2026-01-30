@@ -2,7 +2,7 @@
 
 namespace App\Domain\Progress\Listeners;
 
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Domain\Progress\Events\LessonDeleted;
 use App\Models\Enrollment;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -10,7 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 class RecalculateProgressOnLessonDeletion implements ShouldQueue
 {
     public function __construct(
-        protected ProgressTrackingServiceContract $progressService,
+        protected ProgressTrackingService $progressService,
     ) {}
 
     public function handle(LessonDeleted $event): void
