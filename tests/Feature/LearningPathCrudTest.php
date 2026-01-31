@@ -381,4 +381,62 @@ class LearningPathCrudTest extends TestCase
             ->get(route('learning-paths.index'));
         $response->assertOk();
     }
+
+    public function test_learner_index_only_returns_published_learning_paths()
+    {
+        $publishedPath = LearningPath::factory()->create(['is_published' => true, 'created_by' => $this->admin->id]);
+        $draftPath = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->admin->id]);
+
+        $response = $this->actingAs($this->learner)
+            ->get(route('learning-paths.index'));
+
+        $response->assertOk();
+        $learningPaths = $response->original->getData()['page']['props']['learningPaths'];
+        $ids = collect($learningPaths['data'])->pluck('id')->all();
+
+        $this->assertContains($publishedPath->id, $ids);
+        $this->assertNotContains($draftPath->id, $ids);
+    }
+
+    public function test_content_manager_index_returns_own_and_published_paths()
+    {
+        $publishedByOther = LearningPath::factory()->create(['is_published' => true, 'created_by' => $this->admin->id]);
+        $ownDraft = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->contentManager->id]);
+        $otherDraft = LearningPath::factory()->create(['is_published' => false, 'created_by' => $this->admin->id]);
+
+        $response = $this->actingAs($this->contentManager)
+            ->get(route('learning-paths.index'));
+
+        $response->assertOk();
+        $learningPaths = $response->original->getData()['page']['props']['learningPaths'];
+        $ids = collect($learningPaths['data'])->pluck('id')->all();
+
+        $this->assertContains($publishedByOther->id, $ids);
+        $this->assertContains($ownDraft->id, $ids);
+        $this->assertNotContains($otherDraft->id, $ids);
+    }
+
+    public function test_learner_cannot_access_create_page()
+    {
+        $response = $this->actingAs($this->learner)
+            ->get(route('learning-paths.create'));
+
+        $response->assertForbidden();
+    }
+
+    public function test_admin_can_access_create_page()
+    {
+        $response = $this->actingAs($this->admin)
+            ->get(route('learning-paths.create'));
+
+        $response->assertOk();
+    }
+
+    public function test_content_manager_can_access_create_page()
+    {
+        $response = $this->actingAs($this->contentManager)
+            ->get(route('learning-paths.create'));
+
+        $response->assertOk();
+    }
 }

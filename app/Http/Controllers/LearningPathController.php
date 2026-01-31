@@ -19,12 +19,27 @@ class LearningPathController extends Controller
 {
     public function index(Request $request): Response
     {
-        $learningPaths = LearningPath::with(['creator', 'courses'])
+        Gate::authorize('viewAny', LearningPath::class);
+
+        $user = $request->user();
+
+        $query = LearningPath::with(['creator', 'courses'])
             ->when($request->search, function ($query, $search) {
                 $query->where('title', 'like', '%'.$search.'%')
                     ->orWhere('description', 'like', '%'.$search.'%');
-            })
-            ->orderBy('created_at', 'desc')
+            });
+
+        // Role-based filtering: learners see only published, content managers see own, admins see all
+        if ($user->isLearner()) {
+            $query->where('is_published', true);
+        } elseif ($user->isContentManager()) {
+            $query->where(function ($q) use ($user) {
+                $q->where('created_by', $user->id)
+                    ->orWhere('is_published', true);
+            });
+        }
+
+        $learningPaths = $query->orderBy('created_at', 'desc')
             ->paginate(10)
             ->withQueryString();
 
@@ -36,6 +51,8 @@ class LearningPathController extends Controller
 
     public function create(): Response
     {
+        Gate::authorize('create', LearningPath::class);
+
         $courses = Course::published()->orderBy('title')->get();
 
         return Inertia::render('learning_paths/Create', [
@@ -105,9 +122,6 @@ class LearningPathController extends Controller
 
     public function update(UpdateLearningPathRequest $request, LearningPath $learning_path): RedirectResponse
     {
-        \Log::info('Update request data:', $request->all());
-        \Log::info('Validated data:', $request->validated());
-
         $validated = $request->validated();
         $validated['updated_by'] = Auth::id();
 
