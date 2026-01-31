@@ -2,7 +2,6 @@
 
 namespace App\Domain\Enrollment\Services;
 
-
 use App\Domain\Enrollment\Events\UserEnrolled;
 use App\Domain\Enrollment\Exceptions\AlreadyEnrolledException;
 use App\Domain\Enrollment\Exceptions\CourseNotPublishedException;
@@ -124,6 +123,32 @@ class EnrollmentService
         if (! $course->isPublished()) {
             throw new CourseNotPublishedException($course->id);
         }
+    }
+
+    /**
+     * Build an enrollment status map for a list of courses.
+     *
+     * Returns array keyed by course_id with status and progress for a given user.
+     * Used by course index/browse pages to show enrollment badges.
+     *
+     * @param  iterable<Course>  $courses
+     * @return array<int, array{status: string, progress_percentage: int|null}>
+     */
+    public function getEnrollmentMapForCourses(User $user, iterable $courses): array
+    {
+        $courseIds = collect($courses)->pluck('id')->toArray();
+
+        return Enrollment::query()
+            ->where('user_id', $user->id)
+            ->whereIn('course_id', $courseIds)
+            ->get()
+            ->mapWithKeys(fn (Enrollment $e) => [
+                $e->course_id => [
+                    'status' => $e->status->getValue(),
+                    'progress_percentage' => $e->progress_percentage,
+                ],
+            ])
+            ->toArray();
     }
 
     /**

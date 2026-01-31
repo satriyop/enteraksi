@@ -222,6 +222,36 @@ class Course extends Model
         return $query->where('user_id', $user->id);
     }
 
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        if (! $search) {
+            return $query;
+        }
+
+        return $query->where(function ($q) use ($search) {
+            $q->where('title', 'like', "%{$search}%")
+                ->orWhere('short_description', 'like', "%{$search}%");
+        });
+    }
+
+    public function scopeFilterByCategory(Builder $query, ?int $categoryId): Builder
+    {
+        if (! $categoryId) {
+            return $query;
+        }
+
+        return $query->where('category_id', $categoryId);
+    }
+
+    public function scopeFilterByDifficulty(Builder $query, ?string $difficulty): Builder
+    {
+        if (! $difficulty) {
+            return $query;
+        }
+
+        return $query->where('difficulty_level', $difficulty);
+    }
+
     public function getDurationAttribute(): int
     {
         return $this->manual_duration_minutes ?? $this->estimated_duration_minutes ?? 0;
