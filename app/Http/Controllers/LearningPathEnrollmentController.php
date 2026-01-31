@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Http\Resources\Enrollment\PathEnrollmentBasicResource;
 use App\Http\Resources\Enrollment\PathEnrollmentIndexResource;
 use App\Http\Resources\LearningPath\LearningPathBrowseResource;
@@ -27,8 +27,8 @@ class LearningPathEnrollmentController extends Controller
     use AuthorizesRequests;
 
     public function __construct(
-        protected PathEnrollmentServiceContract $enrollmentService,
-        protected PathProgressServiceContract $progressService
+        protected PathEnrollmentService $enrollmentService,
+        protected PathProgressService $progressService
     ) {}
 
     /**
@@ -50,7 +50,7 @@ class LearningPathEnrollmentController extends Controller
 
         return Inertia::render('learner/learning-paths/Index', [
             'enrollments' => $paginatedEnrollments->through(
-                fn ($enrollment) => (new PathEnrollmentIndexResource($enrollment))->resolve()
+                fn ($enrollment) => new PathEnrollmentIndexResource($enrollment)
             ),
             'filters' => $request->only(['status']),
         ]);
@@ -88,7 +88,7 @@ class LearningPathEnrollmentController extends Controller
 
         return Inertia::render('learner/learning-paths/Browse', [
             'learningPaths' => $paginatedPaths->through(
-                fn ($path) => (new LearningPathBrowseResource($path))->resolve()
+                fn ($path) => new LearningPathBrowseResource($path)
             ),
             'enrolledPathIds' => $enrolledPathIds,
             'filters' => $request->only(['search', 'difficulty']),

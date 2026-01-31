@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Models\Course;
 use App\Models\LearningPath;
@@ -141,8 +141,8 @@ class LearningPathSeeder extends Seeder
         }
 
         // Use service to properly create enrollment with course enrollments
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
-        $progressService = app(PathProgressServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
+        $progressService = app(PathProgressService::class);
 
         $result = $enrollmentService->enroll($testUser, $firstPath);
         $enrollment = $result->enrollment;

@@ -1,8 +1,8 @@
 <?php
 
 use App\Domain\Enrollment\Events\CourseStarted;
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->progressService = app(ProgressTrackingServiceContract::class);
+    $this->progressService = app(ProgressTrackingService::class);
 });
 
 describe('CourseStarted tracking', function () {

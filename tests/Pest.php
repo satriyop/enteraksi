@@ -136,5 +136,5 @@ function assertEventDispatched(string $eventClass, ?callable $callback = null): 
  */
 function progressService(): App\Domain\Progress\Services\ProgressTrackingService
 {
-    return app(App\Domain\Progress\Contracts\ProgressTrackingServiceContract::class);
+    return app(App\Domain\Progress\Services\ProgressTrackingService::class);
 }

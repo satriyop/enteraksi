@@ -2,12 +2,11 @@
 
 namespace App\Domain\Course\Services;
 
-use App\Domain\Course\Contracts\CourseInvitationServiceContract;
 use App\Models\Course;
 use App\Models\CourseInvitation;
 use App\Models\User;
 
-class CourseInvitationService implements CourseInvitationServiceContract
+class CourseInvitationService
 {
     /**
      * Get user IDs that should be excluded from invitations.
@@ -63,19 +62,31 @@ class CourseInvitationService implements CourseInvitationServiceContract
 
         $excludeUserIds = $this->getExcludedUserIds($course);
 
+        // Collect all emails from CSV first, then batch-query users to avoid N+1
+        $emailsFromCsv = [];
+        foreach ($csvData as $index => $row) {
+            if (! empty($row) && isset($row[$emailIndex])) {
+                $email = trim($row[$emailIndex] ?? '');
+                if (! empty($email)) {
+                    $emailsFromCsv[$index] = $email;
+                }
+            }
+        }
+
+        $usersMap = User::whereIn('email', array_values($emailsFromCsv))
+            ->where('role', 'learner')
+            ->get()
+            ->keyBy('email');
+
         foreach ($csvData as $index => $row) {
             $rowNumber = $index + 2;
 
-            if (empty($row) || ! isset($row[$emailIndex])) {
+            if (! isset($emailsFromCsv[$index])) {
                 continue;
             }
 
-            $email = trim($row[$emailIndex] ?? '');
-            if (empty($email)) {
-                continue;
-            }
-
-            $user = User::where('email', $email)->where('role', 'learner')->first();
+            $email = $emailsFromCsv[$index];
+            $user = $usersMap->get($email);
 
             if (! $user) {
                 $results['errors'][] = "Baris {$rowNumber}: Email '{$email}' tidak ditemukan atau bukan learner.";

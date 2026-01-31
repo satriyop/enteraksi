@@ -8,11 +8,11 @@
  * From the test plan: plans/tests/journey/learning-path/03-learner-progress-completion.md
  */
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
 use App\Domain\LearningPath\Events\PathCompleted;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\LearningPath\States\LockedCourseState;
@@ -40,7 +40,7 @@ describe('View Progress Page', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         $response = $this->actingAs($this->learner)
@@ -70,7 +70,7 @@ describe('View Progress Page', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -83,7 +83,7 @@ describe('View Progress Page', function () {
         ]);
 
         // Unlock second course
-        app(PathProgressServiceContract::class)->unlockNextCourses($enrollment);
+        app(PathProgressService::class)->unlockNextCourses($enrollment);
 
         $response = $this->actingAs($this->learner)
             ->get(route('learner.learning-paths.progress', $path));
@@ -131,7 +131,7 @@ describe('Progress Calculation', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -143,7 +143,7 @@ describe('Progress Calculation', function () {
             'completed_at' => now(),
         ]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $percentage = $progressService->calculateProgressPercentage($enrollment);
 
         // 1 of 3 required = 33%
@@ -162,7 +162,7 @@ describe('Progress Calculation', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -180,7 +180,7 @@ describe('Progress Calculation', function () {
             ]);
         }
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $percentage = $progressService->calculateProgressPercentage($enrollment);
 
         expect($percentage)->toBe(100);
@@ -197,7 +197,7 @@ describe('Progress Calculation', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -208,7 +208,7 @@ describe('Progress Calculation', function () {
             'completed_at' => now(),
         ]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $percentage = $progressService->calculateProgressPercentage($enrollment);
 
         // 1 of 3 = 33%
@@ -223,12 +223,12 @@ describe('Course State Transitions', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->startCourse($enrollment, $course);
 
         $courseProgress = $enrollment->courseProgress()->first();
@@ -251,12 +251,12 @@ describe('Course State Transitions', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
 
         // Try to start the second (locked) course
         $progressService->startCourse($enrollment, $courses[1]);
@@ -285,7 +285,7 @@ describe('Course State Transitions', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -301,7 +301,7 @@ describe('Course State Transitions', function () {
         ]);
 
         // Trigger the listener
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->onCourseCompleted($enrollment, $courseEnrollment);
 
         // Verify course progress updated
@@ -327,12 +327,12 @@ describe('Path Completion', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
 
         // Complete each course in sequence
         foreach ($courses as $course) {
@@ -379,7 +379,7 @@ describe('Path Completion', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -391,7 +391,7 @@ describe('Path Completion', function () {
         // Complete only the required course
         $courseEnrollment->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->onCourseCompleted($enrollment, $courseEnrollment);
 
         $enrollment->refresh();
@@ -406,7 +406,7 @@ describe('Path Completion', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -419,7 +419,7 @@ describe('Path Completion', function () {
         $courseEnrollment = $courseProgress->courseEnrollment;
         $courseEnrollment->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->onCourseCompleted($enrollment->fresh(), $courseEnrollment);
 
         $enrollment->refresh();
@@ -440,7 +440,7 @@ describe('Progress Display Information', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         $response = $this->actingAs($this->learner)
@@ -463,7 +463,7 @@ describe('Progress Display Information', function () {
         $path->courses()->attach($courses[0]->id, ['position' => 1, 'is_required' => true]);
         $path->courses()->attach($courses[1]->id, ['position' => 2, 'is_required' => false]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         $response = $this->actingAs($this->learner)
@@ -484,7 +484,7 @@ describe('Continue Learning Flow', function () {
 
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         $response = $this->actingAs($this->learner)
@@ -512,7 +512,7 @@ describe('Continue Learning Flow', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         $response = $this->actingAs($this->learner)
@@ -540,7 +540,7 @@ describe('Progress Persistence', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -573,7 +573,7 @@ describe('Progress Persistence', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -585,7 +585,7 @@ describe('Progress Persistence', function () {
         $courseEnrollment = $courseProgress->courseEnrollment;
         $courseEnrollment->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->onCourseCompleted($enrollment->fresh(), $courseEnrollment);
 
         $enrollment->refresh();
@@ -603,7 +603,7 @@ describe('Edge Cases - Progress Calculation', function () {
             'learning_path_id' => $path->id,
         ]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progress = $progressService->getProgress($enrollment);
 
         expect($progress->totalCourses)->toBe(0);
@@ -636,7 +636,7 @@ describe('Edge Cases - Progress Calculation', function () {
             ]);
         }
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $percentage = $progressService->calculateProgressPercentage($enrollment);
 
         expect($percentage)->toBe(33); // Rounds down from 33.33
@@ -657,7 +657,7 @@ describe('Event Dispatching', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -667,7 +667,7 @@ describe('Event Dispatching', function () {
         $courseEnrollment = $courseProgress->courseEnrollment;
         $courseEnrollment->update(['status' => 'completed', 'completed_at' => now()]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->onCourseCompleted($enrollment->fresh(), $courseEnrollment);
 
         Event::assertDispatched(PathProgressUpdated::class, function ($event) use ($courses) {
@@ -692,7 +692,7 @@ describe('Event Dispatching', function () {
             ]);
         }
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Fetch model to access relationships
@@ -704,7 +704,7 @@ describe('Event Dispatching', function () {
             'completed_at' => now(),
         ]);
 
-        $progressService = app(PathProgressServiceContract::class);
+        $progressService = app(PathProgressService::class);
         $progressService->unlockNextCourses($enrollment);
 
         Event::assertDispatched(CourseUnlockedInPath::class, function ($event) use ($courses) {
@@ -729,7 +729,7 @@ describe('Concurrent Progress', function () {
         $path2->courses()->attach($sharedCourse->id, ['position' => 1, 'is_required' => true]);
         $path2->courses()->attach($path2Course->id, ['position' => 2, 'is_required' => true]);
 
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment1 = $enrollmentService->enroll($this->learner, $path1);
         $enrollment2 = $enrollmentService->enroll($this->learner, $path2);
 

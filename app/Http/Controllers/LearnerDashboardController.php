@@ -63,16 +63,16 @@ class LearnerDashboardController extends Controller
 
         return Inertia::render('learner/Dashboard', [
             'featuredCourses' => $featuredCourses->map(
-                fn ($course) => (new DashboardCourseResource($course))->resolve()
+                fn ($course) => new DashboardCourseResource($course)
             ),
             'myLearning' => $myLearning->map(
-                fn ($enrollment) => (new DashboardEnrollmentResource($enrollment))->resolve()
+                fn ($enrollment) => new DashboardEnrollmentResource($enrollment)
             ),
             'invitedCourses' => $invitedCourses->map(
-                fn ($invitation) => (new DashboardInvitationResource($invitation))->resolve()
+                fn ($invitation) => new DashboardInvitationResource($invitation)
             ),
             'browseCourses' => $browseCourses->map(
-                fn ($course) => (new DashboardCourseResource($course))->resolve()
+                fn ($course) => new DashboardCourseResource($course)
             ),
         ]);
     }

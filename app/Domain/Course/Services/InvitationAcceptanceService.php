@@ -2,7 +2,7 @@
 
 namespace App\Domain\Course\Services;
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
+use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Models\CourseInvitation;
 use App\Models\Enrollment;
 use App\Models\User;
@@ -10,7 +10,7 @@ use App\Models\User;
 class InvitationAcceptanceService
 {
     public function __construct(
-        protected EnrollmentServiceContract $enrollmentService
+        protected EnrollmentService $enrollmentService
     ) {}
 
     /**

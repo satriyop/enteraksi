@@ -3,7 +3,7 @@
 namespace App\Domain\LearningPath\Listeners;
 
 use App\Domain\Enrollment\Events\UserDropped;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
+use App\Domain\LearningPath\Services\PathProgressService;
 use App\Domain\LearningPath\Events\PathProgressUpdated;
 use App\Domain\LearningPath\States\ActivePathState;
 use App\Domain\LearningPath\States\AvailableCourseState;
@@ -28,7 +28,7 @@ class UpdatePathProgressOnCourseDrop implements ShouldQueue
     public string $queue = 'progress';
 
     public function __construct(
-        protected PathProgressServiceContract $progressService,
+        protected PathProgressService $progressService,
         protected DomainLogger $logger
     ) {}
 

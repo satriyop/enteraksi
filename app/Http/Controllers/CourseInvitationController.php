@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Domain\Course\Contracts\CourseInvitationServiceContract;
+use App\Domain\Course\Services\CourseInvitationService;
 use App\Http\Requests\BulkCourseInvitationRequest;
 use App\Http\Requests\StoreCourseInvitationRequest;
 use App\Models\Course;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Gate;
 class CourseInvitationController extends Controller
 {
     public function __construct(
-        protected CourseInvitationServiceContract $invitationService
+        protected CourseInvitationService $invitationService
     ) {}
 
     /**

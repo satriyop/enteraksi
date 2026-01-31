@@ -11,10 +11,10 @@
  * From the test plan: plans/tests/journey/learning-path/06-re-enrollment.md
  */
 
-use App\Domain\LearningPath\Contracts\PathEnrollmentServiceContract;
 use App\Domain\LearningPath\Events\PathEnrollmentCreated;
 use App\Domain\LearningPath\Exceptions\AlreadyEnrolledInPathException;
 use App\Domain\LearningPath\Exceptions\PathNotPublishedException;
+use App\Domain\LearningPath\Services\PathEnrollmentService;
 use App\Domain\LearningPath\States\AvailableCourseState;
 use App\Domain\LearningPath\States\CompletedCourseState;
 use App\Domain\LearningPath\States\LockedCourseState;
@@ -48,7 +48,7 @@ describe('Re-enrollment Detection', function () {
         ]);
 
         // Enroll again
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Should reuse the same enrollment record
@@ -63,7 +63,7 @@ describe('Re-enrollment Detection', function () {
         $path->courses()->attach($course->id, ['position' => 1, 'is_required' => true]);
 
         // Enroll for the first time
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         expect($enrollment->wasRecentlyCreated)->toBeTrue();
@@ -104,7 +104,7 @@ describe('Re-enrollment with Progress Reset', function () {
         }
 
         // Re-enroll with explicit reset (preserveProgress: false)
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path, preserveProgress: false);
 
         // Progress should be reset
@@ -145,7 +145,7 @@ describe('Re-enrollment with Progress Reset', function () {
         ]);
 
         // Re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Course enrollment should be active (may reuse existing enrollment record)
@@ -169,7 +169,7 @@ describe('Re-enrollment with Progress Reset', function () {
         ]);
 
         // Re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         expect($enrollment->dropped_at)->toBeNull();
@@ -209,7 +209,7 @@ describe('Re-enrollment with Progress Preserved', function () {
         }
 
         // Re-enroll WITH preserve
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->reactivatePathEnrollment($droppedEnrollment, preserveProgress: true);
 
         // Progress should be maintained
@@ -248,7 +248,7 @@ describe('Re-enrollment with Progress Preserved', function () {
         ]);
 
         // Re-enroll with preserve
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->reactivatePathEnrollment($droppedEnrollment, preserveProgress: true);
 
         // Course enrollment should be new/active
@@ -296,7 +296,7 @@ describe('Re-enrollment with Progress Preserved', function () {
         ]);
 
         // Re-enroll with preserve
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->reactivatePathEnrollment($droppedEnrollment, preserveProgress: true);
 
         // Fetch model to access relationships
@@ -383,7 +383,7 @@ describe('Re-enrollment Validation', function () {
         ]);
 
         // Try to enroll again
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         expect(fn () => $enrollmentService->enroll($this->learner, $path))
             ->toThrow(AlreadyEnrolledInPathException::class);
@@ -402,7 +402,7 @@ describe('Re-enrollment Validation', function () {
         ]);
 
         // Try to re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
 
         expect(fn () => $enrollmentService->enroll($this->learner, $path))
             ->toThrow(PathNotPublishedException::class);
@@ -424,7 +424,7 @@ describe('Re-enrollment Events', function () {
         ]);
 
         // Re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
 
         Event::assertDispatched(PathEnrollmentCreated::class);
@@ -452,7 +452,7 @@ describe('Re-enrollment Events', function () {
         ]);
 
         // Re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollmentService->enroll($this->learner, $path);
     });
 });
@@ -472,7 +472,7 @@ describe('Edge Cases', function () {
         ]);
 
         // Re-enroll
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path);
 
         // Should use the existing enrollment
@@ -510,7 +510,7 @@ describe('Edge Cases', function () {
         $path->courses()->attach($newCourse->id, ['position' => 2, 'is_required' => true]);
 
         // Re-enroll with reset to get new course structure
-        $enrollmentService = app(PathEnrollmentServiceContract::class);
+        $enrollmentService = app(PathEnrollmentService::class);
         $enrollment = $enrollmentService->enroll($this->learner, $path, preserveProgress: false);
 
         // Should have both courses now (because we reset progress)

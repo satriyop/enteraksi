@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Enrollment\DTOs\EnrollmentContext;
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Enrollment\Services\EnrollmentService;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Http\Requests\Course\StoreCourseRequest;
 use App\Http\Requests\Course\UpdateCourseRequest;
+use App\Http\Resources\CourseInvitationResource;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\CourseInvitation;
@@ -22,7 +24,8 @@ use Inertia\Response;
 class CourseController extends Controller
 {
     public function __construct(
-        protected ProgressTrackingServiceContract $progressService
+        protected ProgressTrackingService $progressService,
+        protected EnrollmentService $enrollmentService
     ) {}
 
     /**
@@ -45,13 +48,22 @@ class CourseController extends Controller
             $query->where('user_id', $user->id);
         }
 
-        $this->applyFilters($query, $request, $user);
+        // Apply filters using model scopes
+        $query->search($request->input('search'))
+            ->filterByCategory($request->integer('category_id') ?: null)
+            ->filterByDifficulty($request->input('difficulty_level'));
+
+        if (! $user->isLearner() && ($status = $request->input('status'))) {
+            $query->where('status', $status);
+        }
 
         $courses = $query->latest()->paginate(12)->withQueryString();
 
         $viewName = $user->isLearner() ? 'courses/Browse' : 'courses/Index';
 
-        $enrollmentMap = $this->getEnrollmentMapForCourses($user, $courses);
+        $enrollmentMap = $user->isLearner()
+            ? $this->enrollmentService->getEnrollmentMapForCourses($user, $courses)
+            : [];
 
         return Inertia::render($viewName, [
             'courses' => $courses,
@@ -130,13 +142,23 @@ class CourseController extends Controller
             ? $this->progressService->getAssessmentStats($enrollment)->toResponse()
             : null;
 
-        $ratings = $this->getRatingsForCourse($course);
+        $ratings = $course->ratings()
+            ->with('user:id,name')
+            ->latest()
+            ->take(10)
+            ->get();
 
         $viewName = $user->isLearner() ? 'courses/Detail' : 'courses/Show';
 
         $invitations = $user->isLearner()
             ? []
-            : $this->getInvitationsForCourse($course);
+            : CourseInvitationResource::collection(
+                CourseInvitation::query()
+                    ->where('course_id', $course->id)
+                    ->with(['user:id,name,email', 'inviter:id,name'])
+                    ->latest()
+                    ->get()
+            )->resolve();
 
         return Inertia::render($viewName, [
             'course' => $course,
@@ -144,11 +166,18 @@ class CourseController extends Controller
             'isUnderRevision' => $enrollment && $course->status === 'draft',
             'assessmentStats' => $assessmentStats,
             'userRating' => $user->courseRatings()->where('course_id', $course->id)->first(),
-            'ratings' => $ratings['collection'],
-            'averageRating' => $ratings['average'],
-            'ratingsCount' => $ratings['count'],
+            'ratings' => $ratings,
+            'averageRating' => $course->average_rating,
+            'ratingsCount' => $course->ratings_count,
             'invitations' => $invitations,
-            'can' => $this->getCoursePermissions($user, $course, $enrollment, $enrollmentContext),
+            'can' => [
+                'update' => Gate::allows('update', $course),
+                'delete' => Gate::allows('delete', $course),
+                'publish' => Gate::allows('publish', $course),
+                'enroll' => Gate::allows('enroll', [$course, $enrollmentContext]),
+                'rate' => $enrollment && ! $user->courseRatings()->where('course_id', $course->id)->exists(),
+                'invite' => Gate::allows('create', [CourseInvitation::class, $course]),
+            ],
         ]);
     }
 
@@ -219,112 +248,5 @@ class CourseController extends Controller
         return redirect()
             ->route('courses.index')
             ->with('success', 'Kursus berhasil dihapus.');
-    }
-
-    /**
-     * Apply filters to the query.
-     */
-    protected function applyFilters($query, Request $request, $user): void
-    {
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('short_description', 'like', "%{$search}%");
-            });
-        }
-
-        if (! $user->isLearner() && ($status = $request->input('status'))) {
-            $query->where('status', $status);
-        }
-
-        if ($categoryId = $request->input('category_id')) {
-            $query->where('category_id', $categoryId);
-        }
-
-        if ($difficulty = $request->input('difficulty_level')) {
-            $query->where('difficulty_level', $difficulty);
-        }
-    }
-
-    /**
-     * Get enrollment map for courses.
-     */
-    protected function getEnrollmentMapForCourses($user, $courses): array
-    {
-        if (! $user->isLearner()) {
-            return [];
-        }
-
-        $courseIds = $courses->pluck('id')->toArray();
-
-        return Enrollment::query()
-            ->where('user_id', $user->id)
-            ->whereIn('course_id', $courseIds)
-            ->get()
-            ->mapWithKeys(fn (Enrollment $e) => [
-                $e->course_id => [
-                    'status' => $e->status->getValue(),
-                    'progress_percentage' => $e->progress_percentage,
-                ],
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Get ratings for course.
-     */
-    protected function getRatingsForCourse(Course $course): array
-    {
-        return [
-            'collection' => $course->ratings()
-                ->with('user:id,name')
-                ->latest()
-                ->take(10)
-                ->get(),
-            'average' => $course->average_rating,
-            'count' => $course->ratings_count,
-        ];
-    }
-
-    /**
-     * Get invitations for course.
-     */
-    protected function getInvitationsForCourse(Course $course): array
-    {
-        return CourseInvitation::query()
-            ->where('course_id', $course->id)
-            ->with(['user:id,name,email', 'inviter:id,name'])
-            ->latest()
-            ->get()
-            ->map(fn (CourseInvitation $inv) => [
-                'id' => $inv->id,
-                'user' => [
-                    'id' => $inv->user->id,
-                    'name' => $inv->user->name,
-                    'email' => $inv->user->email,
-                ],
-                'status' => $inv->status,
-                'message' => $inv->message,
-                'invited_by' => $inv->inviter->name,
-                'invited_at' => $inv->created_at->toISOString(),
-                'expires_at' => $inv->expires_at?->toISOString(),
-                'responded_at' => $inv->responded_at?->toISOString(),
-            ])
-            ->toArray();
-    }
-
-    /**
-     * Get course permissions.
-     */
-    protected function getCoursePermissions($user, Course $course, ?Enrollment $enrollment, EnrollmentContext $context): array
-    {
-        return [
-            'update' => Gate::allows('update', $course),
-            'delete' => Gate::allows('delete', $course),
-            'publish' => Gate::allows('publish', $course),
-            'enroll' => Gate::allows('enroll', [$course, $context]),
-            'rate' => $enrollment && ! $user->courseRatings()->where('course_id', $course->id)->exists(),
-            'invite' => Gate::allows('create', [CourseInvitation::class, $course]),
-        ];
     }
 }

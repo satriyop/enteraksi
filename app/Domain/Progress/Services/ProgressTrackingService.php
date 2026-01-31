@@ -4,7 +4,7 @@ namespace App\Domain\Progress\Services;
 
 use App\Domain\Enrollment\Events\CourseStarted;
 use App\Domain\Progress\Contracts\ProgressCalculatorContract;
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+
 use App\Domain\Progress\DTOs\ProgressResult;
 use App\Domain\Progress\DTOs\ProgressUpdateDTO;
 use App\Domain\Progress\Events\LessonCompleted;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  * Note: Enrollment completion is now handled by $enrollment->complete()
  * instead of through EnrollmentService.
  */
-class ProgressTrackingService implements ProgressTrackingServiceContract
+class ProgressTrackingService
 {
     public function __construct(
         protected ProgressCalculatorContract $calculator,

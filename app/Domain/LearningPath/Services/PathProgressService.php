@@ -2,8 +2,7 @@
 
 namespace App\Domain\LearningPath\Services;
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
-use App\Domain\LearningPath\Contracts\PathProgressServiceContract;
+use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Domain\LearningPath\DTOs\PathProgressResult;
 use App\Domain\LearningPath\DTOs\PrerequisiteCheckResult;
 use App\Domain\LearningPath\Events\CourseUnlockedInPath;
@@ -24,13 +23,13 @@ use App\Models\LearningPathEnrollment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
-class PathProgressService implements PathProgressServiceContract
+class PathProgressService
 {
     public function __construct(
         protected DomainLogger $logger,
         protected MetricsService $metrics,
         protected PrerequisiteEvaluatorFactory $evaluatorFactory,
-        protected EnrollmentServiceContract $enrollmentService
+        protected EnrollmentService $enrollmentService
     ) {}
 
     public function getProgress(LearningPathEnrollment $enrollment): PathProgressResult

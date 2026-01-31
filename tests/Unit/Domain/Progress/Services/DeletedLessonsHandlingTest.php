@@ -1,8 +1,8 @@
 <?php
 
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
 use App\Domain\Progress\Events\LessonDeleted;
 use App\Domain\Progress\Listeners\RecalculateProgressOnLessonDeletion;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
@@ -11,7 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->progressService = app(ProgressTrackingServiceContract::class);
+    $this->progressService = app(ProgressTrackingService::class);
 });
 
 describe('Deleted lessons handling', function () {

@@ -22,7 +22,7 @@ class LessonPreviewController extends Controller
         }
 
         // Verify the course is published
-        if ($course->status !== 'published') {
+        if (! $course->isPublished()) {
             abort(404);
         }
 

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Course;
@@ -42,7 +42,7 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
 
     private Course $course;
 
-    private ProgressTrackingServiceContract $progressService;
+    private ProgressTrackingService $progressService;
 
     protected function setUp(): void
     {
@@ -57,7 +57,7 @@ class EdgeCasesAndBusinessRulesTest extends TestCase
             'visibility' => 'public',
         ]);
 
-        $this->progressService = app(ProgressTrackingServiceContract::class);
+        $this->progressService = app(ProgressTrackingService::class);
     }
 
     // ========== ASSESSMENT ATTEMPT LIMITS ==========

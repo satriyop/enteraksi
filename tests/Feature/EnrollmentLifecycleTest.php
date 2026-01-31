@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Domain\Progress\Contracts\ProgressTrackingServiceContract;
+use App\Domain\Progress\Services\ProgressTrackingService;
 use App\Models\Course;
 use App\Models\CourseSection;
 use App\Models\Enrollment;
@@ -37,7 +37,7 @@ class EnrollmentLifecycleTest extends TestCase
 
     private Course $restrictedCourse;
 
-    private ProgressTrackingServiceContract $progressService;
+    private ProgressTrackingService $progressService;
 
     protected function setUp(): void
     {
@@ -47,7 +47,7 @@ class EnrollmentLifecycleTest extends TestCase
         $this->admin = User::factory()->create(['role' => 'lms_admin']);
         $this->contentManager = User::factory()->create(['role' => 'content_manager']);
 
-        $this->progressService = app(ProgressTrackingServiceContract::class);
+        $this->progressService = app(ProgressTrackingService::class);
 
         // Create public published course
         $this->publicCourse = Course::factory()->published()->create([

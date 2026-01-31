@@ -1,11 +1,11 @@
 <?php
 
-use App\Domain\Enrollment\Contracts\EnrollmentServiceContract;
 use App\Domain\Enrollment\Events\EnrollmentCompleted;
 use App\Domain\Enrollment\Events\UserDropped;
 use App\Domain\Enrollment\Events\UserEnrolled;
 use App\Domain\Enrollment\Exceptions\AlreadyEnrolledException;
 use App\Domain\Enrollment\Exceptions\CourseNotPublishedException;
+use App\Domain\Enrollment\Services\EnrollmentService;
 use App\Domain\Shared\Exceptions\InvalidStateTransitionException;
 use App\Models\Course;
 use App\Models\Enrollment;
@@ -13,7 +13,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Event;
 
 beforeEach(function () {
-    $this->service = app(EnrollmentServiceContract::class);
+    $this->service = app(EnrollmentService::class);
     Event::fake();
 });
 

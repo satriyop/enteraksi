@@ -13,34 +13,10 @@ parameters:
 			path: app/Domain/Assessment/Strategies/TrueFalseGradingStrategy.php
 
 		-
-			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getCourseTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
-			identifier: return.type
+			message: '#^Parameter \$csvData of method App\\Domain\\Course\\Services\\CourseInvitationService\:\:importFromCsv\(\) expects array\<array\<string, string\>\>, array\<list\<string\|null\>\> given\.$#'
+			identifier: argument.type
 			count: 1
-			path: app/Domain/Shared/Services/EventTimelineService.php
-
-		-
-			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getEnrollmentTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domain/Shared/Services/EventTimelineService.php
-
-		-
-			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getRecentEvents\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{id\: mixed, event_id\: mixed, aggregate_type\: mixed, aggregate_id\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domain/Shared/Services/EventTimelineService.php
-
-		-
-			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getTimelineForAggregate\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{id\: mixed, event_id\: mixed, event_name\: mixed, actor_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domain/Shared/Services/EventTimelineService.php
-
-		-
-			message: '#^Method App\\Domain\\Shared\\Services\\EventTimelineService\:\:getUserTimeline\(\) should return Illuminate\\Support\\Collection\<int, array\> but returns Illuminate\\Support\\Collection\<int, array\{event_name\: mixed, aggregate_type\: mixed, aggregate_id\: mixed, metadata\: mixed, occurred_at\: mixed\}\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Domain/Shared/Services/EventTimelineService.php
+			path: app/Http/Controllers/CourseInvitationController.php
 
 		-
 			message: '#^Dead catch \- Illuminate\\Database\\QueryException is already caught above\.$#'
