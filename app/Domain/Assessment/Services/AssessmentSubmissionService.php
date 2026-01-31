@@ -2,7 +2,6 @@
 
 namespace App\Domain\Assessment\Services;
 
-use App\Domain\Assessment\Services\GradingStrategyResolver;
 use App\Models\Assessment;
 use App\Models\AssessmentAttempt;
 use App\Models\Question;
@@ -19,8 +18,12 @@ class AssessmentSubmissionService
         $maxScore = $assessment->total_points;
         $hasManualGrading = false;
 
+        // Batch-load all questions upfront to avoid N+1 queries
+        $questionIds = array_column($answers, 'question_id');
+        $questions = $assessment->questions()->whereIn('id', $questionIds)->get()->keyBy('id');
+
         foreach ($answers as $answerData) {
-            $question = $assessment->questions()->find($answerData['question_id']);
+            $question = $questions->get($answerData['question_id']);
 
             if (! $question instanceof Question) {
                 continue;
@@ -77,8 +80,12 @@ class AssessmentSubmissionService
     {
         $totalScore = 0;
 
+        // Batch-load all answers upfront to avoid N+1 queries
+        $answerIds = array_column($grades, 'answer_id');
+        $answersMap = $attempt->answers()->whereIn('id', $answerIds)->get()->keyBy('id');
+
         foreach ($grades as $gradeData) {
-            $answer = $attempt->answers()->find($gradeData['answer_id']);
+            $answer = $answersMap->get($gradeData['answer_id']);
 
             if ($answer) {
                 $answer->update([
